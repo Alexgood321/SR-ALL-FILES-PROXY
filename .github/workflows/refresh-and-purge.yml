@@ -3,7 +3,7 @@ name: Shadowrocket: refresh + purge CDN
 on:
   schedule:
     - cron: "*/5 * * * *"   # каждые 5 минут
-  workflow_dispatch:        # ручной запуск из UI
+  workflow_dispatch:        # ручной запуск
 
 permissions:
   contents: write
@@ -17,31 +17,53 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout (full history for diff)
+      - name: Checkout (full history)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Update timestamp in text files
+        id: touch_files
         shell: bash
         run: |
           set -euo pipefail
           TS="$(date -u +'%Y-%m-%d_%H:%M:%S_UTC')"
 
-          mapfile -t FILES < <(git ls-files \
-            | grep -E '(^gg$|\.conf$|\.sgmodule$|\.module$|\.list$|\.txt$|\.yaml$|\.yml$)' \
-            | grep -Ev '^\.github/')
+          # Какие расширения считаем «нашими»
+          exts='(^(gg|modules/.*|rules/.*)$|\.conf$|\.sgmodule$|\.module$|\.list$|\.txt$|\.yaml$|\.yml$)'
+          mapfile -t FILES < <(git ls-files | grep -E "${exts}" | grep -Ev '^\.github/')
+
+          # Если файлов нет — просто выходим без ошибок
+          if [ ${#FILES[@]} -eq 0 ]; then
+            echo "found_files=" >> "$GITHUB_OUTPUT"
+            echo "NO_CHANGES=1" >> $GITHUB_ENV
+            exit 0
+          fi
+
+          changed_paths=()
 
           for f in "${FILES[@]}"; do
-            # Пропускаем пустые/большие/нетекстовые
-            if [ ! -s "$f" ] || [ $(stat -c%s "$f") -gt 2000000 ] || ! file --mime "$f" | grep -q 'text/'; then
+            # пропускаем пустые и >2МБ
+            size=$(wc -c < "$f" || echo 0)
+            [ "$size" -eq 0 ] && continue
+            [ "$size" -gt 2000000 ] && continue
+
+            # «грубо» определяем бинарники: если встречается нулевой байт — пропускаем
+            if LC_ALL=C grep -Iq . "$f"; then
+              :
+            else
               continue
             fi
+
+            # вставляем/обновляем # last_update=... в первой строке
             if grep -qE '^(#\s*)?last_update=' "$f"; then
-              sed -i '1s/^\(#\s*\)\?last_update=.*/# last_update='"$TS"'/' "$f"
+              # заменим первую подходящую строку
+              awk -v ts="$TS" 'NR==1{ sub(/^#\s*last_update=.*/, "# last_update=" ts); print; next } {print}' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
             else
               printf '# last_update=%s\n%s' "$TS" "$(cat "$f")" > "$f"
             fi
+
+            changed_paths+=("$f")
           done
 
           git config user.name  "github-actions[bot]"
@@ -50,32 +72,30 @@ jobs:
 
           if git diff --cached --quiet; then
             echo "NO_CHANGES=1" >> $GITHUB_ENV
+            echo "found_files=" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           git commit -m "Refresh for Shadowrocket at $TS [skip ci]"
           git push
-          echo "NO_CHANGES=0" >> $GITHUB_ENV
 
-      - name: Collect changed files
-        if: env.NO_CHANGES == '0'
-        id: changed
-        shell: bash
-        run: |
-          CHANGED=$(git diff-tree --no-commit-id --name-only -r HEAD | tr '\n' ' ')
-          echo "files=$CHANGED" >> "$GITHUB_OUTPUT"
+          # Список потенциально изменённых файлов (для purge/warm-up)
+          printf -v joined '%s ' "${changed_paths[@]}"
+          echo "found_files=${joined}" >> "$GITHUB_OUTPUT"
+          echo "NO_CHANGES=0" >> $GITHUB_ENV
 
       - name: Purge jsDelivr cache
         if: env.NO_CHANGES == '0'
         shell: bash
         run: |
           set -euo pipefail
-          for f in ${{ steps.changed.outputs.files }}; do
-            if echo "$f" | grep -Eq '(^gg$|\.conf$|\.sgmodule$|\.module$|\.list$|\.txt$|\.yaml$|\.yml$)'; then
-              URL="https://purge.jsdelivr.net/gh/Alexgood321/SR-ALL-FILES-PROXY@main/$f"
-              echo "Purging: $URL"
-              curl -fsS "$URL" || true
-            fi
+          REPO="Alexgood321/SR-ALL-FILES-PROXY"   # ← проверь имя репозитория
+          files="${{ steps.touch_files.outputs.found_files }}"
+          [ -z "$files" ] && exit 0
+
+          for f in $files; do
+            echo "Purging jsDelivr: $f"
+            curl -fsS "https://purge.jsdelivr.net/gh/${REPO}@main/${f}" || true
           done
 
       - name: Warm-up raw.githubusercontent
@@ -83,11 +103,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          REPO="Alexgood321/SR-ALL-FILES-PROXY"   # ← проверь имя репозитория
           TS=$(date +%s)
-          for f in ${{ steps.changed.outputs.files }}; do
-            if echo "$f" | grep -Eq '(^gg$|\.conf$|\.sgmodule$|\.module$|\.list$|\.txt$|\.yaml$|\.yml$)'; then
-              URL="https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/main/$f?t=$TS"
-              echo "HEAD $URL"
-              curl -fsI "$URL" >/dev/null || true
-            fi
+          files="${{ steps.touch_files.outputs.found_files }}"
+          [ -z "$files" ] && exit 0
+
+          for f in $files; do
+            url="https://raw.githubusercontent.com/${REPO}/main/${f}?t=${TS}"
+            echo "HEAD $url"
+            curl -fsI "$url" >/dev/null || true
           done
