@@ -3,18 +3,24 @@ name: Shadowrocket: refresh + purge CDN
 on:
   schedule:
     - cron: "*/5 * * * *"   # каждые 5 минут
-  workflow_dispatch:        # ручной запуск из Actions
+  workflow_dispatch:        # ручной запуск из UI
 
 permissions:
   contents: write
+
+concurrency:
+  group: shadowrocket-refresh
+  cancel-in-progress: true
 
 jobs:
   refresh:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout (full history for diff)
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Update timestamp in text files
         shell: bash
@@ -22,17 +28,15 @@ jobs:
           set -euo pipefail
           TS="$(date -u +'%Y-%m-%d_%H:%M:%S_UTC')"
 
-          # Берём только нужные типы (исключаем .github)
           mapfile -t FILES < <(git ls-files \
             | grep -E '(^gg$|\.conf$|\.sgmodule$|\.module$|\.list$|\.txt$|\.yaml$|\.yml$)' \
             | grep -Ev '^\.github/')
 
           for f in "${FILES[@]}"; do
-            # Пропускаем пустые/бинарные/слишком большие
+            # Пропускаем пустые/большие/нетекстовые
             if [ ! -s "$f" ] || [ $(stat -c%s "$f") -gt 2000000 ] || ! file --mime "$f" | grep -q 'text/'; then
               continue
             fi
-            # Вставляем/обновляем строку # last_update=...
             if grep -qE '^(#\s*)?last_update=' "$f"; then
               sed -i '1s/^\(#\s*\)\?last_update=.*/# last_update='"$TS"'/' "$f"
             else
@@ -53,17 +57,24 @@ jobs:
           git push
           echo "NO_CHANGES=0" >> $GITHUB_ENV
 
-      - name: Purge jsDelivr cache for changed files
+      - name: Collect changed files
+        if: env.NO_CHANGES == '0'
+        id: changed
+        shell: bash
+        run: |
+          CHANGED=$(git diff-tree --no-commit-id --name-only -r HEAD | tr '\n' ' ')
+          echo "files=$CHANGED" >> "$GITHUB_OUTPUT"
+
+      - name: Purge jsDelivr cache
         if: env.NO_CHANGES == '0'
         shell: bash
         run: |
           set -euo pipefail
-          CHANGED=$(git diff-tree --no-commit-id --name-only -r HEAD)
-          for f in $CHANGED; do
+          for f in ${{ steps.changed.outputs.files }}; do
             if echo "$f" | grep -Eq '(^gg$|\.conf$|\.sgmodule$|\.module$|\.list$|\.txt$|\.yaml$|\.yml$)'; then
-              URL="https://purge.jsdelivr.net/gh/Alexgood321/my-proxy-raw-link-for-all@main/$f"
+              URL="https://purge.jsdelivr.net/gh/Alexgood321/SR-ALL-FILES-PROXY@main/$f"
               echo "Purging: $URL"
-              curl -sS "$URL" || true
+              curl -fsS "$URL" || true
             fi
           done
 
@@ -73,10 +84,10 @@ jobs:
         run: |
           set -euo pipefail
           TS=$(date +%s)
-          for f in $(git diff-tree --no-commit-id --name-only -r HEAD); do
+          for f in ${{ steps.changed.outputs.files }}; do
             if echo "$f" | grep -Eq '(^gg$|\.conf$|\.sgmodule$|\.module$|\.list$|\.txt$|\.yaml$|\.yml$)'; then
-              URL="https://raw.githubusercontent.com/Alexgood321/my-proxy-raw-link-for-all/main/$f?t=$TS"
+              URL="https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/main/$f?t=$TS"
               echo "HEAD $URL"
-              curl -sI "$URL" >/dev/null || true
+              curl -fsI "$URL" >/dev/null || true
             fi
           done
