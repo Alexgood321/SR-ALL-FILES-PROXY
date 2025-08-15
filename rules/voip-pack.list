@@ -1,4 +1,5 @@
-
+# Здесь перечисляй домены/подсети для VoIP (по одному в строке)
+# last_update=PLACEHOLDER  (экшен сам обновит эту строку)
 
 DOMAIN-SUFFIX,aistudio.google,PROXY
 DOMAIN-SUFFIX,alkalimakersuite-pa.clients6.google.com,PROXY
