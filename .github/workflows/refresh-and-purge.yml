@@ -1,0 +1,82 @@
+name: Shadowrocket: refresh + purge CDN
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"   # каждые 5 минут
+  workflow_dispatch:        # ручной запуск из Actions
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Update timestamp in text files
+        shell: bash
+        run: |
+          set -euo pipefail
+          TS="$(date -u +'%Y-%m-%d_%H:%M:%S_UTC')"
+
+          # Берём только нужные типы (исключаем .github)
+          mapfile -t FILES < <(git ls-files \
+            | grep -E '(^gg$|\.conf$|\.sgmodule$|\.module$|\.list$|\.txt$|\.yaml$|\.yml$)' \
+            | grep -Ev '^\.github/')
+
+          for f in "${FILES[@]}"; do
+            # Пропускаем пустые/бинарные/слишком большие
+            if [ ! -s "$f" ] || [ $(stat -c%s "$f") -gt 2000000 ] || ! file --mime "$f" | grep -q 'text/'; then
+              continue
+            fi
+            # Вставляем/обновляем строку # last_update=...
+            if grep -qE '^(#\s*)?last_update=' "$f"; then
+              sed -i '1s/^\(#\s*\)\?last_update=.*/# last_update='"$TS"'/' "$f"
+            else
+              printf '# last_update=%s\n%s' "$TS" "$(cat "$f")" > "$f"
+            fi
+          done
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+
+          if git diff --cached --quiet; then
+            echo "NO_CHANGES=1" >> $GITHUB_ENV
+            exit 0
+          fi
+
+          git commit -m "Refresh for Shadowrocket at $TS [skip ci]"
+          git push
+          echo "NO_CHANGES=0" >> $GITHUB_ENV
+
+      - name: Purge jsDelivr cache for changed files
+        if: env.NO_CHANGES == '0'
+        shell: bash
+        run: |
+          set -euo pipefail
+          CHANGED=$(git diff-tree --no-commit-id --name-only -r HEAD)
+          for f in $CHANGED; do
+            if echo "$f" | grep -Eq '(^gg$|\.conf$|\.sgmodule$|\.module$|\.list$|\.txt$|\.yaml$|\.yml$)'; then
+              URL="https://purge.jsdelivr.net/gh/Alexgood321/my-proxy-raw-link-for-all@main/$f"
+              echo "Purging: $URL"
+              curl -sS "$URL" || true
+            fi
+          done
+
+      - name: Warm-up raw.githubusercontent
+        if: env.NO_CHANGES == '0'
+        shell: bash
+        run: |
+          set -euo pipefail
+          TS=$(date +%s)
+          for f in $(git diff-tree --no-commit-id --name-only -r HEAD); do
+            if echo "$f" | grep -Eq '(^gg$|\.conf$|\.sgmodule$|\.module$|\.list$|\.txt$|\.yaml$|\.yml$)'; then
+              URL="https://raw.githubusercontent.com/Alexgood321/my-proxy-raw-link-for-all/main/$f?t=$TS"
+              echo "HEAD $URL"
+              curl -sI "$URL" >/dev/null || true
+            fi
+          done
