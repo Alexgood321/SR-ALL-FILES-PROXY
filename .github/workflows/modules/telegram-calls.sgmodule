@@ -1,0 +1,15 @@
+#!name=Telegram Calls – CallsOnly
+#!desc=Проксирование только звонков Telegram. Не затрагивает текст/медиа.
+
+[Proxy Group]
+# В UI выбери активный прокси для звонков:
+Telegram-Calls = select, MyServer, DIRECT
+
+[Rule]
+# Пример доменных правил (дополни своими):
+DOMAIN-SUFFIX,telegram.org,Telegram-Calls
+DOMAIN-SUFFIX,call.telegram.org,Telegram-Calls
+
+# Если нужны IP, добавляй так:
+# IP-CIDR,149.154.160.0/20,Telegram-Calls,no-resolve
+# IP-CIDR,91.108.4.0/22,Telegram-Calls,no-resolve
