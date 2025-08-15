@@ -2,7 +2,7 @@ name: Mirror upstream rule-sets
 
 on:
   schedule:
-    - cron: "0 */6 * * *"     # раз в 6 часов
+    - cron: "0 */6 * * *"   # каждые 6 часов
   workflow_dispatch:
 
 permissions:
@@ -15,27 +15,40 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Make dirs
+      - name: Ensure dirs
         run: |
           mkdir -p rules/upstreams
 
-      - name: Fetch upstream lists
+      - name: Fetch upstream lists (robust)
         shell: bash
         run: |
           set -euo pipefail
 
-          curl -fsSL "https://raw.githubusercontent.com/misha-tgshv/shadowrocket-configuration-file/main/rules/domains_antifilter.list" \
-            -o rules/upstreams/domains_antifilter.list
+          # --- ТАБЛИЦА ИСТОЧНИКОВ (проверь и правь при необходимости) ---
+          declare -A SRC=(
+            [domains_antifilter.list]="https://raw.githubusercontent.com/misha-tgshv/shadowrocket-configuration-file/main/rules/domains_antifilter.list"
+            [proxy.list]="https://raw.githubusercontent.com/misha-tgshv/shadowrocket-configuration-file/main/proxy.list"
+            [anti-ad-easylist.list]="https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/anti-ad-easylist.txt"
+          )
+          # ---------------------------------------------------------------
 
-          curl -fsSL "https://raw.githubusercontent.com/misha-tgshv/shadowrocket-configuration-file/main/proxy.list" \
-            -o rules/upstreams/proxy.list
+          for out in "${!SRC[@]}"; do
+            url="${SRC[$out]}"
+            echo "::group::Fetch $out"
+            echo "URL: $url"
 
-          curl -fsSL "https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/anti-ad-easylist.txt" \
-            -o rules/upstreams/anti-ad-easylist.list
+            code=$(curl -sS -o /dev/null -w "%{http_code}" "$url" || echo 000)
+            echo "HTTP $code"
 
-          # Гарантируем перевод строки в конце
-          for f in rules/upstreams/*.list; do
-            [ -s "$f" ] && tail -c1 "$f" | od -An -t x1 | grep -q . || echo >> "$f"
+            if [[ "$code" == "200" ]]; then
+              curl -fsSL "$url" -o "rules/upstreams/$out"
+              # гарантируем перевод строки
+              tail -c1 "rules/upstreams/$out" | od -An -t x1 | grep -q . || echo >> "rules/upstreams/$out"
+              echo "Saved to rules/upstreams/$out"
+            else
+              echo "Skip: $out (not 200)"
+            fi
+            echo "::endgroup::"
           done
 
       - name: Commit mirrored files (only if changed)
@@ -44,7 +57,7 @@ jobs:
           set -euo pipefail
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add rules/upstreams
+          git add rules/upstreams || true
           if ! git diff --cached --quiet; then
             git commit -m "Mirror upstream rule-sets"
             git push
