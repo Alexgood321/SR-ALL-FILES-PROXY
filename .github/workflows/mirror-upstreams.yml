@@ -1,0 +1,53 @@
+name: Mirror upstream rule-sets
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"     # раз в 6 часов
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Make dirs
+        run: |
+          mkdir -p rules/upstreams
+
+      - name: Fetch upstream lists
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          curl -fsSL "https://raw.githubusercontent.com/misha-tgshv/shadowrocket-configuration-file/main/rules/domains_antifilter.list" \
+            -o rules/upstreams/domains_antifilter.list
+
+          curl -fsSL "https://raw.githubusercontent.com/misha-tgshv/shadowrocket-configuration-file/main/proxy.list" \
+            -o rules/upstreams/proxy.list
+
+          curl -fsSL "https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/anti-ad-easylist.txt" \
+            -o rules/upstreams/anti-ad-easylist.list
+
+          # Гарантируем перевод строки в конце
+          for f in rules/upstreams/*.list; do
+            [ -s "$f" ] && tail -c1 "$f" | od -An -t x1 | grep -q . || echo >> "$f"
+          done
+
+      - name: Commit mirrored files (only if changed)
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add rules/upstreams
+          if ! git diff --cached --quiet; then
+            git commit -m "Mirror upstream rule-sets"
+            git push
+          else
+            echo "No changes."
+          fi
