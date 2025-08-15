@@ -2,10 +2,11 @@ name: Shadowrocket: refresh + purge CDN
 
 on:
   schedule:
-    - cron: "*/5 * * * *"
-  workflow_dispatch:
+    - cron: "*/5 * * * *"   # каждые 5 минут
+  workflow_dispatch:        # ручной запуск из Actions
   push:
-    branches: [ main ]
+    branches:
+      - main
     paths:
       - 'modules/**'
       - 'rules/**'
@@ -40,75 +41,36 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          TS="$(date -u +'%Y-%m-%d_%H:%M:%S_UTC')"
+          TS="$(date -u +"%Y-%m-%d_%H:%M:%S_UTC")"
+          exts="\.(conf|sgmodule|\.module|\.list|\.txt|\.yaml|\.yml)$"
+          mapfile -t files < <(git ls-files | grep -E "${exts}" | grep -Ev '^\.github/')
 
-          exts='(\.conf$|\.sgmodule$|\.module$|\.list$|\.txt$|\.yaml$|\.yml$)'
-          mapfile -t FILES < <(git ls-files | grep -E "${exts}" | grep -Ev '^\.github/')
-
-          if [ ${#FILES[@]} -eq 0 ]; then
-            echo "found_files=" >> "$GITHUB_OUTPUT"
-            echo "NO_CHANGES=1" >> $GITHUB_ENV
-            exit 0
-          fi
-
-          changed_paths=()
-
-          for f in "${FILES[@]}"; do
-            size=$(wc -c < "$f" || echo 0)
-            [ "$size" -eq 0 ] && continue
-            [ "$size" -gt 2000000 ] && continue
-            if LC_ALL=C grep -Iq . "$f"; then :; else continue; fi
+          changed=0
+          for f in "${files[@]}"; do
+            # пропускаем пустые и большие файлы > 2МБ
+            if [ ! -s "$f" ] || [ $(stat -c%s "$f") -gt 2000000 ]; then
+              continue
+            fi
+            if ! file --mime "$f" | grep -q 'text/'; then
+              continue
+            fi
 
             if grep -qE '^(#\s*)?last_update=' "$f"; then
-              awk -v ts="$TS" 'NR==1{ sub(/^#\s*last_update=.*/, "# last_update=" ts); print; next } {print}' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
+              sed -i '1s/^\(#\s*\)\?last_update=.*/# last_update='"$TS"'/' "$f"
             else
               printf '# last_update=%s\n%s' "$TS" "$(cat "$f")" > "$f"
             fi
-
-            changed_paths+=("$f")
+            ((changed++))
           done
 
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A
 
-          if git diff --cached --quiet; then
-            echo "NO_CHANGES=1" >> $GITHUB_ENV
-            echo "found_files=" >> "$GITHUB_OUTPUT"
-            exit 0
+          if [ "$changed" -gt 0 ]; then
+            git add -A
+            git commit -m "Auto refresh (cache-bust) at $TS"
+            git push
+            echo "Changes committed."
+          else
+            echo "No changes to commit."
           fi
-
-          git commit -m "Refresh for Shadowrocket at $TS [skip ci]"
-          git push
-
-          printf -v joined '%s ' "${changed_paths[@]}"
-          echo "found_files=${joined}" >> "$GITHUB_OUTPUT"
-          echo "NO_CHANGES=0" >> $GITHUB_ENV
-
-      - name: Purge jsDelivr cache
-        if: env.NO_CHANGES == '0'
-        shell: bash
-        run: |
-          set -euo pipefail
-          REPO="Alexgood321/SR-ALL-FILES-PROXY"   # <= проверь
-          files="${{ steps.touch_files.outputs.found_files }}"
-          [ -z "$files" ] && exit 0
-          for f in $files; do
-            echo "Purging jsDelivr: $f"
-            curl -fsS "https://purge.jsdelivr.net/gh/${REPO}@main/${f}" || true
-          done
-
-      - name: Warm-up raw.githubusercontent
-        if: env.NO_CHANGES == '0'
-        shell: bash
-        run: |
-          set -euo pipefail
-          REPO="Alexgood321/SR-ALL-FILES-PROXY"   # <= проверь
-          TS=$(date +%s)
-          files="${{ steps.touch_files.outputs.found_files }}"
-          [ -z "$files" ] && exit 0
-          for f in $files; do
-            url="https://raw.githubusercontent.com/${REPO}/main/${f}?t=${TS}"
-            echo "HEAD $url"
-            curl -fsI "$url" >/dev/null || true
-          done
