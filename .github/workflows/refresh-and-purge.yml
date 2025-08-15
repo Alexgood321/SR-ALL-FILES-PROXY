@@ -2,8 +2,21 @@ name: Shadowrocket: refresh + purge CDN
 
 on:
   schedule:
-    - cron: "*/5 * * * *"   # каждые 5 минут
-  workflow_dispatch:        # ручной запуск
+    - cron: "*/5 * * * *"       # каждые 5 минут
+  workflow_dispatch:            # ручной запуск из UI
+  push:                         # запуск при коммите в важные файлы
+    branches: [ main ]
+    paths:
+      - 'modules/**'
+      - 'rules/**'
+      - '*.conf'
+      - '*.sgmodule'
+      - '*.module'
+      - '*.yaml'
+      - '*.yml'
+      - '*.txt'
+      - '.github/workflows/refresh-and-purge.yml'
+      - 'README.md'
 
 permissions:
   contents: write
@@ -15,7 +28,6 @@ concurrency:
 jobs:
   refresh:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout (full history)
         uses: actions/checkout@v4
@@ -29,11 +41,9 @@ jobs:
           set -euo pipefail
           TS="$(date -u +'%Y-%m-%d_%H:%M:%S_UTC')"
 
-          # Какие расширения считаем «нашими»
-          exts='(^(gg|modules/.*|rules/.*)$|\.conf$|\.sgmodule$|\.module$|\.list$|\.txt$|\.yaml$|\.yml$)'
+          exts='(\.conf$|\.sgmodule$|\.module$|\.list$|\.txt$|\.yaml$|\.yml$)'
           mapfile -t FILES < <(git ls-files | grep -E "${exts}" | grep -Ev '^\.github/')
 
-          # Если файлов нет — просто выходим без ошибок
           if [ ${#FILES[@]} -eq 0 ]; then
             echo "found_files=" >> "$GITHUB_OUTPUT"
             echo "NO_CHANGES=1" >> $GITHUB_ENV
@@ -43,21 +53,12 @@ jobs:
           changed_paths=()
 
           for f in "${FILES[@]}"; do
-            # пропускаем пустые и >2МБ
             size=$(wc -c < "$f" || echo 0)
             [ "$size" -eq 0 ] && continue
             [ "$size" -gt 2000000 ] && continue
+            if LC_ALL=C grep -Iq . "$f"; then :; else continue; fi
 
-            # «грубо» определяем бинарники: если встречается нулевой байт — пропускаем
-            if LC_ALL=C grep -Iq . "$f"; then
-              :
-            else
-              continue
-            fi
-
-            # вставляем/обновляем # last_update=... в первой строке
             if grep -qE '^(#\s*)?last_update=' "$f"; then
-              # заменим первую подходящую строку
               awk -v ts="$TS" 'NR==1{ sub(/^#\s*last_update=.*/, "# last_update=" ts); print; next } {print}' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
             else
               printf '# last_update=%s\n%s' "$TS" "$(cat "$f")" > "$f"
@@ -79,7 +80,6 @@ jobs:
           git commit -m "Refresh for Shadowrocket at $TS [skip ci]"
           git push
 
-          # Список потенциально изменённых файлов (для purge/warm-up)
           printf -v joined '%s ' "${changed_paths[@]}"
           echo "found_files=${joined}" >> "$GITHUB_OUTPUT"
           echo "NO_CHANGES=0" >> $GITHUB_ENV
@@ -89,10 +89,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          REPO="Alexgood321/SR-ALL-FILES-PROXY"   # ← проверь имя репозитория
+          REPO="Alexgood321/SR-ALL-FILES-PROXY"   # <- проверь имя
           files="${{ steps.touch_files.outputs.found_files }}"
           [ -z "$files" ] && exit 0
-
           for f in $files; do
             echo "Purging jsDelivr: $f"
             curl -fsS "https://purge.jsdelivr.net/gh/${REPO}@main/${f}" || true
@@ -103,11 +102,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          REPO="Alexgood321/SR-ALL-FILES-PROXY"   # ← проверь имя репозитория
+          REPO="Alexgood321/SR-ALL-FILES-PROXY"   # <- проверь имя
           TS=$(date +%s)
           files="${{ steps.touch_files.outputs.found_files }}"
           [ -z "$files" ] && exit 0
-
           for f in $files; do
             url="https://raw.githubusercontent.com/${REPO}/main/${f}?t=${TS}"
             echo "HEAD $url"
