@@ -2,20 +2,21 @@ name: Shadowrocket: refresh + purge CDN
 
 on:
   schedule:
-    - cron: "*/5 * * * *"       # каждые 5 минут
-  workflow_dispatch:            # ручной запуск из UI
-  push:                         # запуск при коммите в важные файлы
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+  push:
     branches: [ main ]
     paths:
       - 'modules/**'
       - 'rules/**'
+      - 'config/**'
       - '*.conf'
       - '*.sgmodule'
       - '*.module'
       - '*.yaml'
       - '*.yml'
       - '*.txt'
-      - '.github/workflows/refresh-and-purge.yml'
+      - '.github/workflows/**'
       - 'README.md'
 
 permissions:
@@ -89,7 +90,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          REPO="Alexgood321/SR-ALL-FILES-PROXY"
+          REPO="Alexgood321/SR-ALL-FILES-PROXY"   # <= проверь
           files="${{ steps.touch_files.outputs.found_files }}"
           [ -z "$files" ] && exit 0
           for f in $files; do
@@ -102,7 +103,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          REPO="Alexgood321/SR-ALL-FILES-PROXY"
+          REPO="Alexgood321/SR-ALL-FILES-PROXY"   # <= проверь
           TS=$(date +%s)
           files="${{ steps.touch_files.outputs.found_files }}"
           [ -z "$files" ] && exit 0
