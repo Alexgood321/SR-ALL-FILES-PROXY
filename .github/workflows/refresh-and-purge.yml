@@ -1,24 +1,24 @@
-name: Shadowrocket: refresh + purge CDN
+name: Shadowrocket refresh and purge
 
 on:
   schedule:
-    - cron: "*/5 * * * *"   # каждые 5 минут
-  workflow_dispatch:        # ручной запуск из Actions
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
   push:
     branches:
       - main
     paths:
-      - 'modules/**'
-      - 'rules/**'
-      - 'config/**'
-      - '*.conf'
-      - '*.sgmodule'
-      - '*.module'
-      - '*.yaml'
-      - '*.yml'
-      - '*.txt'
-      - '.github/workflows/**'
-      - 'README.md'
+      - "modules/**"
+      - "rules/**"
+      - "config/**"
+      - "*.conf"
+      - "*.sgmodule"
+      - "*.module"
+      - "*.yaml"
+      - "*.yml"
+      - "*.txt"
+      - ".github/workflows/**"
+      - "README.md"
 
 permissions:
   contents: write
@@ -31,46 +31,76 @@ jobs:
   refresh:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout (full history)
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Update timestamp in text files
+      - name: Touch last_update
         id: touch_files
         shell: bash
         run: |
           set -euo pipefail
-          TS="$(date -u +"%Y-%m-%d_%H:%M:%S_UTC")"
-          exts="\.(conf|sgmodule|\.module|\.list|\.txt|\.yaml|\.yml)$"
-          mapfile -t files < <(git ls-files | grep -E "${exts}" | grep -Ev '^\.github/')
+          TS="$(date -u +'%Y-%m-%d_%H:%M:%S_UTC')"
 
-          changed=0
-          for f in "${files[@]}"; do
-            # пропускаем пустые и большие файлы > 2МБ
-            if [ ! -s "$f" ] || [ $(stat -c%s "$f") -gt 2000000 ]; then
-              continue
-            fi
-            if ! file --mime "$f" | grep -q 'text/'; then
-              continue
-            fi
+          mapfile -t FILES < <(git ls-files)
 
-            if grep -qE '^(#\s*)?last_update=' "$f"; then
-              sed -i '1s/^\(#\s*\)\?last_update=.*/# last_update='"$TS"'/' "$f"
+          changed_paths=()
+          for f in "${FILES[@]}"; do
+            case "$f" in
+              .github/*) continue;;
+              *.conf|*.sgmodule|*.module|*.list|*.txt|*.yaml|*.yml) ;;
+              *) continue;;
+            esac
+
+            size=$(wc -c < "$f" || echo 0)
+            [ "$size" -eq 0 ] && continue
+            [ "$size" -gt 2000000 ] && continue
+            if LC_ALL=C grep -Iq . "$f"; then :; else continue; fi
+
+            if head -n1 "$f" | grep -qE '^(#\s*)?last_update='; then
+              awk -v ts="$TS" 'NR==1{ sub(/^#\s*last_update=.*/, "# last_update=" ts); print; next } {print}' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
             else
               printf '# last_update=%s\n%s' "$TS" "$(cat "$f")" > "$f"
             fi
-            ((changed++))
+
+            changed_paths+=("$f")
           done
 
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          if [ "$changed" -gt 0 ]; then
+          if git status --porcelain | grep -q .; then
             git add -A
-            git commit -m "Auto refresh (cache-bust) at $TS"
+            git commit -m "Refresh at $TS"
             git push
-            echo "Changes committed."
+            printf '%s\n' "${changed_paths[@]}" > /tmp/changed.txt
           else
-            echo "No changes to commit."
+            : > /tmp/changed.txt
+          fi
+
+      - name: Purge jsDelivr
+        shell: bash
+        run: |
+          set -euo pipefail
+          REPO="Alexgood321/SR-ALL-FILES-PROXY"
+          if [ -s /tmp/changed.txt ]; then
+            while IFS= read -r f; do
+              echo "Purging https://purge.jsdelivr.net/gh/${REPO}@main/${f}"
+              curl -fsS "https://purge.jsdelivr.net/gh/${REPO}@main/${f}" || true
+            done < /tmp/changed.txt
+          fi
+
+      - name: Warm raw.githubusercontent
+        shell: bash
+        run: |
+          set -euo pipefail
+          REPO="Alexgood321/SR-ALL-FILES-PROXY"
+          TS=$(date +%s)
+          if [ -s /tmp/changed.txt ]; then
+            while IFS= read -r f; do
+              url="https://raw.githubusercontent.com/${REPO}/main/${f}?t=${TS}"
+              echo "HEAD $url"
+              curl -fsI "$url" >/dev/null || true
+            done < /tmp/changed.txt
           fi
