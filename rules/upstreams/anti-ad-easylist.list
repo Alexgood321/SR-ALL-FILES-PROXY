@@ -1,10 +1,9 @@
-# last_update=2025-11-30_17:58:04_UTC
 !Title: anti-AD
-!Version: 20251129024613
+!Version: 20251130221344
 !Homepage: https://github.com/privacy-protection-tools/anti-AD
 !!!note! If you are using "AdGuard", please load https://anti-ad.net/adguard.txt
 !!!This list only applies to "AdGuard Home".
-!Total lines: 91525
+!Total lines: 91528
 @@||ad.azure.com^
 @@||ad.ext.azure.com^
 @@||ads.taboola.com^
@@ -43875,6 +43874,7 @@
 ||juomsawqzkdqo.space^
 ||juomudsjlmert.online^
 ||jupdyvbotqwhw.site^
+||juphaufaigna.net^
 ||jupit.xyz^
 ||juponrerope.com^
 ||jupteshoofah.net^
@@ -77434,6 +77434,7 @@
 ||thinpaltrydistrust.com^
 ||tracking.thiomucase.es^
 ||thipseedsy.net^
+||thirairtoaboats.net^
 ||third-growth.pro^
 ||third-tracking.com^
 ||thirdgas.com^
@@ -85718,6 +85719,7 @@
 ||uqhpej.wiberrentacar.com^
 ||statistics.wibiya.com^
 ||wicdn.cloud^
+||wichoaltaisheel.net^
 ||wickedhumankindbarrel.com^
 ||wickedreports.com^
 ||wickedsetup.com^
