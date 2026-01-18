@@ -1,5 +1,4 @@
-# last_update=2026-01-17_23:57:19_UTC
-# Количество доменов: 472
+# Количество доменов: 473
 DOMAIN-SUFFIX,10minutemail.com
 DOMAIN-SUFFIX,1337x.to
 DOMAIN-SUFFIX,4pda.to
@@ -278,6 +277,7 @@ DOMAIN-SUFFIX,packages.gitlab.com
 DOMAIN-SUFFIX,pages.dev
 DOMAIN-SUFFIX,pandasecurity.com
 DOMAIN-SUFFIX,paperpaper.ru
+DOMAIN-SUFFIX,parallels.com
 DOMAIN-SUFFIX,path3.xtracloud.net
 DOMAIN-SUFFIX,patreon.com
 DOMAIN-SUFFIX,pay.buckaroo.nl
