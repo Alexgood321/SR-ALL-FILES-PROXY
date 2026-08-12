@@ -1,5 +1,4 @@
-# last_update=2026-08-12_00:44:31_UTC
-# Количество доменов: 484
+# Количество доменов: 485
 DOMAIN-SUFFIX,10minutemail.com
 DOMAIN-SUFFIX,1337x.to
 DOMAIN-SUFFIX,4pda.to
@@ -280,6 +279,7 @@ DOMAIN-SUFFIX,omv-extras.org
 DOMAIN-SUFFIX,onlineradiobox.com
 DOMAIN-SUFFIX,onlinesim.ru
 DOMAIN-SUFFIX,open.spotify.com
+DOMAIN-SUFFIX,openrouter.ai
 DOMAIN-SUFFIX,openwrt.wk.cz
 DOMAIN-SUFFIX,orbit-games.com
 DOMAIN-SUFFIX,os.mbed.com
