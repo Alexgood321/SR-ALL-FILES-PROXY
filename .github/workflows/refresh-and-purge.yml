@@ -1,4 +1,4 @@
-name: Validate and purge jsDelivr
+name: Validate and reconcile jsDelivr
 
 on:
   push:
@@ -13,134 +13,217 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: shadowrocket-publish-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout repository history
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Validate Shadowrocket files
-        run: python3 scripts/validate_shadowrocket.py
-
-      - name: Find changed delivery files
-        id: changes
-        shell: bash
-        env:
-          BEFORE_SHA: ${{ github.event.before }}
-          AFTER_SHA: ${{ github.sha }}
-        run: |
-          set -euo pipefail
-
-          if [[ "$BEFORE_SHA" =~ ^0+$ ]]; then
-            mapfile -t changed_files < <(
-              git diff-tree --no-commit-id --name-only -r "$AFTER_SHA" -- config modules
-            )
-          else
-            mapfile -t changed_files < <(
-              git diff --name-only "$BEFORE_SHA" "$AFTER_SHA" -- config modules
-            )
-          fi
-
-          if [ "${#changed_files[@]}" -gt 0 ]; then
-            has_files=true
-          else
-            has_files=false
-          fi
-
-          {
-            echo "has_files=$has_files"
-            echo "files<<EOF"
-            printf '%s\n' "${changed_files[@]}"
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
-
-          printf 'Changed delivery files:\n'
-          printf '  %s\n' "${changed_files[@]}"
-
-      - name: Purge changed jsDelivr paths
-        if: steps.changes.outputs.has_files == 'true'
+      - name: Reconcile current main to jsDelivr
         shell: bash
         env:
           REPOSITORY: ${{ github.repository }}
-          CHANGED_FILES: ${{ steps.changes.outputs.files }}
+          EVENT_BEFORE: ${{ github.event.before }}
+          EVENT_SHA: ${{ github.sha }}
+          MAX_ITERATIONS: "8"
         run: |
-          set -euo pipefail
+          set -Eeuo pipefail
 
-          while IFS= read -r path; do
-            [ -n "$path" ] || continue
-            purge_url="https://purge.jsdelivr.net/gh/${REPOSITORY}@main/${path}"
-            response_file=$(mktemp)
-            success=false
+          purge_path() {
+            local path="$1"
+            local purge_url="https://purge.jsdelivr.net/gh/${REPOSITORY}@main/${path}"
+            local response_file
+            local status="000"
+            response_file="$(mktemp)"
 
             for attempt in 1 2 3; do
-              status=000
-              if status=$(curl -sS -o "$response_file" -w '%{http_code}' "$purge_url"); then
+              status="000"
+              if status="$(curl -sS -o "$response_file" -w '%{http_code}' "$purge_url")"; then
                 if [[ "$status" =~ ^2[0-9][0-9]$ ]]; then
-                  success=true
-                  break
+                  echo "Purged $path (HTTP $status)"
+                  rm -f "$response_file"
+                  return 0
                 fi
               fi
               echo "Purge attempt $attempt failed for $path (HTTP $status)"
               sleep $((attempt * 2))
             done
 
-            if [ "$success" != true ]; then
-              echo "Purge failed after 3 attempts: $purge_url" >&2
-              sed -n '1,20p' "$response_file" >&2
-              exit 1
-            fi
-            echo "Purged $path (HTTP $status)"
-          done <<< "$CHANGED_FILES"
+            echo "Purge failed after 3 attempts: $purge_url" >&2
+            sed -n '1,20p' "$response_file" >&2 || :
+            rm -f "$response_file"
+            return 1
+          }
 
-      - name: Verify changed CDN content
-        if: steps.changes.outputs.has_files == 'true'
-        shell: bash
-        env:
-          REPOSITORY: ${{ github.repository }}
-          CHANGED_FILES: ${{ steps.changes.outputs.files }}
-        run: |
-          set -euo pipefail
+          fetch_main_head() {
+            git fetch --quiet origin main
+            git rev-parse origin/main
+          }
 
-          while IFS= read -r path; do
-            [ -n "$path" ] || continue
-            if [ ! -f "$path" ]; then
-              echo "Skipped CDN body verification for deleted path: $path"
-              continue
-            fi
-            cdn_url="https://cdn.jsdelivr.net/gh/${REPOSITORY}@main/${path}"
-            body_file=$(mktemp)
-            headers_file=$(mktemp)
-            matched=false
-            status=000
+          list_delivery_files() {
+            local target_sha="$1"
+            {
+              git ls-tree -r --name-only "$target_sha" -- config/remote.conf
+              git ls-tree -r --name-only "$target_sha" -- modules \
+                | grep -E '^modules/[^/]+\.sgmodule$' || :
+            } | LC_ALL=C sort -u
+          }
 
-            for attempt in 1 2 3; do
-              status=000
-              if status=$(curl -sS -L -D "$headers_file" -o "$body_file" -w '%{http_code}' "$cdn_url"); then
-                if [ "$status" = 200 ] && [ -s "$body_file" ]; then
+          materialize_target() {
+            local target_sha="$1"
+            local target_dir="$2"
+
+            mkdir -p "$target_dir"
+            git archive "$target_sha" \
+              config/remote.conf \
+              modules \
+              scripts/validate_shadowrocket.py \
+              | tar -x -C "$target_dir"
+          }
+
+          verify_cdn_file() {
+            local path="$1"
+            local expected_file="$2"
+            local target_sha="$3"
+            local cdn_url="https://cdn.jsdelivr.net/gh/${REPOSITORY}@main/${path}"
+            local body_file
+            local headers_file
+            local status="000"
+            local observed_head
+
+            body_file="$(mktemp)"
+            headers_file="$(mktemp)"
+
+            for attempt in 1 2 3 4; do
+              observed_head="$(fetch_main_head)"
+              if [ "$observed_head" != "$target_sha" ]; then
+                echo "main advanced during CDN verification: $target_sha -> $observed_head"
+                rm -f "$body_file" "$headers_file"
+                return 2
+              fi
+
+              status="000"
+              if status="$(curl -sS -L -D "$headers_file" -o "$body_file" -w '%{http_code}' "$cdn_url")"; then
+                if [ "$status" = "200" ] && [ -s "$body_file" ]; then
                   if ! head -c 512 "$body_file" | grep -qiE '<!doctype html|<html'; then
-                    if cmp -s "$body_file" "$path"; then
-                      matched=true
-                      break
+                    if cmp -s "$body_file" "$expected_file"; then
+                      echo "Verified $path (HTTP 200, exact content match)"
+                      rm -f "$body_file" "$headers_file"
+                      return 0
                     fi
                   fi
                 fi
               fi
+
+              observed_head="$(fetch_main_head)"
+              if [ "$observed_head" != "$target_sha" ]; then
+                echo "main advanced after CDN mismatch: $target_sha -> $observed_head"
+                rm -f "$body_file" "$headers_file"
+                return 2
+              fi
+
               echo "CDN verification attempt $attempt failed for $path (HTTP $status)"
-              sleep $((attempt * 2))
+              if [ "$attempt" -lt 4 ]; then
+                sleep $((2 ** attempt))
+              fi
             done
 
-            if [ "$matched" != true ]; then
-              echo "CDN content does not match GitHub HEAD: $cdn_url" >&2
-              grep -i '^content-type:' "$headers_file" >&2 || :
-              shasum -a 256 "$path" "$body_file" >&2
+            echo "CDN content does not match stable target $target_sha: $cdn_url" >&2
+            grep -i '^content-type:' "$headers_file" >&2 || :
+            sha256sum "$expected_file" "$body_file" >&2 || :
+            rm -f "$body_file" "$headers_file"
+            return 1
+          }
+
+          echo "Event SHA: $EVENT_SHA"
+          echo "Event before: $EVENT_BEFORE"
+
+          # Deleted delivery paths are secondary to convergence of current files.
+          # Purge them best-effort so stale cached URLs are less likely to linger.
+          if [[ ! "$EVENT_BEFORE" =~ ^0+$ ]] \
+             && git cat-file -e "${EVENT_BEFORE}^{commit}" 2>/dev/null \
+             && git cat-file -e "${EVENT_SHA}^{commit}" 2>/dev/null; then
+            mapfile -t deleted_paths < <(
+              git diff --diff-filter=D --name-only "$EVENT_BEFORE" "$EVENT_SHA" -- \
+                config/remote.conf modules \
+                | grep -E '^(config/remote\.conf|modules/[^/]+\.sgmodule)$' || :
+            )
+            for path in "${deleted_paths[@]}"; do
+              echo "Best-effort purge for deleted delivery path: $path"
+              purge_path "$path" || echo "WARNING: deleted path purge failed: $path"
+            done
+          fi
+
+          for iteration in $(seq 1 "$MAX_ITERATIONS"); do
+            echo "========== reconciliation iteration $iteration/$MAX_ITERATIONS =========="
+
+            TARGET_SHA="$(fetch_main_head)"
+            echo "TARGET_SHA=$TARGET_SHA"
+
+            expected_dir="$(mktemp -d)"
+            materialize_target "$TARGET_SHA" "$expected_dir"
+
+            mapfile -t delivery_files < <(list_delivery_files "$TARGET_SHA")
+            if [ "${#delivery_files[@]}" -eq 0 ]; then
+              echo "No delivery files found at $TARGET_SHA" >&2
+              rm -rf "$expected_dir"
               exit 1
             fi
-            echo "Verified $path (HTTP 200, exact content match)"
-          done <<< "$CHANGED_FILES"
+
+            echo "Delivery files at TARGET_SHA:"
+            printf '  %s\n' "${delivery_files[@]}"
+
+            echo "Validating TARGET_SHA=$TARGET_SHA"
+            (
+              cd "$expected_dir"
+              python3 scripts/validate_shadowrocket.py
+            )
+
+            advanced=false
+
+            for path in "${delivery_files[@]}"; do
+              purge_path "$path"
+            done
+
+            for path in "${delivery_files[@]}"; do
+              set +e
+              verify_cdn_file "$path" "$expected_dir/$path" "$TARGET_SHA"
+              verify_rc=$?
+              set -e
+
+              if [ "$verify_rc" -eq 2 ]; then
+                advanced=true
+                break
+              elif [ "$verify_rc" -ne 0 ]; then
+                rm -rf "$expected_dir"
+                exit "$verify_rc"
+              fi
+            done
+
+            rm -rf "$expected_dir"
+
+            if [ "$advanced" = true ]; then
+              echo "Retrying publication against the newer main HEAD."
+              continue
+            fi
+
+            END_SHA="$(fetch_main_head)"
+            echo "END_SHA=$END_SHA"
+
+            if [ "$END_SHA" = "$TARGET_SHA" ]; then
+              echo "RECONCILIATION SUCCESS: CDN == stable main HEAD $TARGET_SHA"
+              exit 0
+            fi
+
+            echo "main advanced during reconciliation: $TARGET_SHA -> $END_SHA"
+            echo "Retrying publication against the newer main HEAD."
+          done
+
+          FINAL_HEAD="$(fetch_main_head)"
+          echo "RECONCILIATION FAILED: main did not remain stable during $MAX_ITERATIONS iterations." >&2
+          echo "Latest observed main HEAD: $FINAL_HEAD" >&2
+          echo "This run refuses to report success without CDN == stable main HEAD." >&2
+          exit 1
