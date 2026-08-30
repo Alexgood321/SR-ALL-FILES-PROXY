@@ -1,0 +1,33 @@
+# last_update=2026-08-30_02:18:40_UTC
+# Модуль: VK Direct Stable Privacy DNS Test
+# Основной VK, Mail и CDN напрямую.
+# Политика DIRECT задаётся в config/remote.conf.
+
+DOMAIN-SUFFIX,vk.com
+DOMAIN-SUFFIX,vk.ru
+DOMAIN-SUFFIX,vkontakte.ru
+DOMAIN-SUFFIX,vkuser.net
+DOMAIN-SUFFIX,vkuserphoto.ru
+DOMAIN-SUFFIX,userapi.com
+DOMAIN-SUFFIX,mycdn.me
+DOMAIN-SUFFIX,vk-cdn.net
+DOMAIN-SUFFIX,vk-cdn.com
+DOMAIN-SUFFIX,vkvd.net
+DOMAIN-SUFFIX,vkvideo.ru
+DOMAIN-SUFFIX,vkpay.ru
+DOMAIN-SUFFIX,vk.team
+DOMAIN-SUFFIX,vkuseraudio.net
+DOMAIN-SUFFIX,mail.ru
+DOMAIN-SUFFIX,cloud.mail.ru
+DOMAIN-SUFFIX,my.com
+DOMAIN-SUFFIX,datacloudmail.ru
+DOMAIN-SUFFIX,mailcdn.ru
+DOMAIN-SUFFIX,my.mail.ru
+DOMAIN-SUFFIX,e.mail.ru
+DOMAIN-SUFFIX,corp.mail.ru
+DOMAIN-SUFFIX,biz.mail.ru
+DOMAIN-SUFFIX,alt-aj-https.mail.ru
+DOMAIN-SUFFIX,odnoklassniki.ru
+DOMAIN-SUFFIX,ok.ru
+DOMAIN-SUFFIX,okcdn.ru
+IP-CIDR,93.186.225.194/32,no-resolve
