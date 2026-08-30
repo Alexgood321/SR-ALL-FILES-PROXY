@@ -1,0 +1,45 @@
+# last_update=2026-08-30_02:18:40_UTC
+# Модуль: WhatsApp Companion WIDE
+# WhatsApp with wider fallback for calls, but without fully swallowing all Meta traffic
+# Политика PROXY задаётся в config/remote.conf.
+
+# --- App hints ---
+PROCESS-NAME,WhatsApp
+USER-AGENT,WhatsApp*
+
+# --- Core WhatsApp domains ---
+DOMAIN-SUFFIX,whatsapp.com
+DOMAIN-SUFFIX,whatsapp.net
+DOMAIN-SUFFIX,wa.me
+DOMAIN-SUFFIX,g.whatsapp.net
+DOMAIN-SUFFIX,v.whatsapp.net
+DOMAIN-SUFFIX,mmg.whatsapp.net
+DOMAIN-SUFFIX,media.whatsapp.net
+DOMAIN-SUFFIX,static.whatsapp.net
+DOMAIN-SUFFIX,cdn.whatsapp.net
+DOMAIN-SUFFIX,pps.whatsapp.net
+
+# --- Calls/media preference over UDP ---
+AND,((DOMAIN-SUFFIX,v.whatsapp.net),(PROTOCOL,UDP))
+AND,((DOMAIN-SUFFIX,mmg.whatsapp.net),(PROTOCOL,UDP))
+AND,((DOMAIN-SUFFIX,media.whatsapp.net),(PROTOCOL,UDP))
+
+# --- IPv6 Meta fallback for calls ---
+AND,((IP-CIDR6,2a03:2880::/12,no-resolve),(PROTOCOL,UDP))
+
+# --- Wider IPv4 fallback, but not full Meta swallow ---
+IP-CIDR,31.13.64.0/18,no-resolve
+IP-CIDR,102.132.96.0/20,no-resolve
+IP-CIDR,157.240.200.0/21,no-resolve
+IP-CIDR,157.240.208.0/20,no-resolve
+IP-CIDR,157.240.224.0/19,no-resolve
+IP-CIDR,185.60.216.0/22,no-resolve
+IP-CIDR,179.60.192.0/22,no-resolve
+
+# --- Exact known hits ---
+IP-CIDR,31.13.84.48/32,no-resolve
+IP-CIDR,185.60.218.51/32,no-resolve
+IP-CIDR,157.240.252.62/32,no-resolve
+IP-CIDR,157.240.253.62/32,no-resolve
+IP-CIDR,157.240.223.62/32,no-resolve
+IP-CIDR,157.240.0.62/32,no-resolve
