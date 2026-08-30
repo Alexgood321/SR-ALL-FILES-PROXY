@@ -29,6 +29,7 @@ jobs:
           EVENT_BEFORE: ${{ github.event.before }}
           EVENT_SHA: ${{ github.sha }}
           MAX_ITERATIONS: "8"
+          CDN_ATTEMPTS: "6"
         run: |
           set -Eeuo pipefail
 
@@ -84,6 +85,16 @@ jobs:
               | tar -x -C "$target_dir"
           }
 
+          cdn_backoff_seconds() {
+            case "$1" in
+              1) echo 2 ;;
+              2) echo 4 ;;
+              3) echo 8 ;;
+              4) echo 12 ;;
+              *) echo 15 ;;
+            esac
+          }
+
           verify_cdn_file() {
             local path="$1"
             local expected_file="$2"
@@ -93,11 +104,12 @@ jobs:
             local headers_file
             local status="000"
             local observed_head
+            local delay
 
             body_file="$(mktemp)"
             headers_file="$(mktemp)"
 
-            for attempt in 1 2 3 4; do
+            for attempt in $(seq 1 "$CDN_ATTEMPTS"); do
               observed_head="$(fetch_main_head)"
               if [ "$observed_head" != "$target_sha" ]; then
                 echo "main advanced during CDN verification: $target_sha -> $observed_head"
@@ -110,7 +122,7 @@ jobs:
                 if [ "$status" = "200" ] && [ -s "$body_file" ]; then
                   if ! head -c 512 "$body_file" | grep -qiE '<!doctype html|<html'; then
                     if cmp -s "$body_file" "$expected_file"; then
-                      echo "Verified $path (HTTP 200, exact content match)"
+                      echo "Verified $path (HTTP 200, exact content match, CDN attempt $attempt)"
                       rm -f "$body_file" "$headers_file"
                       return 0
                     fi
@@ -125,17 +137,26 @@ jobs:
                 return 2
               fi
 
-              echo "CDN verification attempt $attempt failed for $path (HTTP $status)"
-              if [ "$attempt" -lt 4 ]; then
-                sleep $((2 ** attempt))
+              echo "CDN verification attempt $attempt/$CDN_ATTEMPTS stale or failed for $path (HTTP $status)"
+              sha256sum "$expected_file" "$body_file" 2>/dev/null || :
+
+              if [ "$attempt" -eq 3 ] || [ "$attempt" -eq 5 ]; then
+                echo "Re-purging stale CDN path before another verification: $path"
+                purge_path "$path"
+              fi
+
+              if [ "$attempt" -lt "$CDN_ATTEMPTS" ]; then
+                delay="$(cdn_backoff_seconds "$attempt")"
+                echo "Waiting ${delay}s for jsDelivr propagation"
+                sleep "$delay"
               fi
             done
 
-            echo "CDN content does not match stable target $target_sha: $cdn_url" >&2
+            echo "CDN is still stale for stable target $target_sha after $CDN_ATTEMPTS attempts: $cdn_url" >&2
             grep -i '^content-type:' "$headers_file" >&2 || :
             sha256sum "$expected_file" "$body_file" >&2 || :
             rm -f "$body_file" "$headers_file"
-            return 1
+            return 3
           }
 
           echo "Event SHA: $EVENT_SHA"
@@ -183,6 +204,7 @@ jobs:
             )
 
             advanced=false
+            stale=false
 
             for path in "${delivery_files[@]}"; do
               purge_path "$path"
@@ -197,6 +219,9 @@ jobs:
               if [ "$verify_rc" -eq 2 ]; then
                 advanced=true
                 break
+              elif [ "$verify_rc" -eq 3 ]; then
+                stale=true
+                break
               elif [ "$verify_rc" -ne 0 ]; then
                 rm -rf "$expected_dir"
                 exit "$verify_rc"
@@ -207,6 +232,16 @@ jobs:
 
             if [ "$advanced" = true ]; then
               echo "Retrying publication against the newer main HEAD."
+              continue
+            fi
+
+            if [ "$stale" = true ]; then
+              CURRENT_SHA="$(fetch_main_head)"
+              if [ "$CURRENT_SHA" != "$TARGET_SHA" ]; then
+                echo "main advanced while CDN remained stale: $TARGET_SHA -> $CURRENT_SHA"
+              else
+                echo "jsDelivr remained stale while main stayed at $TARGET_SHA; starting a fresh purge/reconciliation cycle."
+              fi
               continue
             fi
 
@@ -223,7 +258,7 @@ jobs:
           done
 
           FINAL_HEAD="$(fetch_main_head)"
-          echo "RECONCILIATION FAILED: main did not remain stable during $MAX_ITERATIONS iterations." >&2
+          echo "RECONCILIATION FAILED: CDN did not converge to a stable main HEAD within $MAX_ITERATIONS iterations." >&2
           echo "Latest observed main HEAD: $FINAL_HEAD" >&2
           echo "This run refuses to report success without CDN == stable main HEAD." >&2
           exit 1
