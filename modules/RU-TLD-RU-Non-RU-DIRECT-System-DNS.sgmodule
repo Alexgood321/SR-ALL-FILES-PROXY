@@ -2,6 +2,7 @@
 #!desc=.ru/.su/.рф через DIRECT + system DNS; российские сервисы вне RU-зон добавлены точечно
 #!author=OpenAI + user
 #!version=1.0
+# semver-race-test=B
 
 [Rule]
 # =========================
