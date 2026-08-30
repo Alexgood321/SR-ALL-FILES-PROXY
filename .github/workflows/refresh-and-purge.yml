@@ -1,4 +1,4 @@
-name: Validate and publish jsDelivr semver alias
+name: Validate and publish GitHub release delivery
 
 on:
   push:
@@ -16,7 +16,7 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
     steps:
       - name: Checkout event commit
         uses: actions/checkout@v4
@@ -24,7 +24,7 @@ jobs:
           fetch-depth: 2
           persist-credentials: false
 
-      - name: Publish stable main through semver alias
+      - name: Publish stable main as release assets
         shell: bash
         env:
           REPOSITORY: ${{ github.repository }}
@@ -34,8 +34,7 @@ jobs:
           MAX_ITERATIONS: "8"
           STABILITY_CHECKS: "3"
           STABILITY_DELAY_SECONDS: "5"
-          METADATA_POLL_ROUNDS: "20"
-          CDN_POLL_ROUNDS: "20"
+          LATEST_POLL_ROUNDS: "12"
         run: |
           set -Eeuo pipefail
 
@@ -51,10 +50,7 @@ jobs:
           }
 
           wait_for_stable_main() {
-            local candidate
-            local observed
-            local check
-
+            local candidate observed check
             candidate="$(fetch_main_head)"
             echo "Stability candidate: $candidate" >&2
 
@@ -81,9 +77,7 @@ jobs:
           }
 
           materialize_target() {
-            local target_sha="$1"
-            local target_dir="$2"
-
+            local target_sha="$1" target_dir="$2"
             mkdir -p "$target_dir"
             git archive "$target_sha" \
               config/remote.conf \
@@ -94,7 +88,6 @@ jobs:
 
           relevant_changes_after_event() {
             local target_sha="$1"
-
             if [ "$EVENT_SHA" = "$target_sha" ]; then
               return 1
             fi
@@ -104,71 +97,8 @@ jobs:
               | grep -q .
           }
 
-          create_or_verify_tag() {
-            local version="$1"
-            local target_sha="$2"
-            local ref_url="https://api.github.com/repos/${REPOSITORY}/git/ref/tags/${version}"
-            local create_url="https://api.github.com/repos/${REPOSITORY}/git/refs"
-            local response_file
-            local status
-            local existing_sha
-            local payload
-
-            response_file="$(mktemp)"
-            status="$(curl -sS -o "$response_file" -w '%{http_code}' "${api_headers[@]}" "$ref_url")"
-
-            if [ "$status" = "200" ]; then
-              existing_sha="$(jq -r '.object.sha // empty' "$response_file")"
-              rm -f "$response_file"
-              if [ "$existing_sha" = "$target_sha" ]; then
-                echo "TAG EXISTS version=$version sha=$target_sha"
-                return 0
-              fi
-              echo "Tag collision: $version points to $existing_sha, expected $target_sha" >&2
-              return 1
-            fi
-
-            if [ "$status" != "404" ]; then
-              echo "Failed to inspect tag $version (HTTP $status)" >&2
-              sed -n '1,40p' "$response_file" >&2 || :
-              rm -f "$response_file"
-              return 1
-            fi
-
-            payload="$(jq -cn --arg ref "refs/tags/${version}" --arg sha "$target_sha" '{ref:$ref,sha:$sha}')"
-            status="$(curl -sS -o "$response_file" -w '%{http_code}' \
-              -X POST "${api_headers[@]}" \
-              -H "Content-Type: application/json" \
-              --data "$payload" \
-              "$create_url")"
-
-            if [ "$status" = "201" ]; then
-              echo "TAG CREATED version=$version sha=$target_sha"
-              rm -f "$response_file"
-              return 0
-            fi
-
-            echo "Failed to create tag $version (HTTP $status)" >&2
-            sed -n '1,40p' "$response_file" >&2 || :
-            rm -f "$response_file"
-            return 1
-          }
-
-          resolved_latest() {
-            curl -fsS \
-              "https://data.jsdelivr.com/v1/packages/gh/${REPOSITORY}/resolved?specifier=latest" \
-              | jq -r '.version // empty'
-          }
-
-          version_ge() {
-            local left="${1#v}"
-            local right="${2#v}"
-            [ "$(printf '%s\n%s\n' "$left" "$right" | sort -V | tail -n1)" = "$left" ]
-          }
-
           poll_delay() {
-            local round="$1"
-            case "$round" in
+            case "$1" in
               1) echo 2 ;;
               2) echo 4 ;;
               3) echo 6 ;;
@@ -178,165 +108,207 @@ jobs:
             esac
           }
 
-          wait_for_latest_metadata() {
-            local version="$1"
-            local target_sha="$2"
-            local round
-            local resolved
-            local observed
-            local delay
-
-            for round in $(seq 1 "$METADATA_POLL_ROUNDS"); do
-              observed="$(fetch_main_head)"
-              if [ "$observed" != "$target_sha" ]; then
-                echo "main advanced while waiting for jsDelivr metadata: $target_sha -> $observed"
-                return 2
-              fi
-
-              resolved="$(resolved_latest || true)"
-              echo "jsDelivr metadata round $round/$METADATA_POLL_ROUNDS: latest=${resolved:-NONE}"
-
-              if [ -n "$resolved" ] && version_ge "$resolved" "$version"; then
-                echo "jsDelivr latest metadata reached version $resolved (required >= $version)"
-                return 0
-              fi
-
-              if [ "$round" -lt "$METADATA_POLL_ROUNDS" ]; then
-                delay="$(poll_delay "$round")"
-                sleep "$delay"
-              fi
-            done
-
-            echo "jsDelivr metadata did not expose $version or a newer semver version in time." >&2
-            return 1
+          version_ge() {
+            local left="${1#v}" right="${2#v}"
+            [ "$(printf '%s\n%s\n' "$left" "$right" | sort -V | tail -n1)" = "$left" ]
           }
 
-          verify_url_file() {
-            local url="$1"
-            local expected_file="$2"
-            local body_file
-            local headers_file
-            local status="000"
-            local expected_sha
-            local actual_sha
+          get_or_create_release() {
+            local version="$1" target_sha="$2"
+            local response_file status release_id tag_sha payload
+            response_file="$(mktemp)"
 
-            body_file="$(mktemp)"
-            headers_file="$(mktemp)"
+            status="$(curl -sS -o "$response_file" -w '%{http_code}' \
+              "${api_headers[@]}" \
+              "https://api.github.com/repos/${REPOSITORY}/releases/tags/${version}")"
 
-            if status="$(curl -sS -L -D "$headers_file" -o "$body_file" -w '%{http_code}' "$url")"; then
-              if [ "$status" = "200" ] \
-                 && [ -s "$body_file" ] \
-                 && ! head -c 512 "$body_file" | grep -qiE '<!doctype html|<html' \
-                 && cmp -s "$body_file" "$expected_file"; then
-                expected_sha="$(sha256sum "$expected_file" | awk '{print $1}')"
-                echo "MATCH $url sha256=$expected_sha"
-                rm -f "$body_file" "$headers_file"
-                return 0
+            if [ "$status" = "200" ]; then
+              release_id="$(jq -r '.id // empty' "$response_file")"
+              rm -f "$response_file"
+              tag_sha="$(curl -fsS "${api_headers[@]}" \
+                "https://api.github.com/repos/${REPOSITORY}/git/ref/tags/${version}" \
+                | jq -r '.object.sha // empty')"
+              if [ -z "$release_id" ] || [ "$tag_sha" != "$target_sha" ]; then
+                echo "Existing release/tag mismatch for $version: tag_sha=$tag_sha target=$target_sha" >&2
+                return 1
               fi
+              echo "RELEASE EXISTS version=$version id=$release_id sha=$target_sha" >&2
+              printf '%s\n' "$release_id"
+              return 0
             fi
 
+            if [ "$status" != "404" ]; then
+              echo "Failed to inspect release $version HTTP=$status" >&2
+              sed -n '1,40p' "$response_file" >&2 || :
+              rm -f "$response_file"
+              return 1
+            fi
+
+            payload="$(jq -cn \
+              --arg tag "$version" \
+              --arg sha "$target_sha" \
+              --arg name "Shadowrocket delivery $version" \
+              --arg body "Immutable delivery snapshot for $target_sha" \
+              '{tag_name:$tag,target_commitish:$sha,name:$name,body:$body,draft:false,prerelease:false,make_latest:"legacy"}')"
+
+            status="$(curl -sS -o "$response_file" -w '%{http_code}' \
+              -X POST "${api_headers[@]}" \
+              -H "Content-Type: application/json" \
+              --data "$payload" \
+              "https://api.github.com/repos/${REPOSITORY}/releases")"
+
+            if [ "$status" != "201" ]; then
+              echo "Failed to create release $version HTTP=$status" >&2
+              sed -n '1,80p' "$response_file" >&2 || :
+              rm -f "$response_file"
+              return 1
+            fi
+
+            release_id="$(jq -r '.id // empty' "$response_file")"
+            rm -f "$response_file"
+            if [ -z "$release_id" ]; then
+              echo "Release $version created without an id" >&2
+              return 1
+            fi
+
+            echo "RELEASE CREATED version=$version id=$release_id sha=$target_sha" >&2
+            printf '%s\n' "$release_id"
+          }
+
+          upload_or_verify_asset() {
+            local release_id="$1" name="$2" file="$3"
+            local expected_sha expected_size assets_file existing_id existing_digest existing_size encoded_name
+            local response_file status
+
+            expected_sha="$(sha256sum "$file" | awk '{print $1}')"
+            expected_size="$(wc -c < "$file" | tr -d ' ')"
+            assets_file="$(mktemp)"
+
+            curl -fsS "${api_headers[@]}" \
+              "https://api.github.com/repos/${REPOSITORY}/releases/${release_id}/assets?per_page=100" \
+              > "$assets_file"
+
+            existing_id="$(jq -r --arg n "$name" '.[] | select(.name == $n) | .id' "$assets_file" | head -n1)"
+            if [ -n "$existing_id" ]; then
+              existing_digest="$(jq -r --arg n "$name" '.[] | select(.name == $n) | .digest // ""' "$assets_file" | head -n1)"
+              existing_size="$(jq -r --arg n "$name" '.[] | select(.name == $n) | .size // 0' "$assets_file" | head -n1)"
+              rm -f "$assets_file"
+              if [ "$existing_digest" = "sha256:${expected_sha}" ] && [ "$existing_size" = "$expected_size" ]; then
+                echo "ASSET EXISTS MATCH name=$name sha256=$expected_sha"
+                return 0
+              fi
+              echo "Existing asset mismatch in immutable release: $name digest=$existing_digest size=$existing_size" >&2
+              return 1
+            fi
+            rm -f "$assets_file"
+
+            encoded_name="$(jq -rn --arg v "$name" '$v|@uri')"
+            response_file="$(mktemp)"
+            status="$(curl -sS -o "$response_file" -w '%{http_code}' \
+              -X POST "${api_headers[@]}" \
+              -H "Content-Type: application/octet-stream" \
+              --data-binary @"$file" \
+              "https://uploads.github.com/repos/${REPOSITORY}/releases/${release_id}/assets?name=${encoded_name}")"
+
+            if [ "$status" != "201" ]; then
+              echo "Failed to upload release asset $name HTTP=$status" >&2
+              sed -n '1,80p' "$response_file" >&2 || :
+              rm -f "$response_file"
+              return 1
+            fi
+
+            actual_digest="$(jq -r '.digest // empty' "$response_file")"
+            rm -f "$response_file"
+            if [ "$actual_digest" != "sha256:${expected_sha}" ]; then
+              echo "Uploaded asset digest mismatch: $name expected=sha256:$expected_sha actual=$actual_digest" >&2
+              return 1
+            fi
+            echo "ASSET UPLOADED MATCH name=$name sha256=$expected_sha"
+          }
+
+          verify_download() {
+            local url="$1" expected_file="$2"
+            local body_file status expected_sha actual_sha
+            body_file="$(mktemp)"
+            status="$(curl -sS -L -o "$body_file" -w '%{http_code}' "$url" || true)"
             expected_sha="$(sha256sum "$expected_file" | awk '{print $1}')"
+
+            if [ "$status" = "200" ] && [ -s "$body_file" ] && cmp -s "$body_file" "$expected_file"; then
+              echo "DOWNLOAD MATCH url=$url sha256=$expected_sha"
+              rm -f "$body_file"
+              return 0
+            fi
+
             if [ -s "$body_file" ]; then
               actual_sha="$(sha256sum "$body_file" | awk '{print $1}')"
             else
               actual_sha="EMPTY"
             fi
-            echo "MISMATCH $url HTTP=$status expected=$expected_sha actual=$actual_sha"
-            rm -f "$body_file" "$headers_file"
+            echo "DOWNLOAD MISMATCH url=$url HTTP=$status expected=$expected_sha actual=$actual_sha"
+            rm -f "$body_file"
             return 1
           }
 
-          verify_version_files() {
-            local version="$1"
-            local expected_dir="$2"
+          verify_immutable_release() {
+            local version="$1" expected_dir="$2"
             shift 2
-            local paths=("$@")
-            local path
-            local round
-            local delay
-            local all_match
-
-            for round in $(seq 1 "$CDN_POLL_ROUNDS"); do
-              all_match=true
-              echo "Immutable version verification round $round/$CDN_POLL_ROUNDS for $version"
-
-              for path in "${paths[@]}"; do
-                if ! verify_url_file \
-                  "https://cdn.jsdelivr.net/gh/${REPOSITORY}@${version}/${path}" \
-                  "$expected_dir/$path"; then
-                  all_match=false
-                fi
-              done
-
-              if [ "$all_match" = true ]; then
-                return 0
-              fi
-
-              if [ "$round" -lt "$CDN_POLL_ROUNDS" ]; then
-                delay="$(poll_delay "$round")"
-                sleep "$delay"
-              fi
+            local paths=("$@") path name
+            for path in "${paths[@]}"; do
+              name="$(basename "$path")"
+              verify_download \
+                "https://github.com/${REPOSITORY}/releases/download/${version}/${name}" \
+                "$expected_dir/$path" || return 1
             done
-
-            return 1
           }
 
-          purge_latest_path() {
-            local path="$1"
-            local purge_url="https://purge.jsdelivr.net/gh/${REPOSITORY}@latest/${path}"
-            local response_file
-            local status="000"
+          wait_and_verify_latest_release() {
+            local required_version="$1" target_sha="$2" expected_dir="$3"
+            shift 3
+            local paths=("$@") round latest_json latest_tag latest_sha path name all_match observed delay
 
-            response_file="$(mktemp)"
-            for attempt in 1 2 3; do
-              status="$(curl -sS -o "$response_file" -w '%{http_code}' "$purge_url" || true)"
-              if [[ "$status" =~ ^2[0-9][0-9]$ ]]; then
-                echo "PURGED @latest $path HTTP=$status"
-                rm -f "$response_file"
-                return 0
-              fi
-              echo "Purge @latest attempt $attempt/3 failed for $path HTTP=$status"
-              sleep $((attempt * 2))
-            done
-
-            echo "Purge @latest failed for $path after 3 attempts." >&2
-            sed -n '1,40p' "$response_file" >&2 || :
-            rm -f "$response_file"
-            return 1
-          }
-
-          verify_latest_files() {
-            local target_sha="$1"
-            local expected_dir="$2"
-            shift 2
-            local paths=("$@")
-            local path
-            local round
-            local delay
-            local all_match
-            local observed
-
-            for round in $(seq 1 "$CDN_POLL_ROUNDS"); do
+            for round in $(seq 1 "$LATEST_POLL_ROUNDS"); do
               observed="$(fetch_main_head)"
               if [ "$observed" != "$target_sha" ]; then
-                echo "main advanced while verifying @latest: $target_sha -> $observed"
+                echo "main advanced while checking latest release: $target_sha -> $observed"
                 return 2
               fi
 
-              all_match=true
-              echo "@latest verification round $round/$CDN_POLL_ROUNDS"
-
-              for path in "${paths[@]}"; do
-                if ! verify_url_file \
-                  "https://cdn.jsdelivr.net/gh/${REPOSITORY}@latest/${path}" \
-                  "$expected_dir/$path"; then
-                  all_match=false
+              latest_json="$(mktemp)"
+              if ! curl -fsS "${api_headers[@]}" \
+                "https://api.github.com/repos/${REPOSITORY}/releases/latest" > "$latest_json"; then
+                rm -f "$latest_json"
+                latest_tag=""
+                latest_sha=""
+              else
+                latest_tag="$(jq -r '.tag_name // empty' "$latest_json")"
+                rm -f "$latest_json"
+                if [ -n "$latest_tag" ]; then
+                  latest_sha="$(curl -fsS "${api_headers[@]}" \
+                    "https://api.github.com/repos/${REPOSITORY}/git/ref/tags/${latest_tag}" \
+                    | jq -r '.object.sha // empty' || true)"
+                else
+                  latest_sha=""
                 fi
-              done
+              fi
+
+              echo "Latest release round $round/$LATEST_POLL_ROUNDS: tag=${latest_tag:-NONE} sha=${latest_sha:-NONE}"
+
+              all_match=false
+              if [ -n "$latest_tag" ] && version_ge "$latest_tag" "$required_version" && [ "$latest_sha" = "$target_sha" ]; then
+                all_match=true
+                for path in "${paths[@]}"; do
+                  name="$(basename "$path")"
+                  if ! verify_download \
+                    "https://github.com/${REPOSITORY}/releases/latest/download/${name}" \
+                    "$expected_dir/$path"; then
+                    all_match=false
+                  fi
+                done
+              fi
 
               observed="$(fetch_main_head)"
               if [ "$observed" != "$target_sha" ]; then
-                echo "main advanced during @latest verification: $target_sha -> $observed"
+                echo "main advanced during latest release verification: $target_sha -> $observed"
                 return 2
               fi
 
@@ -344,7 +316,7 @@ jobs:
                 return 0
               fi
 
-              if [ "$round" -lt "$CDN_POLL_ROUNDS" ]; then
+              if [ "$round" -lt "$LATEST_POLL_ROUNDS" ]; then
                 delay="$(poll_delay "$round")"
                 sleep "$delay"
               fi
@@ -357,13 +329,12 @@ jobs:
           echo "Workflow run number: $RUN_NUMBER"
 
           for iteration in $(seq 1 "$MAX_ITERATIONS"); do
-            echo "========== semver reconciliation iteration $iteration/$MAX_ITERATIONS =========="
+            echo "========== release reconciliation iteration $iteration/$MAX_ITERATIONS =========="
 
             set +e
             TARGET_SHA="$(wait_for_stable_main)"
             settle_rc=$?
             set -e
-
             if [ "$settle_rc" -eq 2 ]; then
               echo "main is still moving; restarting"
               continue
@@ -371,16 +342,23 @@ jobs:
               exit "$settle_rc"
             fi
 
-            VERSION="1.${RUN_NUMBER}.${iteration}"
+            VERSION="v2.${RUN_NUMBER}.${iteration}"
             echo "TARGET_SHA=$TARGET_SHA"
             echo "VERSION=$VERSION"
 
             expected_dir="$(mktemp -d)"
             materialize_target "$TARGET_SHA" "$expected_dir"
             mapfile -t delivery_files < <(list_delivery_files "$TARGET_SHA")
-
             if [ "${#delivery_files[@]}" -eq 0 ]; then
               echo "No delivery files found at $TARGET_SHA" >&2
+              rm -rf "$expected_dir"
+              exit 1
+            fi
+
+            mapfile -t asset_names < <(printf '%s\n' "${delivery_files[@]}" | xargs -n1 basename)
+            if [ "$(printf '%s\n' "${asset_names[@]}" | sort | uniq -d | wc -l)" -ne 0 ]; then
+              echo "Delivery basenames are not unique; release asset URLs would collide." >&2
+              printf '%s\n' "${asset_names[@]}" >&2
               rm -rf "$expected_dir"
               exit 1
             fi
@@ -394,28 +372,6 @@ jobs:
               python3 scripts/validate_shadowrocket.py
             )
 
-            create_or_verify_tag "$VERSION" "$TARGET_SHA"
-
-            set +e
-            wait_for_latest_metadata "$VERSION" "$TARGET_SHA"
-            metadata_rc=$?
-            set -e
-
-            if [ "$metadata_rc" -eq 2 ]; then
-              rm -rf "$expected_dir"
-              continue
-            elif [ "$metadata_rc" -ne 0 ]; then
-              rm -rf "$expected_dir"
-              exit "$metadata_rc"
-            fi
-
-            echo "Verifying immutable jsDelivr version @$VERSION"
-            if ! verify_version_files "$VERSION" "$expected_dir" "${delivery_files[@]}"; then
-              echo "Immutable jsDelivr version @$VERSION did not match TARGET_SHA=$TARGET_SHA." >&2
-              rm -rf "$expected_dir"
-              exit 1
-            fi
-
             publisher=true
             if relevant_changes_after_event "$TARGET_SHA"; then
               publisher=false
@@ -423,40 +379,45 @@ jobs:
 
             if [ "$publisher" = true ]; then
               echo "ROLE=PUBLISHER event=$EVENT_SHA target=$TARGET_SHA version=$VERSION"
+              release_id="$(get_or_create_release "$VERSION" "$TARGET_SHA")"
+              echo "RELEASE_ID=$release_id"
+
               for path in "${delivery_files[@]}"; do
-                purge_latest_path "$path"
+                upload_or_verify_asset "$release_id" "$(basename "$path")" "$expected_dir/$path"
               done
+
+              echo "Verifying immutable release $VERSION"
+              verify_immutable_release "$VERSION" "$expected_dir" "${delivery_files[@]}"
             else
               echo "ROLE=OBSERVER event=$EVENT_SHA target=$TARGET_SHA version=$VERSION"
-              echo "A newer relevant main change exists; this run will not purge @latest."
+              echo "A newer relevant main change exists; this run will not create a release."
             fi
 
             set +e
-            verify_latest_files "$TARGET_SHA" "$expected_dir" "${delivery_files[@]}"
+            wait_and_verify_latest_release "$VERSION" "$TARGET_SHA" "$expected_dir" "${delivery_files[@]}"
             latest_rc=$?
             set -e
-
             rm -rf "$expected_dir"
 
             if [ "$latest_rc" -eq 0 ]; then
               END_SHA="$(fetch_main_head)"
               echo "END_SHA=$END_SHA"
               if [ "$END_SHA" = "$TARGET_SHA" ]; then
-                echo "SEMVER RECONCILIATION SUCCESS: @latest == stable main HEAD $TARGET_SHA via version $VERSION"
+                echo "RELEASE RECONCILIATION SUCCESS: latest release assets == stable main HEAD $TARGET_SHA"
                 exit 0
               fi
-              echo "main advanced after exact @latest verification: $TARGET_SHA -> $END_SHA"
+              echo "main advanced after exact latest-release verification: $TARGET_SHA -> $END_SHA"
               continue
             elif [ "$latest_rc" -eq 2 ]; then
-              echo "main advanced while verifying @latest; restarting"
+              echo "main advanced while verifying latest release; restarting"
               continue
             fi
 
-            echo "SEMVER RECONCILIATION FAILED: @latest did not converge to stable TARGET_SHA=$TARGET_SHA." >&2
+            echo "RELEASE RECONCILIATION FAILED: latest release did not converge to stable TARGET_SHA=$TARGET_SHA." >&2
             exit 1
           done
 
           FINAL_HEAD="$(fetch_main_head)"
-          echo "SEMVER RECONCILIATION FAILED: main did not stay stable within $MAX_ITERATIONS attempts." >&2
+          echo "RELEASE RECONCILIATION FAILED: main did not stay stable within $MAX_ITERATIONS attempts." >&2
           echo "Latest observed main HEAD: $FINAL_HEAD" >&2
           exit 1
