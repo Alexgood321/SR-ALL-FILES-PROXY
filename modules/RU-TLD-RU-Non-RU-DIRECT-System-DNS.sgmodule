@@ -1,0 +1,146 @@
+#!name=RU TLD + RU Non-RU DIRECT System DNS
+#!desc=.ru/.su/.рф через DIRECT + system DNS; российские сервисы вне RU-зон добавлены точечно
+#!author=OpenAI + user
+#!version=1.0
+
+[Rule]
+# =========================
+# 1) Российские доменные зоны
+# =========================
+DOMAIN-SUFFIX,ru,DIRECT
+DOMAIN-SUFFIX,su,DIRECT
+DOMAIN-SUFFIX,xn--p1ai,DIRECT
+
+# =========================
+# 2) VK / Mail / OK / MY ecosystem вне .ru
+# =========================
+DOMAIN-SUFFIX,vk.com,DIRECT
+DOMAIN-SUFFIX,my.com,DIRECT
+
+# =========================
+# 3) Yandex ecosystem / static / CDN-хвосты Яндекса вне .ru
+# =========================
+DOMAIN-SUFFIX,yandex.net,DIRECT
+DOMAIN-SUFFIX,yastatic.net,DIRECT
+DOMAIN-SUFFIX,yandex.st,DIRECT
+
+# =========================
+# 4) 2GIS вне .ru
+# =========================
+DOMAIN-SUFFIX,2gis.com,DIRECT
+DOMAIN-SUFFIX,dgis.com,DIRECT
+
+# =========================
+# 5) Wildberries static / CDN-хвосты WB вне .ru
+# =========================
+DOMAIN-SUFFIX,wbstatic.net,DIRECT
+
+# =========================
+# 6) Avito static вне .ru
+# =========================
+DOMAIN-SUFFIX,avito.st,DIRECT
+
+# =========================
+# 7) Банки / финтех вне .ru
+# =========================
+DOMAIN-SUFFIX,sberbank.com,DIRECT
+DOMAIN-SUFFIX,vtb.com,DIRECT
+DOMAIN-SUFFIX,alfabank.com,DIRECT
+DOMAIN-SUFFIX,sovcombank.com,DIRECT
+DOMAIN-SUFFIX,tochka.com,DIRECT
+
+# =========================
+# 8) Медиа / транспорт / сервисы вне .ru
+# =========================
+DOMAIN-SUFFIX,okko.tv,DIRECT
+DOMAIN-SUFFIX,premier.one,DIRECT
+DOMAIN-SUFFIX,pobeda.aero,DIRECT
+DOMAIN-SUFFIX,lenta.com,DIRECT
+
+[Host]
+# =========================
+# 1) Российские доменные зоны через system DNS
+# =========================
+ru = server:system
+*.ru = server:system
+
+su = server:system
+*.su = server:system
+
+xn--p1ai = server:system
+*.xn--p1ai = server:system
+
+# =========================
+# 2) VK / Mail / OK / MY ecosystem вне .ru
+# =========================
+vk.com = server:system
+*.vk.com = server:system
+
+my.com = server:system
+*.my.com = server:system
+
+# =========================
+# 3) Yandex ecosystem / static / CDN-хвосты Яндекса вне .ru
+# =========================
+yandex.net = server:system
+*.yandex.net = server:system
+
+yastatic.net = server:system
+*.yastatic.net = server:system
+
+yandex.st = server:system
+*.yandex.st = server:system
+
+# =========================
+# 4) 2GIS вне .ru
+# =========================
+2gis.com = server:system
+*.2gis.com = server:system
+
+dgis.com = server:system
+*.dgis.com = server:system
+
+# =========================
+# 5) Wildberries static / CDN-хвосты WB вне .ru
+# =========================
+wbstatic.net = server:system
+*.wbstatic.net = server:system
+
+# =========================
+# 6) Avito static вне .ru
+# =========================
+avito.st = server:system
+*.avito.st = server:system
+
+# =========================
+# 7) Банки / финтех вне .ru
+# =========================
+sberbank.com = server:system
+*.sberbank.com = server:system
+
+vtb.com = server:system
+*.vtb.com = server:system
+
+alfabank.com = server:system
+*.alfabank.com = server:system
+
+sovcombank.com = server:system
+*.sovcombank.com = server:system
+
+tochka.com = server:system
+*.tochka.com = server:system
+
+# =========================
+# 8) Медиа / транспорт / сервисы вне .ru
+# =========================
+okko.tv = server:system
+*.okko.tv = server:system
+
+premier.one = server:system
+*.premier.one = server:system
+
+pobeda.aero = server:system
+*.pobeda.aero = server:system
+
+lenta.com = server:system
+*.lenta.com = server:system
