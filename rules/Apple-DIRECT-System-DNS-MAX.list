@@ -1,4 +1,4 @@
-# last_update=2026-08-30_14:58:05_UTC
+# last_update=2026-08-30_18:31:54_UTC
 # Модуль: Apple DIRECT + System DNS MAX
 # Apple/iCloud/APNs/App Store/iTunes/CloudKit/FaceTime/CDN via DIRECT + system DNS; fixed App Store Search DNS/CNAME tails
 # Политика DIRECT задаётся в config/remote.conf.
