@@ -9,7 +9,7 @@ import sys
 
 
 REMOTE_PATH = Path("config/remote.conf")
-ROUTING_PATH = Path("modules/Routing.sgmodule")
+ROUTING_PATH = Path("modules/Unified-Routing-System-DNS.sgmodule")
 
 ALLOWED_POLICIES = {
     "DIRECT",
