@@ -16,52 +16,50 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - name: Checkout repository history
+      - name: Checkout event commit
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 2
 
-      - name: Reconcile current main to jsDelivr
+      - name: Reconcile stable main to jsDelivr
         shell: bash
         env:
           REPOSITORY: ${{ github.repository }}
           EVENT_BEFORE: ${{ github.event.before }}
           EVENT_SHA: ${{ github.sha }}
-          MAX_ITERATIONS: "8"
-          CDN_ATTEMPTS: "6"
+          MAX_ITERATIONS: "10"
+          STABILITY_CHECKS: "3"
+          STABILITY_DELAY_SECONDS: "5"
+          CDN_POLL_ROUNDS: "20"
         run: |
           set -Eeuo pipefail
 
-          purge_path() {
-            local path="$1"
-            local purge_url="https://purge.jsdelivr.net/gh/${REPOSITORY}@main/${path}"
-            local response_file
-            local status="000"
-            response_file="$(mktemp)"
-
-            for attempt in 1 2 3; do
-              status="000"
-              if status="$(curl -sS -o "$response_file" -w '%{http_code}' "$purge_url")"; then
-                if [[ "$status" =~ ^2[0-9][0-9]$ ]]; then
-                  echo "Purged $path (HTTP $status)"
-                  rm -f "$response_file"
-                  return 0
-                fi
-              fi
-              echo "Purge attempt $attempt failed for $path (HTTP $status)"
-              sleep $((attempt * 2))
-            done
-
-            echo "Purge failed after 3 attempts: $purge_url" >&2
-            sed -n '1,20p' "$response_file" >&2 || :
-            rm -f "$response_file"
-            return 1
+          fetch_main_head() {
+            git fetch --quiet --depth=1 origin +refs/heads/main:refs/remotes/origin/main
+            git rev-parse origin/main
           }
 
-          fetch_main_head() {
-            git fetch --quiet origin main
-            git rev-parse origin/main
+          wait_for_stable_main() {
+            local candidate
+            local observed
+            local check
+
+            candidate="$(fetch_main_head)"
+            echo "Stability candidate: $candidate" >&2
+
+            for check in $(seq 1 "$STABILITY_CHECKS"); do
+              sleep "$STABILITY_DELAY_SECONDS"
+              observed="$(fetch_main_head)"
+              echo "Stability check $check/$STABILITY_CHECKS: $observed" >&2
+              if [ "$observed" != "$candidate" ]; then
+                echo "main moved while settling: $candidate -> $observed" >&2
+                return 2
+              fi
+            done
+
+            printf '%s\n' "$candidate"
           }
 
           list_delivery_files() {
@@ -85,85 +83,130 @@ jobs:
               | tar -x -C "$target_dir"
           }
 
-          cdn_backoff_seconds() {
-            case "$1" in
-              1) echo 2 ;;
-              2) echo 4 ;;
-              3) echo 8 ;;
-              4) echo 12 ;;
-              *) echo 15 ;;
-            esac
+          relevant_changes_after_event() {
+            local target_sha="$1"
+
+            if [ "$EVENT_SHA" = "$target_sha" ]; then
+              return 1
+            fi
+
+            git diff --name-only "$EVENT_SHA" "$target_sha" -- \
+              config modules scripts/validate_shadowrocket.py .github/workflows/refresh-and-purge.yml \
+              | grep -q .
           }
 
-          verify_cdn_file() {
+          purge_path() {
+            local path="$1"
+            local purge_url="https://purge.jsdelivr.net/gh/${REPOSITORY}@main/${path}"
+            local response_file
+            local status="000"
+            response_file="$(mktemp)"
+
+            for attempt in 1 2 3; do
+              status="000"
+              if status="$(curl -sS -o "$response_file" -w '%{http_code}' "$purge_url")"; then
+                if [[ "$status" =~ ^2[0-9][0-9]$ ]]; then
+                  echo "Purged $path (HTTP $status)"
+                  rm -f "$response_file"
+                  return 0
+                fi
+              fi
+              echo "Purge request attempt $attempt failed for $path (HTTP $status)"
+              sleep $((attempt * 2))
+            done
+
+            echo "Purge request failed after 3 attempts: $purge_url" >&2
+            sed -n '1,20p' "$response_file" >&2 || :
+            rm -f "$response_file"
+            return 1
+          }
+
+          verify_one_file() {
             local path="$1"
             local expected_file="$2"
-            local target_sha="$3"
-            local cdn_url="https://cdn.jsdelivr.net/gh/${REPOSITORY}@main/${path}"
             local body_file
             local headers_file
             local status="000"
-            local observed_head
-            local delay
+            local expected_sha
+            local actual_sha
 
             body_file="$(mktemp)"
             headers_file="$(mktemp)"
 
-            for attempt in $(seq 1 "$CDN_ATTEMPTS"); do
-              observed_head="$(fetch_main_head)"
-              if [ "$observed_head" != "$target_sha" ]; then
-                echo "main advanced during CDN verification: $target_sha -> $observed_head"
+            if status="$(curl -sS -L -D "$headers_file" -o "$body_file" -w '%{http_code}' \
+              "https://cdn.jsdelivr.net/gh/${REPOSITORY}@main/${path}")"; then
+              if [ "$status" = "200" ] \
+                 && [ -s "$body_file" ] \
+                 && ! head -c 512 "$body_file" | grep -qiE '<!doctype html|<html' \
+                 && cmp -s "$body_file" "$expected_file"; then
+                expected_sha="$(sha256sum "$expected_file" | awk '{print $1}')"
+                echo "MATCH $path sha256=$expected_sha"
                 rm -f "$body_file" "$headers_file"
-                return 2
+                return 0
               fi
+            fi
 
-              status="000"
-              if status="$(curl -sS -L -D "$headers_file" -o "$body_file" -w '%{http_code}' "$cdn_url")"; then
-                if [ "$status" = "200" ] && [ -s "$body_file" ]; then
-                  if ! head -c 512 "$body_file" | grep -qiE '<!doctype html|<html'; then
-                    if cmp -s "$body_file" "$expected_file"; then
-                      echo "Verified $path (HTTP 200, exact content match, CDN attempt $attempt)"
-                      rm -f "$body_file" "$headers_file"
-                      return 0
-                    fi
-                  fi
-                fi
-              fi
+            expected_sha="$(sha256sum "$expected_file" | awk '{print $1}')"
+            if [ -s "$body_file" ]; then
+              actual_sha="$(sha256sum "$body_file" | awk '{print $1}')"
+            else
+              actual_sha="EMPTY"
+            fi
+            echo "STALE $path HTTP=$status expected=$expected_sha cdn=$actual_sha"
+            rm -f "$body_file" "$headers_file"
+            return 1
+          }
 
-              observed_head="$(fetch_main_head)"
-              if [ "$observed_head" != "$target_sha" ]; then
-                echo "main advanced after CDN mismatch: $target_sha -> $observed_head"
-                rm -f "$body_file" "$headers_file"
-                return 2
-              fi
+          verify_all_files() {
+            local target_sha="$1"
+            local expected_dir="$2"
+            shift 2
+            local paths=("$@")
+            local path
+            local all_match=true
+            local observed
 
-              echo "CDN verification attempt $attempt/$CDN_ATTEMPTS stale or failed for $path (HTTP $status)"
-              sha256sum "$expected_file" "$body_file" 2>/dev/null || :
+            observed="$(fetch_main_head)"
+            if [ "$observed" != "$target_sha" ]; then
+              echo "main advanced before CDN round: $target_sha -> $observed"
+              return 2
+            fi
 
-              if [ "$attempt" -eq 3 ] || [ "$attempt" -eq 5 ]; then
-                echo "Re-purging stale CDN path before another verification: $path"
-                purge_path "$path"
-              fi
-
-              if [ "$attempt" -lt "$CDN_ATTEMPTS" ]; then
-                delay="$(cdn_backoff_seconds "$attempt")"
-                echo "Waiting ${delay}s for jsDelivr propagation"
-                sleep "$delay"
+            for path in "${paths[@]}"; do
+              if ! verify_one_file "$path" "$expected_dir/$path"; then
+                all_match=false
               fi
             done
 
-            echo "CDN is still stale for stable target $target_sha after $CDN_ATTEMPTS attempts: $cdn_url" >&2
-            grep -i '^content-type:' "$headers_file" >&2 || :
-            sha256sum "$expected_file" "$body_file" >&2 || :
-            rm -f "$body_file" "$headers_file"
-            return 3
+            observed="$(fetch_main_head)"
+            if [ "$observed" != "$target_sha" ]; then
+              echo "main advanced during CDN round: $target_sha -> $observed"
+              return 2
+            fi
+
+            if [ "$all_match" = true ]; then
+              return 0
+            fi
+            return 1
+          }
+
+          poll_delay() {
+            local round="$1"
+            case "$round" in
+              1) echo 2 ;;
+              2) echo 4 ;;
+              3) echo 8 ;;
+              4) echo 12 ;;
+              5) echo 15 ;;
+              *) echo 20 ;;
+            esac
           }
 
           echo "Event SHA: $EVENT_SHA"
           echo "Event before: $EVENT_BEFORE"
 
-          # Deleted delivery paths are secondary to convergence of current files.
-          # Purge them best-effort so stale cached URLs are less likely to linger.
+          # Deleted delivery paths are best-effort only. Current existing files remain
+          # the source of truth for successful reconciliation.
           if [[ ! "$EVENT_BEFORE" =~ ^0+$ ]] \
              && git cat-file -e "${EVENT_BEFORE}^{commit}" 2>/dev/null \
              && git cat-file -e "${EVENT_SHA}^{commit}" 2>/dev/null; then
@@ -174,20 +217,30 @@ jobs:
             )
             for path in "${deleted_paths[@]}"; do
               echo "Best-effort purge for deleted delivery path: $path"
-              purge_path "$path" || echo "WARNING: deleted path purge failed: $path"
+              purge_path "$path" || echo "WARNING: deleted path purge request failed: $path"
             done
           fi
 
           for iteration in $(seq 1 "$MAX_ITERATIONS"); do
             echo "========== reconciliation iteration $iteration/$MAX_ITERATIONS =========="
 
-            TARGET_SHA="$(fetch_main_head)"
+            set +e
+            TARGET_SHA="$(wait_for_stable_main)"
+            settle_rc=$?
+            set -e
+            if [ "$settle_rc" -eq 2 ]; then
+              echo "main is still moving; restarting reconciliation"
+              continue
+            elif [ "$settle_rc" -ne 0 ]; then
+              exit "$settle_rc"
+            fi
+
             echo "TARGET_SHA=$TARGET_SHA"
 
             expected_dir="$(mktemp -d)"
             materialize_target "$TARGET_SHA" "$expected_dir"
-
             mapfile -t delivery_files < <(list_delivery_files "$TARGET_SHA")
+
             if [ "${#delivery_files[@]}" -eq 0 ]; then
               echo "No delivery files found at $TARGET_SHA" >&2
               rm -rf "$expected_dir"
@@ -203,62 +256,98 @@ jobs:
               python3 scripts/validate_shadowrocket.py
             )
 
+            # First check without touching CDN. This lets superseded/overlapping runs
+            # finish harmlessly when another run has already reconciled the same HEAD.
+            set +e
+            verify_all_files "$TARGET_SHA" "$expected_dir" "${delivery_files[@]}"
+            initial_rc=$?
+            set -e
+
+            if [ "$initial_rc" -eq 0 ]; then
+              END_SHA="$(fetch_main_head)"
+              rm -rf "$expected_dir"
+              echo "END_SHA=$END_SHA"
+              if [ "$END_SHA" = "$TARGET_SHA" ]; then
+                echo "RECONCILIATION SUCCESS: CDN already equals stable main HEAD $TARGET_SHA"
+                exit 0
+              fi
+              echo "main advanced after exact CDN check: $TARGET_SHA -> $END_SHA"
+              continue
+            elif [ "$initial_rc" -eq 2 ]; then
+              rm -rf "$expected_dir"
+              echo "main advanced during pre-purge verification; restarting"
+              continue
+            fi
+
+            # Publisher election without a GitHub concurrency group:
+            # if newer relevant changes exist after this run's event SHA, a newer
+            # push-triggered run owns the purge. This run becomes an observer only.
+            publisher=true
+            if relevant_changes_after_event "$TARGET_SHA"; then
+              publisher=false
+            fi
+
+            if [ "$publisher" = true ]; then
+              echo "ROLE=PUBLISHER event=$EVENT_SHA target=$TARGET_SHA"
+              echo "One purge cycle for the stable target; no repeated purge while polling."
+              for path in "${delivery_files[@]}"; do
+                purge_path "$path"
+              done
+            else
+              echo "ROLE=OBSERVER event=$EVENT_SHA target=$TARGET_SHA"
+              echo "Newer relevant push exists; this run will not purge or interfere with its publisher."
+            fi
+
             advanced=false
-            stale=false
-
-            for path in "${delivery_files[@]}"; do
-              purge_path "$path"
-            done
-
-            for path in "${delivery_files[@]}"; do
+            for round in $(seq 1 "$CDN_POLL_ROUNDS"); do
+              echo "CDN poll round $round/$CDN_POLL_ROUNDS for TARGET_SHA=$TARGET_SHA"
               set +e
-              verify_cdn_file "$path" "$expected_dir/$path" "$TARGET_SHA"
+              verify_all_files "$TARGET_SHA" "$expected_dir" "${delivery_files[@]}"
               verify_rc=$?
               set -e
 
-              if [ "$verify_rc" -eq 2 ]; then
+              if [ "$verify_rc" -eq 0 ]; then
+                END_SHA="$(fetch_main_head)"
+                rm -rf "$expected_dir"
+                echo "END_SHA=$END_SHA"
+                if [ "$END_SHA" = "$TARGET_SHA" ]; then
+                  echo "RECONCILIATION SUCCESS: CDN == stable main HEAD $TARGET_SHA"
+                  exit 0
+                fi
+                echo "main advanced after exact CDN verification: $TARGET_SHA -> $END_SHA"
                 advanced=true
                 break
-              elif [ "$verify_rc" -eq 3 ]; then
-                stale=true
+              elif [ "$verify_rc" -eq 2 ]; then
+                echo "main advanced while polling; switching to newer target"
+                advanced=true
                 break
-              elif [ "$verify_rc" -ne 0 ]; then
-                rm -rf "$expected_dir"
-                exit "$verify_rc"
+              fi
+
+              if [ "$round" -lt "$CDN_POLL_ROUNDS" ]; then
+                delay="$(poll_delay "$round")"
+                echo "CDN not converged; waiting ${delay}s without another purge"
+                sleep "$delay"
               fi
             done
 
             rm -rf "$expected_dir"
 
             if [ "$advanced" = true ]; then
-              echo "Retrying publication against the newer main HEAD."
               continue
             fi
 
-            if [ "$stale" = true ]; then
-              CURRENT_SHA="$(fetch_main_head)"
-              if [ "$CURRENT_SHA" != "$TARGET_SHA" ]; then
-                echo "main advanced while CDN remained stale: $TARGET_SHA -> $CURRENT_SHA"
-              else
-                echo "jsDelivr remained stale while main stayed at $TARGET_SHA; starting a fresh purge/reconciliation cycle."
-              fi
+            FINAL_STABLE_SHA="$(fetch_main_head)"
+            if [ "$FINAL_STABLE_SHA" != "$TARGET_SHA" ]; then
+              echo "main changed after polling: $TARGET_SHA -> $FINAL_STABLE_SHA"
               continue
             fi
 
-            END_SHA="$(fetch_main_head)"
-            echo "END_SHA=$END_SHA"
-
-            if [ "$END_SHA" = "$TARGET_SHA" ]; then
-              echo "RECONCILIATION SUCCESS: CDN == stable main HEAD $TARGET_SHA"
-              exit 0
-            fi
-
-            echo "main advanced during reconciliation: $TARGET_SHA -> $END_SHA"
-            echo "Retrying publication against the newer main HEAD."
+            echo "RECONCILIATION FAILED: jsDelivr @main did not converge to stable HEAD $TARGET_SHA within the polling window." >&2
+            echo "No false success was reported. Note that jsDelivr documents branch caching independently of GitHub HEAD." >&2
+            exit 1
           done
 
           FINAL_HEAD="$(fetch_main_head)"
-          echo "RECONCILIATION FAILED: CDN did not converge to a stable main HEAD within $MAX_ITERATIONS iterations." >&2
+          echo "RECONCILIATION FAILED: main did not stay stable within $MAX_ITERATIONS settling attempts." >&2
           echo "Latest observed main HEAD: $FINAL_HEAD" >&2
-          echo "This run refuses to report success without CDN == stable main HEAD." >&2
           exit 1
