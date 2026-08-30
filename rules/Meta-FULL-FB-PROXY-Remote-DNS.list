@@ -1,0 +1,76 @@
+# last_update=2026-08-30_02:18:40_UTC
+# Модуль: Meta FULL FB PROXY + Remote DNS
+# Facebook / Messenger / Instagram -> PROXY, to avoid RU DNS poisoning and GEOIP misrouting
+# Политика PROXY задаётся в config/remote.conf.
+
+# =========================
+# META / FACEBOOK / MESSENGER / INSTAGRAM -> PROXY
+# Put this module ABOVE GEOIP,RU,DIRECT and ABOVE any Meta/WhatsApp IP-CIDR rules
+# =========================
+
+# --- Core domains ---
+DOMAIN-SUFFIX,facebook.com
+DOMAIN-SUFFIX,fbcdn.net
+DOMAIN-SUFFIX,fbsbx.com
+DOMAIN-SUFFIX,messenger.com
+DOMAIN-SUFFIX,instagram.com
+DOMAIN-SUFFIX,cdninstagram.com
+DOMAIN-SUFFIX,meta.com
+
+# --- Facebook / Meta app API ---
+DOMAIN,graph.facebook.com
+DOMAIN,graph-fallback.facebook.com
+DOMAIN,payments-graph.facebook.com
+DOMAIN,api.facebook.com
+DOMAIN,b-api.facebook.com
+DOMAIN,www.facebook.com
+DOMAIN,m.facebook.com
+DOMAIN,web.facebook.com
+DOMAIN,gateway.facebook.com
+DOMAIN,gateway-fallback.facebook.com
+DOMAIN,lookaside.facebook.com
+DOMAIN,rupload.facebook.com
+DOMAIN,rupload-fallback.facebook.com
+DOMAIN,developers.facebook.com
+DOMAIN,accountscenter.facebook.com
+DOMAIN,accounts.meta.com
+
+# --- Messenger / realtime / chat / mqtt ---
+DOMAIN,edge-mqtt.facebook.com
+DOMAIN,edge-mqtt-fallback.facebook.com
+DOMAIN,edge-chat.facebook.com
+DOMAIN,chat-e2ee.facebook.com
+DOMAIN,mqtt.c10r.facebook.com
+DOMAIN,mqtt.fallback.c10r.facebook.com
+DOMAIN,chat-e2ee.c10r.facebook.com
+DOMAIN,chat-e2ee-ig-p42.c10r.facebook.com
+DOMAIN,dgw.c10r.facebook.com
+DOMAIN,star.c10r.facebook.com
+DOMAIN,star.fallback.c10r.facebook.com
+DOMAIN,z-p42-chat-e2ee-ig.facebook.com
+
+# --- Instagram explicit ---
+DOMAIN,www.instagram.com
+DOMAIN,i.instagram.com
+DOMAIN,api.instagram.com
+DOMAIN,graph.instagram.com
+DOMAIN,z-p42-instagram.c10r.facebook.com
+
+# --- Media / uploads / CDN helpers ---
+DOMAIN-SUFFIX,xx.fbcdn.net
+DOMAIN-SUFFIX,scontent.xx.fbcdn.net
+DOMAIN-SUFFIX,video.xx.fbcdn.net
+
+# --- Safety net for classic Meta ASNs often seen in logs ---
+# Keep BELOW domain rules. Useful only as backup if some Meta hosts appear without stable domain matching.
+IP-CIDR,31.13.24.0/21,no-resolve
+IP-CIDR,31.13.64.0/18,no-resolve
+IP-CIDR,66.220.144.0/20,no-resolve
+IP-CIDR,69.63.176.0/20,no-resolve
+IP-CIDR,69.171.224.0/19,no-resolve
+IP-CIDR,74.119.76.0/22,no-resolve
+IP-CIDR,102.132.96.0/20,no-resolve
+IP-CIDR,129.134.0.0/16,no-resolve
+IP-CIDR,157.240.0.0/16,no-resolve
+IP-CIDR,173.252.64.0/18,no-resolve
+IP-CIDR,185.60.216.0/22,no-resolve
