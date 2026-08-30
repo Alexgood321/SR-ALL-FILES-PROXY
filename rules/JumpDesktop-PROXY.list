@@ -1,0 +1,7 @@
+# last_update=2026-08-30_02:18:40_UTC
+# Модуль: JumpDesktop PROXY
+# Route all Jump Desktop traffic through proxy
+# Политика PROXY задаётся в config/remote.conf.
+
+DOMAIN-SUFFIX,jumpdesktop.com
+DOMAIN-KEYWORD,jumpdesktop
