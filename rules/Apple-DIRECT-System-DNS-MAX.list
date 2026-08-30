@@ -1,0 +1,126 @@
+# last_update=2026-08-30_02:18:40_UTC
+# Модуль: Apple DIRECT + System DNS MAX
+# Apple/iCloud/APNs/App Store/iTunes/CloudKit/FaceTime/CDN via DIRECT + system DNS; fixed App Store Search DNS/CNAME tails
+# Политика DIRECT задаётся в config/remote.conf.
+
+# Apple core
+DOMAIN-SUFFIX,apple.com
+DOMAIN-SUFFIX,icloud.com
+DOMAIN-SUFFIX,me.com
+DOMAIN-SUFFIX,mac.com
+DOMAIN-SUFFIX,apple.news
+DOMAIN-SUFFIX,appleusercontent.com
+
+# App Store / iTunes / Media
+DOMAIN-SUFFIX,apps.apple.com
+DOMAIN-SUFFIX,itunes.apple.com
+DOMAIN-SUFFIX,itunes.com
+DOMAIN-SUFFIX,itunes-apple.com
+DOMAIN-SUFFIX,itunes-nocookie.com
+DOMAIN-SUFFIX,mzstatic.com
+DOMAIN-SUFFIX,aaplimg.com
+DOMAIN-SUFFIX,g.aaplimg.com
+DOMAIN-SUFFIX,appsto.re
+DOMAIN-SUFFIX,appstoreconnect.apple.com
+DOMAIN-SUFFIX,testflight.apple.com
+DOMAIN-SUFFIX,iadsdk.apple.com
+
+# App Store Search / token / ATS
+DOMAIN-SUFFIX,sf-api-token-service.itunes.apple.com
+DOMAIN-SUFFIX,silverbullet-external-ats.itunes.apple.com
+DOMAIN-SUFFIX,apps-marketplace.apple.com
+DOMAIN-SUFFIX,appattest.apple.com
+DOMAIN,token.safebrowsing.apple
+
+# Apple CDN / downloads / software update
+DOMAIN-SUFFIX,icloud-content.com
+DOMAIN-SUFFIX,cdn-apple.com
+DOMAIN-SUFFIX,apple-dns.net
+DOMAIN-SUFFIX,apple-mapkit.com
+DOMAIN-SUFFIX,akadns.net
+DOMAIN-SUFFIX,akamaiedge.net
+DOMAIN-SUFFIX,akamaized.net
+DOMAIN-SUFFIX,edgekey.net
+DOMAIN-SUFFIX,edgesuite.net
+DOMAIN-SUFFIX,akamaihd.net
+DOMAIN-SUFFIX,deploy.static.akamaitechnologies.com
+DOMAIN-SUFFIX,swcdn.apple.com
+DOMAIN-SUFFIX,swdist.apple.com
+DOMAIN-SUFFIX,swdownload.apple.com
+DOMAIN-SUFFIX,swquery.apple.com
+DOMAIN-SUFFIX,swscan.apple.com
+DOMAIN-SUFFIX,updates-http.cdn-apple.com
+DOMAIN,updates.cdn-apple.com
+DOMAIN,app-site-association.cdn-apple.com
+DOMAIN-SUFFIX,appldnld.apple.com
+
+# Fastly CDN / Apple Maps CNAME tails
+DOMAIN-SUFFIX,fastly.net
+DOMAIN-SUFFIX,fastlylb.net
+DOMAIN-SUFFIX,fastly-edge.com
+DOMAIN-SUFFIX,map.fastly.net
+DOMAIN-SUFFIX,apis.apple.map.fastly.net
+DOMAIN-SUFFIX,media.apple.map.fastly.net
+
+# Push / APNs
+DOMAIN-SUFFIX,push.apple.com
+DOMAIN-SUFFIX,push-apple.com
+DOMAIN-SUFFIX,courier.push.apple.com
+
+# CloudKit
+DOMAIN-SUFFIX,apple-cloudkit.com
+
+# FaceTime / iMessage / IDS / Siri / Game Center
+DOMAIN-SUFFIX,ess.apple.com
+DOMAIN-SUFFIX,identity.apple.com
+DOMAIN-SUFFIX,ids-apple.com
+DOMAIN-SUFFIX,guzzoni.apple.com
+DOMAIN-SUFFIX,gc.apple.com
+
+# Location / captive / config / device services
+DOMAIN-SUFFIX,ls.apple.com
+DOMAIN-SUFFIX,gs-loc.apple.com
+DOMAIN-SUFFIX,captive.apple.com
+DOMAIN-SUFFIX,gdmf.apple.com
+DOMAIN-SUFFIX,deviceenrollment.apple.com
+DOMAIN-SUFFIX,deviceservices-external.apple.com
+DOMAIN-SUFFIX,albert.apple.com
+
+# Time / activation / setup / OTA
+DOMAIN-SUFFIX,time.apple.com
+DOMAIN-SUFFIX,time-ios.apple.com
+DOMAIN-SUFFIX,init.itunes.apple.com
+DOMAIN-SUFFIX,iphone-ld.apple.com
+DOMAIN-SUFFIX,xp.apple.com
+DOMAIN-SUFFIX,mesu.apple.com
+
+# OCSP / certificates
+DOMAIN-SUFFIX,ocsp.apple.com
+DOMAIN-SUFFIX,ocsp2.apple.com
+DOMAIN-SUFFIX,valid.apple.com
+DOMAIN-SUFFIX,certs.apple.com
+DOMAIN-SUFFIX,crl.apple.com
+DOMAIN-SUFFIX,digicert.com
+DOMAIN-SUFFIX,digicert.cn
+DOMAIN-SUFFIX,sectigo.com
+
+# Private Relay / iCloud mask
+DOMAIN,apple-relay.cloudflare.com
+DOMAIN,apple-relay.fastly-edge.com
+DOMAIN,apple-relay.apple.com
+DOMAIN-SUFFIX,doh.dns.apple.com
+DOMAIN-SUFFIX,gateway.icloud.com
+DOMAIN-SUFFIX,mask.icloud.com
+DOMAIN-SUFFIX,mask-h2.icloud.com
+DOMAIN-SUFFIX,mask-api.icloud.com
+DOMAIN-SUFFIX,probe.icloud.com
+DOMAIN-SUFFIX,pong.icloud.com
+DOMAIN-SUFFIX,metrics.icloud.com
+DOMAIN-SUFFIX,apple-native-relay.apple.com
+
+# Apple official IP ranges / UDP fallback
+IP-CIDR,17.0.0.0/8,no-resolve
+IP-CIDR,172.224.0.0/12,no-resolve
+IP-CIDR6,2403:300::/32,no-resolve
+IP-CIDR6,2620:149::/32,no-resolve
+IP-CIDR6,2a01:b740::/32,no-resolve
