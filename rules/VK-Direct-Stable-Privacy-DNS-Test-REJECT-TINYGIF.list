@@ -1,0 +1,6 @@
+# last_update=2026-08-30_02:18:40_UTC
+# Модуль: VK Direct Stable Privacy DNS Test
+# Блокировка рекламы и трекинга.
+# Политика REJECT-TINYGIF задаётся в config/remote.conf.
+
+DOMAIN-SUFFIX,mradx.net
