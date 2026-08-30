@@ -2,7 +2,7 @@
 #!desc=.ru/.su/.рф через DIRECT + system DNS; российские сервисы вне RU-зон добавлены точечно
 #!author=OpenAI + user
 #!version=1.0
-# publication-race-test: C-B-ru-module
+# publication-race-test: D-B-ru-module
 
 [Rule]
 # =========================
