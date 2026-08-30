@@ -1,0 +1,21 @@
+# last_update=2026-08-30_02:18:40_UTC
+# Модуль: BiP DIRECT
+# BiP Messenger (Turkey) -> DIRECT based on observed hosts/IPs from PacketTunnel log
+# Политика DIRECT задаётся в config/remote.conf.
+
+# Core BiP domains seen in the log
+DOMAIN-SUFFIX,bip.com
+DOMAIN-SUFFIX,bip.ai
+DOMAIN,xmpp.bip.com
+DOMAIN,bipchannel.bip.com
+DOMAIN,dman.bip.com
+DOMAIN,fts.bip.com
+DOMAIN,imos.bip.com
+DOMAIN,swf.bip.com
+DOMAIN,swfbu.bip.com
+DOMAIN,groups.bip.ai
+DOMAIN,tims.turkcell.com.tr
+
+# Observed BiP IP blocks from the log
+IP-CIDR,176.235.29.0/24,no-resolve
+IP-CIDR,176.235.227.0/24,no-resolve
