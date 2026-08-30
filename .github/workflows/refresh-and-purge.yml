@@ -1,4 +1,4 @@
-name: Validate and reconcile jsDelivr
+name: Validate and publish jsDelivr semver alias
 
 on:
   push:
@@ -11,7 +11,7 @@ on:
       - ".github/workflows/refresh-and-purge.yml"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   publish:
@@ -22,19 +22,28 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 2
+          persist-credentials: false
 
-      - name: Reconcile stable main to jsDelivr
+      - name: Publish stable main through semver alias
         shell: bash
         env:
           REPOSITORY: ${{ github.repository }}
-          EVENT_BEFORE: ${{ github.event.before }}
           EVENT_SHA: ${{ github.sha }}
-          MAX_ITERATIONS: "10"
+          RUN_NUMBER: ${{ github.run_number }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MAX_ITERATIONS: "8"
           STABILITY_CHECKS: "3"
           STABILITY_DELAY_SECONDS: "5"
+          METADATA_POLL_ROUNDS: "20"
           CDN_POLL_ROUNDS: "20"
         run: |
           set -Eeuo pipefail
+
+          api_headers=(
+            -H "Accept: application/vnd.github+json"
+            -H "Authorization: Bearer ${GITHUB_TOKEN}"
+            -H "X-GitHub-Api-Version: 2022-11-28"
+          )
 
           fetch_main_head() {
             git fetch --quiet --depth=1 origin +refs/heads/main:refs/remotes/origin/main
@@ -95,34 +104,115 @@ jobs:
               | grep -q .
           }
 
-          purge_path() {
-            local path="$1"
-            local purge_url="https://purge.jsdelivr.net/gh/${REPOSITORY}@main/${path}"
+          create_or_verify_tag() {
+            local version="$1"
+            local target_sha="$2"
+            local ref_url="https://api.github.com/repos/${REPOSITORY}/git/ref/tags/${version}"
+            local create_url="https://api.github.com/repos/${REPOSITORY}/git/refs"
             local response_file
-            local status="000"
+            local status
+            local existing_sha
+            local payload
+
             response_file="$(mktemp)"
+            status="$(curl -sS -o "$response_file" -w '%{http_code}' "${api_headers[@]}" "$ref_url")"
 
-            for attempt in 1 2 3; do
-              status="000"
-              if status="$(curl -sS -o "$response_file" -w '%{http_code}' "$purge_url")"; then
-                if [[ "$status" =~ ^2[0-9][0-9]$ ]]; then
-                  echo "Purged $path (HTTP $status)"
-                  rm -f "$response_file"
-                  return 0
-                fi
+            if [ "$status" = "200" ]; then
+              existing_sha="$(jq -r '.object.sha // empty' "$response_file")"
+              rm -f "$response_file"
+              if [ "$existing_sha" = "$target_sha" ]; then
+                echo "TAG EXISTS version=$version sha=$target_sha"
+                return 0
               fi
-              echo "Purge request attempt $attempt failed for $path (HTTP $status)"
-              sleep $((attempt * 2))
-            done
+              echo "Tag collision: $version points to $existing_sha, expected $target_sha" >&2
+              return 1
+            fi
 
-            echo "Purge request failed after 3 attempts: $purge_url" >&2
-            sed -n '1,20p' "$response_file" >&2 || :
+            if [ "$status" != "404" ]; then
+              echo "Failed to inspect tag $version (HTTP $status)" >&2
+              sed -n '1,40p' "$response_file" >&2 || :
+              rm -f "$response_file"
+              return 1
+            fi
+
+            payload="$(jq -cn --arg ref "refs/tags/${version}" --arg sha "$target_sha" '{ref:$ref,sha:$sha}')"
+            status="$(curl -sS -o "$response_file" -w '%{http_code}' \
+              -X POST "${api_headers[@]}" \
+              -H "Content-Type: application/json" \
+              --data "$payload" \
+              "$create_url")"
+
+            if [ "$status" = "201" ]; then
+              echo "TAG CREATED version=$version sha=$target_sha"
+              rm -f "$response_file"
+              return 0
+            fi
+
+            echo "Failed to create tag $version (HTTP $status)" >&2
+            sed -n '1,40p' "$response_file" >&2 || :
             rm -f "$response_file"
             return 1
           }
 
-          verify_one_file() {
-            local path="$1"
+          resolved_latest() {
+            curl -fsS \
+              "https://data.jsdelivr.com/v1/packages/gh/${REPOSITORY}/resolved?specifier=latest" \
+              | jq -r '.version // empty'
+          }
+
+          version_ge() {
+            local left="${1#v}"
+            local right="${2#v}"
+            [ "$(printf '%s\n%s\n' "$left" "$right" | sort -V | tail -n1)" = "$left" ]
+          }
+
+          poll_delay() {
+            local round="$1"
+            case "$round" in
+              1) echo 2 ;;
+              2) echo 4 ;;
+              3) echo 6 ;;
+              4) echo 8 ;;
+              5) echo 10 ;;
+              *) echo 15 ;;
+            esac
+          }
+
+          wait_for_latest_metadata() {
+            local version="$1"
+            local target_sha="$2"
+            local round
+            local resolved
+            local observed
+            local delay
+
+            for round in $(seq 1 "$METADATA_POLL_ROUNDS"); do
+              observed="$(fetch_main_head)"
+              if [ "$observed" != "$target_sha" ]; then
+                echo "main advanced while waiting for jsDelivr metadata: $target_sha -> $observed"
+                return 2
+              fi
+
+              resolved="$(resolved_latest || true)"
+              echo "jsDelivr metadata round $round/$METADATA_POLL_ROUNDS: latest=${resolved:-NONE}"
+
+              if [ -n "$resolved" ] && version_ge "$resolved" "$version"; then
+                echo "jsDelivr latest metadata reached version $resolved (required >= $version)"
+                return 0
+              fi
+
+              if [ "$round" -lt "$METADATA_POLL_ROUNDS" ]; then
+                delay="$(poll_delay "$round")"
+                sleep "$delay"
+              fi
+            done
+
+            echo "jsDelivr metadata did not expose $version or a newer semver version in time." >&2
+            return 1
+          }
+
+          verify_url_file() {
+            local url="$1"
             local expected_file="$2"
             local body_file
             local headers_file
@@ -133,14 +223,13 @@ jobs:
             body_file="$(mktemp)"
             headers_file="$(mktemp)"
 
-            if status="$(curl -sS -L -D "$headers_file" -o "$body_file" -w '%{http_code}' \
-              "https://cdn.jsdelivr.net/gh/${REPOSITORY}@main/${path}")"; then
+            if status="$(curl -sS -L -D "$headers_file" -o "$body_file" -w '%{http_code}' "$url")"; then
               if [ "$status" = "200" ] \
                  && [ -s "$body_file" ] \
                  && ! head -c 512 "$body_file" | grep -qiE '<!doctype html|<html' \
                  && cmp -s "$body_file" "$expected_file"; then
                 expected_sha="$(sha256sum "$expected_file" | awk '{print $1}')"
-                echo "MATCH $path sha256=$expected_sha"
+                echo "MATCH $url sha256=$expected_sha"
                 rm -f "$body_file" "$headers_file"
                 return 0
               fi
@@ -152,90 +241,139 @@ jobs:
             else
               actual_sha="EMPTY"
             fi
-            echo "STALE $path HTTP=$status expected=$expected_sha cdn=$actual_sha"
+            echo "MISMATCH $url HTTP=$status expected=$expected_sha actual=$actual_sha"
             rm -f "$body_file" "$headers_file"
             return 1
           }
 
-          verify_all_files() {
+          verify_version_files() {
+            local version="$1"
+            local expected_dir="$2"
+            shift 2
+            local paths=("$@")
+            local path
+            local round
+            local delay
+            local all_match
+
+            for round in $(seq 1 "$CDN_POLL_ROUNDS"); do
+              all_match=true
+              echo "Immutable version verification round $round/$CDN_POLL_ROUNDS for $version"
+
+              for path in "${paths[@]}"; do
+                if ! verify_url_file \
+                  "https://cdn.jsdelivr.net/gh/${REPOSITORY}@${version}/${path}" \
+                  "$expected_dir/$path"; then
+                  all_match=false
+                fi
+              done
+
+              if [ "$all_match" = true ]; then
+                return 0
+              fi
+
+              if [ "$round" -lt "$CDN_POLL_ROUNDS" ]; then
+                delay="$(poll_delay "$round")"
+                sleep "$delay"
+              fi
+            done
+
+            return 1
+          }
+
+          purge_latest_path() {
+            local path="$1"
+            local purge_url="https://purge.jsdelivr.net/gh/${REPOSITORY}@latest/${path}"
+            local response_file
+            local status="000"
+
+            response_file="$(mktemp)"
+            for attempt in 1 2 3; do
+              status="$(curl -sS -o "$response_file" -w '%{http_code}' "$purge_url" || true)"
+              if [[ "$status" =~ ^2[0-9][0-9]$ ]]; then
+                echo "PURGED @latest $path HTTP=$status"
+                rm -f "$response_file"
+                return 0
+              fi
+              echo "Purge @latest attempt $attempt/3 failed for $path HTTP=$status"
+              sleep $((attempt * 2))
+            done
+
+            echo "Purge @latest failed for $path after 3 attempts." >&2
+            sed -n '1,40p' "$response_file" >&2 || :
+            rm -f "$response_file"
+            return 1
+          }
+
+          verify_latest_files() {
             local target_sha="$1"
             local expected_dir="$2"
             shift 2
             local paths=("$@")
             local path
-            local all_match=true
+            local round
+            local delay
+            local all_match
             local observed
 
-            observed="$(fetch_main_head)"
-            if [ "$observed" != "$target_sha" ]; then
-              echo "main advanced before CDN round: $target_sha -> $observed"
-              return 2
-            fi
+            for round in $(seq 1 "$CDN_POLL_ROUNDS"); do
+              observed="$(fetch_main_head)"
+              if [ "$observed" != "$target_sha" ]; then
+                echo "main advanced while verifying @latest: $target_sha -> $observed"
+                return 2
+              fi
 
-            for path in "${paths[@]}"; do
-              if ! verify_one_file "$path" "$expected_dir/$path"; then
-                all_match=false
+              all_match=true
+              echo "@latest verification round $round/$CDN_POLL_ROUNDS"
+
+              for path in "${paths[@]}"; do
+                if ! verify_url_file \
+                  "https://cdn.jsdelivr.net/gh/${REPOSITORY}@latest/${path}" \
+                  "$expected_dir/$path"; then
+                  all_match=false
+                fi
+              done
+
+              observed="$(fetch_main_head)"
+              if [ "$observed" != "$target_sha" ]; then
+                echo "main advanced during @latest verification: $target_sha -> $observed"
+                return 2
+              fi
+
+              if [ "$all_match" = true ]; then
+                return 0
+              fi
+
+              if [ "$round" -lt "$CDN_POLL_ROUNDS" ]; then
+                delay="$(poll_delay "$round")"
+                sleep "$delay"
               fi
             done
 
-            observed="$(fetch_main_head)"
-            if [ "$observed" != "$target_sha" ]; then
-              echo "main advanced during CDN round: $target_sha -> $observed"
-              return 2
-            fi
-
-            if [ "$all_match" = true ]; then
-              return 0
-            fi
             return 1
           }
 
-          poll_delay() {
-            local round="$1"
-            case "$round" in
-              1) echo 2 ;;
-              2) echo 4 ;;
-              3) echo 8 ;;
-              4) echo 12 ;;
-              5) echo 15 ;;
-              *) echo 20 ;;
-            esac
-          }
-
           echo "Event SHA: $EVENT_SHA"
-          echo "Event before: $EVENT_BEFORE"
-
-          # Deleted delivery paths are best-effort only. Current existing files remain
-          # the source of truth for successful reconciliation.
-          if [[ ! "$EVENT_BEFORE" =~ ^0+$ ]] \
-             && git cat-file -e "${EVENT_BEFORE}^{commit}" 2>/dev/null \
-             && git cat-file -e "${EVENT_SHA}^{commit}" 2>/dev/null; then
-            mapfile -t deleted_paths < <(
-              git diff --diff-filter=D --name-only "$EVENT_BEFORE" "$EVENT_SHA" -- \
-                config/remote.conf modules \
-                | grep -E '^(config/remote\.conf|modules/[^/]+\.sgmodule)$' || :
-            )
-            for path in "${deleted_paths[@]}"; do
-              echo "Best-effort purge for deleted delivery path: $path"
-              purge_path "$path" || echo "WARNING: deleted path purge request failed: $path"
-            done
-          fi
+          echo "Workflow run number: $RUN_NUMBER"
 
           for iteration in $(seq 1 "$MAX_ITERATIONS"); do
-            echo "========== reconciliation iteration $iteration/$MAX_ITERATIONS =========="
+            echo "========== semver reconciliation iteration $iteration/$MAX_ITERATIONS =========="
 
             set +e
             TARGET_SHA="$(wait_for_stable_main)"
             settle_rc=$?
             set -e
+
             if [ "$settle_rc" -eq 2 ]; then
-              echo "main is still moving; restarting reconciliation"
+              echo "main is still moving; restarting"
               continue
             elif [ "$settle_rc" -ne 0 ]; then
               exit "$settle_rc"
             fi
 
+            VERSION="1.${RUN_NUMBER}.${iteration}"
             echo "TARGET_SHA=$TARGET_SHA"
+            echo "VERSION=$VERSION"
 
             expected_dir="$(mktemp -d)"
             materialize_target "$TARGET_SHA" "$expected_dir"
@@ -247,7 +385,7 @@ jobs:
               exit 1
             fi
 
-            echo "Delivery files at TARGET_SHA:"
+            echo "Delivery files:"
             printf '  %s\n' "${delivery_files[@]}"
 
             echo "Validating TARGET_SHA=$TARGET_SHA"
@@ -256,98 +394,69 @@ jobs:
               python3 scripts/validate_shadowrocket.py
             )
 
-            # First check without touching CDN. This lets superseded/overlapping runs
-            # finish harmlessly when another run has already reconciled the same HEAD.
+            create_or_verify_tag "$VERSION" "$TARGET_SHA"
+
             set +e
-            verify_all_files "$TARGET_SHA" "$expected_dir" "${delivery_files[@]}"
-            initial_rc=$?
+            wait_for_latest_metadata "$VERSION" "$TARGET_SHA"
+            metadata_rc=$?
             set -e
 
-            if [ "$initial_rc" -eq 0 ]; then
-              END_SHA="$(fetch_main_head)"
+            if [ "$metadata_rc" -eq 2 ]; then
               rm -rf "$expected_dir"
-              echo "END_SHA=$END_SHA"
-              if [ "$END_SHA" = "$TARGET_SHA" ]; then
-                echo "RECONCILIATION SUCCESS: CDN already equals stable main HEAD $TARGET_SHA"
-                exit 0
-              fi
-              echo "main advanced after exact CDN check: $TARGET_SHA -> $END_SHA"
               continue
-            elif [ "$initial_rc" -eq 2 ]; then
+            elif [ "$metadata_rc" -ne 0 ]; then
               rm -rf "$expected_dir"
-              echo "main advanced during pre-purge verification; restarting"
-              continue
+              exit "$metadata_rc"
             fi
 
-            # Publisher election without a GitHub concurrency group:
-            # if newer relevant changes exist after this run's event SHA, a newer
-            # push-triggered run owns the purge. This run becomes an observer only.
+            echo "Verifying immutable jsDelivr version @$VERSION"
+            if ! verify_version_files "$VERSION" "$expected_dir" "${delivery_files[@]}"; then
+              echo "Immutable jsDelivr version @$VERSION did not match TARGET_SHA=$TARGET_SHA." >&2
+              rm -rf "$expected_dir"
+              exit 1
+            fi
+
             publisher=true
             if relevant_changes_after_event "$TARGET_SHA"; then
               publisher=false
             fi
 
             if [ "$publisher" = true ]; then
-              echo "ROLE=PUBLISHER event=$EVENT_SHA target=$TARGET_SHA"
-              echo "One purge cycle for the stable target; no repeated purge while polling."
+              echo "ROLE=PUBLISHER event=$EVENT_SHA target=$TARGET_SHA version=$VERSION"
               for path in "${delivery_files[@]}"; do
-                purge_path "$path"
+                purge_latest_path "$path"
               done
             else
-              echo "ROLE=OBSERVER event=$EVENT_SHA target=$TARGET_SHA"
-              echo "Newer relevant push exists; this run will not purge or interfere with its publisher."
+              echo "ROLE=OBSERVER event=$EVENT_SHA target=$TARGET_SHA version=$VERSION"
+              echo "A newer relevant main change exists; this run will not purge @latest."
             fi
 
-            advanced=false
-            for round in $(seq 1 "$CDN_POLL_ROUNDS"); do
-              echo "CDN poll round $round/$CDN_POLL_ROUNDS for TARGET_SHA=$TARGET_SHA"
-              set +e
-              verify_all_files "$TARGET_SHA" "$expected_dir" "${delivery_files[@]}"
-              verify_rc=$?
-              set -e
-
-              if [ "$verify_rc" -eq 0 ]; then
-                END_SHA="$(fetch_main_head)"
-                rm -rf "$expected_dir"
-                echo "END_SHA=$END_SHA"
-                if [ "$END_SHA" = "$TARGET_SHA" ]; then
-                  echo "RECONCILIATION SUCCESS: CDN == stable main HEAD $TARGET_SHA"
-                  exit 0
-                fi
-                echo "main advanced after exact CDN verification: $TARGET_SHA -> $END_SHA"
-                advanced=true
-                break
-              elif [ "$verify_rc" -eq 2 ]; then
-                echo "main advanced while polling; switching to newer target"
-                advanced=true
-                break
-              fi
-
-              if [ "$round" -lt "$CDN_POLL_ROUNDS" ]; then
-                delay="$(poll_delay "$round")"
-                echo "CDN not converged; waiting ${delay}s without another purge"
-                sleep "$delay"
-              fi
-            done
+            set +e
+            verify_latest_files "$TARGET_SHA" "$expected_dir" "${delivery_files[@]}"
+            latest_rc=$?
+            set -e
 
             rm -rf "$expected_dir"
 
-            if [ "$advanced" = true ]; then
+            if [ "$latest_rc" -eq 0 ]; then
+              END_SHA="$(fetch_main_head)"
+              echo "END_SHA=$END_SHA"
+              if [ "$END_SHA" = "$TARGET_SHA" ]; then
+                echo "SEMVER RECONCILIATION SUCCESS: @latest == stable main HEAD $TARGET_SHA via version $VERSION"
+                exit 0
+              fi
+              echo "main advanced after exact @latest verification: $TARGET_SHA -> $END_SHA"
+              continue
+            elif [ "$latest_rc" -eq 2 ]; then
+              echo "main advanced while verifying @latest; restarting"
               continue
             fi
 
-            FINAL_STABLE_SHA="$(fetch_main_head)"
-            if [ "$FINAL_STABLE_SHA" != "$TARGET_SHA" ]; then
-              echo "main changed after polling: $TARGET_SHA -> $FINAL_STABLE_SHA"
-              continue
-            fi
-
-            echo "RECONCILIATION FAILED: jsDelivr @main did not converge to stable HEAD $TARGET_SHA within the polling window." >&2
-            echo "No false success was reported. Note that jsDelivr documents branch caching independently of GitHub HEAD." >&2
+            echo "SEMVER RECONCILIATION FAILED: @latest did not converge to stable TARGET_SHA=$TARGET_SHA." >&2
             exit 1
           done
 
           FINAL_HEAD="$(fetch_main_head)"
-          echo "RECONCILIATION FAILED: main did not stay stable within $MAX_ITERATIONS settling attempts." >&2
+          echo "SEMVER RECONCILIATION FAILED: main did not stay stable within $MAX_ITERATIONS attempts." >&2
           echo "Latest observed main HEAD: $FINAL_HEAD" >&2
           exit 1
