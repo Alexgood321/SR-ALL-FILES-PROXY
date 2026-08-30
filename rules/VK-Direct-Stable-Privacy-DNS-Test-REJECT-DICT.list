@@ -1,8 +1,0 @@
-# last_update=2026-08-30_20:38:34_UTC
-# Модуль: VK Direct Stable Privacy DNS Test
-# Блокировка рекламы и трекинга.
-# Политика REJECT-DICT задаётся в config/remote.conf.
-
-DOMAIN-SUFFIX,target.my.com
-DOMAIN-SUFFIX,advertising.my.com
-DOMAIN-SUFFIX,mytarget.com

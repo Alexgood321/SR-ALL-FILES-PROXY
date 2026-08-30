@@ -1,10 +1,15 @@
 # SR-ALL-FILES-PROXY
 
-Готовые ссылки для Shadowrocket. Репозиторий автообновляется каждые 5 минут и при любом коммите. Кэш CDN (jsDelivr) чистится автоматически.
+Конфигурация Shadowrocket с раздельными глобальными настройками, маршрутизацией и функциональным YouTube-модулем. Кэш jsDelivr очищается автоматически после реальных изменений `config/**` или `modules/**` в `main`.
 
 ## Ссылки для импорта
 
-Конфиг https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/refs/heads/main/config/remote.conf
+- Основной конфиг: https://cdn.jsdelivr.net/gh/Alexgood321/SR-ALL-FILES-PROXY@main/config/remote.conf
+- Routing Module: https://cdn.jsdelivr.net/gh/Alexgood321/SR-ALL-FILES-PROXY@main/modules/Routing.sgmodule
+- YouTube Module: https://cdn.jsdelivr.net/gh/Alexgood321/SR-ALL-FILES-PROXY@main/modules/Youtube-Config.sgmodule
 
-### Модуль (Modules → + → Download from URL)
-YOUTUBE https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/refs/heads/main/modules/Youtube-Config.sgmodule
+## Архитектура
+
+- `config/remote.conf` — глобальные и базовые настройки, DNS, `GEOIP` и `FINAL`.
+- `modules/Routing.sgmodule` — единая пользовательская маршрутизация DIRECT / PROXY / REJECT.
+- `modules/Youtube-Config.sgmodule` — отдельная YouTube-функциональность MITM / Rewrite / Script.

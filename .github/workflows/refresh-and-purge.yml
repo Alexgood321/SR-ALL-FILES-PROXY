@@ -1,34 +1,24 @@
-name: Shadowrocket refresh and purge
+name: Validate and purge jsDelivr
 
 on:
-  schedule:
-    - cron: "*/5 * * * *"
-  workflow_dispatch:
   push:
     branches:
       - main
     paths:
-      - "modules/**"
-      - "rules/**"
       - "config/**"
-      - "*.conf"
-      - "*.sgmodule"
-      - "*.module"
-      - "*.yaml"
-      - "*.yml"
-      - "*.txt"
-      - ".github/workflows/**"
-      - "README.md"
+      - "modules/**"
+      - "scripts/validate_shadowrocket.py"
+      - ".github/workflows/refresh-and-purge.yml"
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: shadowrocket-refresh
+  group: shadowrocket-publish-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  refresh:
+  publish:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -36,71 +26,121 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Touch last_update
-        id: touch_files
+      - name: Validate Shadowrocket files
+        run: python3 scripts/validate_shadowrocket.py
+
+      - name: Find changed delivery files
+        id: changes
         shell: bash
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          AFTER_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
-          TS="$(date -u +'%Y-%m-%d_%H:%M:%S_UTC')"
 
-          mapfile -t FILES < <(git ls-files)
-
-          changed_paths=()
-          for f in "${FILES[@]}"; do
-            case "$f" in
-              .github/*) continue;;
-              *.conf|*.sgmodule|*.module|*.list|*.txt|*.yaml|*.yml) ;;
-              *) continue;;
-            esac
-
-            size=$(wc -c < "$f" || echo 0)
-            [ "$size" -eq 0 ] && continue
-            [ "$size" -gt 2000000 ] && continue
-            if LC_ALL=C grep -Iq . "$f"; then :; else continue; fi
-
-            if head -n1 "$f" | grep -qE '^(#\s*)?last_update='; then
-              awk -v ts="$TS" 'NR==1{ sub(/^#\s*last_update=.*/, "# last_update=" ts); print; next } {print}' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
-            else
-              printf '# last_update=%s\n%s' "$TS" "$(cat "$f")" > "$f"
-            fi
-
-            changed_paths+=("$f")
-          done
-
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          if git status --porcelain | grep -q .; then
-            git add -A
-            git commit -m "Refresh at $TS"
-            git push
-            printf '%s\n' "${changed_paths[@]}" > /tmp/changed.txt
+          if [[ "$BEFORE_SHA" =~ ^0+$ ]]; then
+            mapfile -t changed_files < <(
+              git diff-tree --no-commit-id --name-only -r "$AFTER_SHA" -- config modules
+            )
           else
-            : > /tmp/changed.txt
+            mapfile -t changed_files < <(
+              git diff --name-only "$BEFORE_SHA" "$AFTER_SHA" -- config modules
+            )
           fi
 
-      - name: Purge jsDelivr
-        shell: bash
-        run: |
-          set -euo pipefail
-          REPO="Alexgood321/SR-ALL-FILES-PROXY"
-          if [ -s /tmp/changed.txt ]; then
-            while IFS= read -r f; do
-              echo "Purging https://purge.jsdelivr.net/gh/${REPO}@main/${f}"
-              curl -fsS "https://purge.jsdelivr.net/gh/${REPO}@main/${f}" || true
-            done < /tmp/changed.txt
+          if [ "${#changed_files[@]}" -gt 0 ]; then
+            has_files=true
+          else
+            has_files=false
           fi
 
-      - name: Warm raw.githubusercontent
+          {
+            echo "has_files=$has_files"
+            echo "files<<EOF"
+            printf '%s\n' "${changed_files[@]}"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+          printf 'Changed delivery files:\n'
+          printf '  %s\n' "${changed_files[@]}"
+
+      - name: Purge changed jsDelivr paths
+        if: steps.changes.outputs.has_files == 'true'
         shell: bash
+        env:
+          REPOSITORY: ${{ github.repository }}
+          CHANGED_FILES: ${{ steps.changes.outputs.files }}
         run: |
           set -euo pipefail
-          REPO="Alexgood321/SR-ALL-FILES-PROXY"
-          TS=$(date +%s)
-          if [ -s /tmp/changed.txt ]; then
-            while IFS= read -r f; do
-              url="https://raw.githubusercontent.com/${REPO}/main/${f}?t=${TS}"
-              echo "HEAD $url"
-              curl -fsI "$url" >/dev/null || true
-            done < /tmp/changed.txt
-          fi
+
+          while IFS= read -r path; do
+            [ -n "$path" ] || continue
+            purge_url="https://purge.jsdelivr.net/gh/${REPOSITORY}@main/${path}"
+            response_file=$(mktemp)
+            success=false
+
+            for attempt in 1 2 3; do
+              status=000
+              if status=$(curl -sS -o "$response_file" -w '%{http_code}' "$purge_url"); then
+                if [[ "$status" =~ ^2[0-9][0-9]$ ]]; then
+                  success=true
+                  break
+                fi
+              fi
+              echo "Purge attempt $attempt failed for $path (HTTP $status)"
+              sleep $((attempt * 2))
+            done
+
+            if [ "$success" != true ]; then
+              echo "Purge failed after 3 attempts: $purge_url" >&2
+              sed -n '1,20p' "$response_file" >&2
+              exit 1
+            fi
+            echo "Purged $path (HTTP $status)"
+          done <<< "$CHANGED_FILES"
+
+      - name: Verify changed CDN content
+        if: steps.changes.outputs.has_files == 'true'
+        shell: bash
+        env:
+          REPOSITORY: ${{ github.repository }}
+          CHANGED_FILES: ${{ steps.changes.outputs.files }}
+        run: |
+          set -euo pipefail
+
+          while IFS= read -r path; do
+            [ -n "$path" ] || continue
+            if [ ! -f "$path" ]; then
+              echo "Skipped CDN body verification for deleted path: $path"
+              continue
+            fi
+            cdn_url="https://cdn.jsdelivr.net/gh/${REPOSITORY}@main/${path}"
+            body_file=$(mktemp)
+            headers_file=$(mktemp)
+            matched=false
+            status=000
+
+            for attempt in 1 2 3; do
+              status=000
+              if status=$(curl -sS -L -D "$headers_file" -o "$body_file" -w '%{http_code}' "$cdn_url"); then
+                if [ "$status" = 200 ] && [ -s "$body_file" ]; then
+                  if ! head -c 512 "$body_file" | grep -qiE '<!doctype html|<html'; then
+                    if cmp -s "$body_file" "$path"; then
+                      matched=true
+                      break
+                    fi
+                  fi
+                fi
+              fi
+              echo "CDN verification attempt $attempt failed for $path (HTTP $status)"
+              sleep $((attempt * 2))
+            done
+
+            if [ "$matched" != true ]; then
+              echo "CDN content does not match GitHub HEAD: $cdn_url" >&2
+              grep -i '^content-type:' "$headers_file" >&2 || :
+              shasum -a 256 "$path" "$body_file" >&2
+              exit 1
+            fi
+            echo "Verified $path (HTTP 200, exact content match)"
+          done <<< "$CHANGED_FILES"

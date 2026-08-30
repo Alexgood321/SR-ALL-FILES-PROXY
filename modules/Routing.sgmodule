@@ -1,0 +1,672 @@
+#!name=Routing – Alexgood
+#!desc=Central routing rules for Shadowrocket. DIRECT / PROXY / REJECT rules migrated from the previous RULE-SET architecture.
+
+[Rule]
+
+# Source 01: rules/tunneling.list
+# Policy: DIRECT
+DOMAIN-KEYWORD,bidspirit,DIRECT
+
+# Source 02: rules/VK-Direct-Stable-Privacy-DNS-Test-REJECT-ARRAY.list
+# Policy: REJECT-ARRAY
+# Блокировка рекламы и трекинга.
+
+DOMAIN,alt-ad.mail.ru,REJECT-ARRAY
+DOMAIN,ad.mail.ru,REJECT-ARRAY
+
+# Source 03: rules/VK-Direct-Stable-Privacy-DNS-Test-REJECT-TINYGIF.list
+# Policy: REJECT-TINYGIF
+# Блокировка рекламы и трекинга.
+
+DOMAIN-SUFFIX,mradx.net,REJECT-TINYGIF
+
+# Source 04: rules/VK-Direct-Stable-Privacy-DNS-Test-REJECT-DICT.list
+# Policy: REJECT-DICT
+# Блокировка рекламы и трекинга.
+
+DOMAIN-SUFFIX,target.my.com,REJECT-DICT
+DOMAIN-SUFFIX,advertising.my.com,REJECT-DICT
+DOMAIN-SUFFIX,mytarget.com,REJECT-DICT
+
+# Source 05: rules/VK-Direct-Stable-Privacy-DNS-Test-REJECT.list
+# Policy: REJECT
+# Блокировка рекламы и трекинга.
+
+DOMAIN-SUFFIX,tracker-api.vk-analytics.ru,REJECT
+DOMAIN-SUFFIX,vk-analytics.ru,REJECT
+DOMAIN-SUFFIX,tracker-api.my.com,REJECT
+
+# Source 06: rules/VK-Direct-Stable-Privacy-DNS-Test-REJECT-200.list
+# Policy: REJECT-200
+# Блокировка рекламы и трекинга.
+
+DOMAIN-SUFFIX,top.mail.ru,REJECT-200
+DOMAIN,r.mail.ru,REJECT-200
+
+# Source 07: rules/Manual-DIRECT.list
+# Policy: DIRECT
+# IPTV/EPG, видео, Яндекс core и выбранные сервисы идут напрямую
+
+DOMAIN-SUFFIX,2ip.io,DIRECT
+
+# =========================
+# IPTV / EPG
+# =========================
+
+DOMAIN,new.tv.team,DIRECT
+DOMAIN,rus.epg.team,DIRECT
+DOMAIN,iptvx.one,DIRECT
+DOMAIN,epg.one,DIRECT
+DOMAIN,cdn.epg.one,DIRECT
+DOMAIN,ss-iptv.com,DIRECT
+DOMAIN-SUFFIX,tvtm.one,DIRECT
+DOMAIN,uhf-epg-backend.divine-leaf-f816.workers.dev,DIRECT
+DOMAIN,tbs01-edge11.itdc.ge,DIRECT
+
+IP-CIDR,188.225.31.197/32,DIRECT,no-resolve
+IP-CIDR,5.61.89.166/32,DIRECT,no-resolve
+
+# IPTV Lamro
+DOMAIN-SUFFIX,lamro.workers.dev,DIRECT
+
+# =========================
+# HDRezka / video resources
+# =========================
+
+DOMAIN,flymaterez.net,DIRECT
+DOMAIN,statichdrezka.ac,DIRECT
+DOMAIN,static.voidboost.com,DIRECT
+
+DOMAIN-SUFFIX,vdbmate.org,DIRECT
+DOMAIN,getter.fun,DIRECT
+DOMAIN,sun1-14.userapi.com,DIRECT
+
+# =========================
+# DaVinci Resolve / Blackmagic Design
+# =========================
+
+DOMAIN-SUFFIX,blackmagicdesign.com,DIRECT
+
+# =========================
+# IQOS
+# =========================
+
+DOMAIN-SUFFIX,iqos.ru,DIRECT
+
+# =========================
+# Z.ai / ChatGLM
+# =========================
+
+DOMAIN-SUFFIX,z.ai,DIRECT
+DOMAIN-SUFFIX,chatglm.cn,DIRECT
+
+# =========================
+# Vigbo / photo
+# =========================
+
+DOMAIN-SUFFIX,clients.vigbo.com,DIRECT
+
+# =========================
+# AliExpress
+# =========================
+
+DOMAIN-SUFFIX,aliexpress.com,DIRECT
+
+# =========================
+# External IP check
+# =========================
+
+DOMAIN-SUFFIX,ifconfig.me,DIRECT
+
+# =========================
+# Radio Record
+# =========================
+
+DOMAIN-SUFFIX,radiorecord.ru,DIRECT
+DOMAIN-SUFFIX,hostingradio.ru,DIRECT
+DOMAIN-KEYWORD,radiorecord,DIRECT
+
+# =========================
+
+# T-Банк / Tinkoff
+
+# =========================
+
+DOMAIN-SUFFIX,tinkoff.ru,DIRECT
+
+DOMAIN-SUFFIX,tbank.ru,DIRECT
+
+DOMAIN-SUFFIX,tinkoffinsurance.ru,DIRECT
+
+DOMAIN-SUFFIX,cdn-tinkoff.ru,DIRECT
+
+# =========================
+
+# Ozon
+
+# =========================
+
+DOMAIN-SUFFIX,ozon.ru,DIRECT
+
+DOMAIN-SUFFIX,ozone.ru,DIRECT
+
+DOMAIN-SUFFIX,ozonusercontent.com,DIRECT
+
+# =========================
+
+# Wildberries / WB
+
+# =========================
+
+DOMAIN-SUFFIX,wildberries.ru,DIRECT
+
+DOMAIN-SUFFIX,wb.ru,DIRECT
+
+# =========================
+
+# Sber
+
+# =========================
+
+DOMAIN-SUFFIX,sberbank.ru,DIRECT
+
+DOMAIN-SUFFIX,online.sberbank.ru,DIRECT
+
+DOMAIN-SUFFIX,sber.ru,DIRECT
+
+# =========================
+
+# Alfa-Bank
+
+# =========================
+
+DOMAIN-SUFFIX,alfabank.ru,DIRECT
+
+# =========================
+# Kinorium
+# =========================
+DOMAIN-SUFFIX,kinorium.com,DIRECT
+
+#2gis
+
+DOMAIN-SUFFIX,2gis.com,DIRECT
+
+DOMAIN-SUFFIX,postmypost.io,DIRECT
+
+# =========================
+# Qwen / Alibaba Cloud — disabled
+# =========================
+# DOMAIN-SUFFIX,qwen.ai,DIRECT
+# DOMAIN-SUFFIX,chat.qwen.ai,DIRECT
+# DOMAIN-SUFFIX,qwenlm.github.io,DIRECT
+# DOMAIN-SUFFIX,dashscope.aliyuncs.com,DIRECT
+# DOMAIN-SUFFIX,dashscope-intl.aliyuncs.com,DIRECT
+# DOMAIN-SUFFIX,alibabacloud.com,DIRECT
+# DOMAIN-SUFFIX,aliyuncs.com,DIRECT
+# DOMAIN-SUFFIX,modelscope.cn,DIRECT
+
+
+
+IP-CIDR,46.174.49.29/32,DIRECT,no-resolve
+
+# Source 08: rules/Apple-DIRECT-System-DNS-MAX.list
+# Policy: DIRECT
+# Apple/iCloud/APNs/App Store/iTunes/CloudKit/FaceTime/CDN via DIRECT + system DNS; fixed App Store Search DNS/CNAME tails
+
+# Apple core
+DOMAIN-SUFFIX,apple.com,DIRECT
+DOMAIN-SUFFIX,icloud.com,DIRECT
+DOMAIN-SUFFIX,me.com,DIRECT
+DOMAIN-SUFFIX,mac.com,DIRECT
+DOMAIN-SUFFIX,apple.news,DIRECT
+DOMAIN-SUFFIX,appleusercontent.com,DIRECT
+
+# App Store / iTunes / Media
+DOMAIN-SUFFIX,apps.apple.com,DIRECT
+DOMAIN-SUFFIX,itunes.apple.com,DIRECT
+DOMAIN-SUFFIX,itunes.com,DIRECT
+DOMAIN-SUFFIX,itunes-apple.com,DIRECT
+DOMAIN-SUFFIX,itunes-nocookie.com,DIRECT
+DOMAIN-SUFFIX,mzstatic.com,DIRECT
+DOMAIN-SUFFIX,aaplimg.com,DIRECT
+DOMAIN-SUFFIX,g.aaplimg.com,DIRECT
+DOMAIN-SUFFIX,appsto.re,DIRECT
+DOMAIN-SUFFIX,appstoreconnect.apple.com,DIRECT
+DOMAIN-SUFFIX,testflight.apple.com,DIRECT
+DOMAIN-SUFFIX,iadsdk.apple.com,DIRECT
+
+# App Store Search / token / ATS
+DOMAIN-SUFFIX,sf-api-token-service.itunes.apple.com,DIRECT
+DOMAIN-SUFFIX,silverbullet-external-ats.itunes.apple.com,DIRECT
+DOMAIN-SUFFIX,apps-marketplace.apple.com,DIRECT
+DOMAIN-SUFFIX,appattest.apple.com,DIRECT
+DOMAIN,token.safebrowsing.apple,DIRECT
+
+# Apple CDN / downloads / software update
+DOMAIN-SUFFIX,icloud-content.com,DIRECT
+DOMAIN-SUFFIX,cdn-apple.com,DIRECT
+DOMAIN-SUFFIX,apple-dns.net,DIRECT
+DOMAIN-SUFFIX,apple-mapkit.com,DIRECT
+DOMAIN-SUFFIX,akadns.net,DIRECT
+DOMAIN-SUFFIX,akamaiedge.net,DIRECT
+DOMAIN-SUFFIX,akamaized.net,DIRECT
+DOMAIN-SUFFIX,edgekey.net,DIRECT
+DOMAIN-SUFFIX,edgesuite.net,DIRECT
+DOMAIN-SUFFIX,akamaihd.net,DIRECT
+DOMAIN-SUFFIX,deploy.static.akamaitechnologies.com,DIRECT
+DOMAIN-SUFFIX,swcdn.apple.com,DIRECT
+DOMAIN-SUFFIX,swdist.apple.com,DIRECT
+DOMAIN-SUFFIX,swdownload.apple.com,DIRECT
+DOMAIN-SUFFIX,swquery.apple.com,DIRECT
+DOMAIN-SUFFIX,swscan.apple.com,DIRECT
+DOMAIN-SUFFIX,updates-http.cdn-apple.com,DIRECT
+DOMAIN,updates.cdn-apple.com,DIRECT
+DOMAIN,app-site-association.cdn-apple.com,DIRECT
+DOMAIN-SUFFIX,appldnld.apple.com,DIRECT
+
+# Fastly CDN / Apple Maps CNAME tails
+DOMAIN-SUFFIX,fastly.net,DIRECT
+DOMAIN-SUFFIX,fastlylb.net,DIRECT
+DOMAIN-SUFFIX,fastly-edge.com,DIRECT
+DOMAIN-SUFFIX,map.fastly.net,DIRECT
+DOMAIN-SUFFIX,apis.apple.map.fastly.net,DIRECT
+DOMAIN-SUFFIX,media.apple.map.fastly.net,DIRECT
+
+# Push / APNs
+DOMAIN-SUFFIX,push.apple.com,DIRECT
+DOMAIN-SUFFIX,push-apple.com,DIRECT
+DOMAIN-SUFFIX,courier.push.apple.com,DIRECT
+
+# CloudKit
+DOMAIN-SUFFIX,apple-cloudkit.com,DIRECT
+
+# FaceTime / iMessage / IDS / Siri / Game Center
+DOMAIN-SUFFIX,ess.apple.com,DIRECT
+DOMAIN-SUFFIX,identity.apple.com,DIRECT
+DOMAIN-SUFFIX,ids-apple.com,DIRECT
+DOMAIN-SUFFIX,guzzoni.apple.com,DIRECT
+DOMAIN-SUFFIX,gc.apple.com,DIRECT
+
+# Location / captive / config / device services
+DOMAIN-SUFFIX,ls.apple.com,DIRECT
+DOMAIN-SUFFIX,gs-loc.apple.com,DIRECT
+DOMAIN-SUFFIX,captive.apple.com,DIRECT
+DOMAIN-SUFFIX,gdmf.apple.com,DIRECT
+DOMAIN-SUFFIX,deviceenrollment.apple.com,DIRECT
+DOMAIN-SUFFIX,deviceservices-external.apple.com,DIRECT
+DOMAIN-SUFFIX,albert.apple.com,DIRECT
+
+# Time / activation / setup / OTA
+DOMAIN-SUFFIX,time.apple.com,DIRECT
+DOMAIN-SUFFIX,time-ios.apple.com,DIRECT
+DOMAIN-SUFFIX,init.itunes.apple.com,DIRECT
+DOMAIN-SUFFIX,iphone-ld.apple.com,DIRECT
+DOMAIN-SUFFIX,xp.apple.com,DIRECT
+DOMAIN-SUFFIX,mesu.apple.com,DIRECT
+
+# OCSP / certificates
+DOMAIN-SUFFIX,ocsp.apple.com,DIRECT
+DOMAIN-SUFFIX,ocsp2.apple.com,DIRECT
+DOMAIN-SUFFIX,valid.apple.com,DIRECT
+DOMAIN-SUFFIX,certs.apple.com,DIRECT
+DOMAIN-SUFFIX,crl.apple.com,DIRECT
+DOMAIN-SUFFIX,digicert.com,DIRECT
+DOMAIN-SUFFIX,digicert.cn,DIRECT
+DOMAIN-SUFFIX,sectigo.com,DIRECT
+
+# Private Relay / iCloud mask
+DOMAIN,apple-relay.cloudflare.com,DIRECT
+DOMAIN,apple-relay.fastly-edge.com,DIRECT
+DOMAIN,apple-relay.apple.com,DIRECT
+DOMAIN-SUFFIX,doh.dns.apple.com,DIRECT
+DOMAIN-SUFFIX,gateway.icloud.com,DIRECT
+DOMAIN-SUFFIX,mask.icloud.com,DIRECT
+DOMAIN-SUFFIX,mask-h2.icloud.com,DIRECT
+DOMAIN-SUFFIX,mask-api.icloud.com,DIRECT
+DOMAIN-SUFFIX,probe.icloud.com,DIRECT
+DOMAIN-SUFFIX,pong.icloud.com,DIRECT
+DOMAIN-SUFFIX,metrics.icloud.com,DIRECT
+DOMAIN-SUFFIX,apple-native-relay.apple.com,DIRECT
+
+# Apple official IP ranges / UDP fallback
+IP-CIDR,17.0.0.0/8,DIRECT,no-resolve
+IP-CIDR,172.224.0.0/12,DIRECT,no-resolve
+IP-CIDR6,2403:300::/32,DIRECT,no-resolve
+IP-CIDR6,2620:149::/32,DIRECT,no-resolve
+IP-CIDR6,2a01:b740::/32,DIRECT,no-resolve
+
+# Source 09: rules/BiP-DIRECT.list
+# Policy: DIRECT
+# BiP Messenger (Turkey) -> DIRECT based on observed hosts/IPs from PacketTunnel log
+
+# Core BiP domains seen in the log
+DOMAIN-SUFFIX,bip.com,DIRECT
+DOMAIN-SUFFIX,bip.ai,DIRECT
+DOMAIN,xmpp.bip.com,DIRECT
+DOMAIN,bipchannel.bip.com,DIRECT
+DOMAIN,dman.bip.com,DIRECT
+DOMAIN,fts.bip.com,DIRECT
+DOMAIN,imos.bip.com,DIRECT
+DOMAIN,swf.bip.com,DIRECT
+DOMAIN,swfbu.bip.com,DIRECT
+DOMAIN,groups.bip.ai,DIRECT
+DOMAIN,tims.turkcell.com.tr,DIRECT
+
+# Observed BiP IP blocks from the log
+IP-CIDR,176.235.29.0/24,DIRECT,no-resolve
+IP-CIDR,176.235.227.0/24,DIRECT,no-resolve
+
+# Source 10: rules/VK-Direct-Stable-Privacy-DNS-Test-DIRECT.list
+# Policy: DIRECT
+# Основной VK, Mail и CDN напрямую.
+
+DOMAIN-SUFFIX,vk.com,DIRECT
+DOMAIN-SUFFIX,vk.ru,DIRECT
+DOMAIN-SUFFIX,vkontakte.ru,DIRECT
+DOMAIN-SUFFIX,vkuser.net,DIRECT
+DOMAIN-SUFFIX,vkuserphoto.ru,DIRECT
+DOMAIN-SUFFIX,userapi.com,DIRECT
+DOMAIN-SUFFIX,mycdn.me,DIRECT
+DOMAIN-SUFFIX,vk-cdn.net,DIRECT
+DOMAIN-SUFFIX,vk-cdn.com,DIRECT
+DOMAIN-SUFFIX,vkvd.net,DIRECT
+DOMAIN-SUFFIX,vkvideo.ru,DIRECT
+DOMAIN-SUFFIX,vkpay.ru,DIRECT
+DOMAIN-SUFFIX,vk.team,DIRECT
+DOMAIN-SUFFIX,vkuseraudio.net,DIRECT
+DOMAIN-SUFFIX,mail.ru,DIRECT
+DOMAIN-SUFFIX,cloud.mail.ru,DIRECT
+DOMAIN-SUFFIX,my.com,DIRECT
+DOMAIN-SUFFIX,datacloudmail.ru,DIRECT
+DOMAIN-SUFFIX,mailcdn.ru,DIRECT
+DOMAIN-SUFFIX,my.mail.ru,DIRECT
+DOMAIN-SUFFIX,e.mail.ru,DIRECT
+DOMAIN-SUFFIX,corp.mail.ru,DIRECT
+DOMAIN-SUFFIX,biz.mail.ru,DIRECT
+DOMAIN-SUFFIX,alt-aj-https.mail.ru,DIRECT
+DOMAIN-SUFFIX,odnoklassniki.ru,DIRECT
+DOMAIN-SUFFIX,ok.ru,DIRECT
+DOMAIN-SUFFIX,okcdn.ru,DIRECT
+IP-CIDR,93.186.225.194/32,DIRECT,no-resolve
+
+# Source 11: rules/Telegram-PROXY-Full.list
+# Policy: PROXY
+# Весь Telegram (домены + медиа + официальные CIDR) через прокси. Подходит для видео/медиа/звонков/ботов и обхода замедлений.
+
+# --- Telegram домены (основные) ---
+DOMAIN-SUFFIX,telegram.org,PROXY
+DOMAIN-SUFFIX,t.me,PROXY
+DOMAIN-SUFFIX,telegram.me,PROXY
+DOMAIN-SUFFIX,telegram.dog,PROXY
+DOMAIN-SUFFIX,telegra.ph,PROXY
+DOMAIN-SUFFIX,telesco.pe,PROXY
+DOMAIN-SUFFIX,tdesktop.com,PROXY
+DOMAIN-SUFFIX,graph.org,PROXY
+DOMAIN-SUFFIX,tx.me,PROXY
+
+# --- Медиа/файлы / CDN ---
+DOMAIN-SUFFIX,telegramusercontent.com,PROXY
+DOMAIN-SUFFIX,cdn-telegram.org,PROXY
+
+# --- Доп. домены (редко, но полезно) ---
+DOMAIN-SUFFIX,comments.app,PROXY
+DOMAIN-SUFFIX,telegramdownload.com,PROXY
+DOMAIN-SUFFIX,stel.com,PROXY
+DOMAIN-SUFFIX,telega.one,PROXY
+DOMAIN-SUFFIX,telegram.space,PROXY
+
+# --- API/кабинет ---
+DOMAIN,api.telegram.org,PROXY
+DOMAIN,my.telegram.org,PROXY
+
+# --- Официальные Telegram IPv4 CIDR (core.telegram.org/resources/cidr.txt) ---
+IP-CIDR,91.108.4.0/22,PROXY,no-resolve
+IP-CIDR,91.108.8.0/22,PROXY,no-resolve
+IP-CIDR,91.108.12.0/22,PROXY,no-resolve
+IP-CIDR,91.108.16.0/22,PROXY,no-resolve
+IP-CIDR,91.108.20.0/22,PROXY,no-resolve
+IP-CIDR,91.108.56.0/22,PROXY,no-resolve
+IP-CIDR,149.154.160.0/20,PROXY,no-resolve
+IP-CIDR,91.105.192.0/23,PROXY,no-resolve
+IP-CIDR,185.76.151.0/24,PROXY,no-resolve
+
+# --- Официальные Telegram IPv6 CIDR ---
+IP-CIDR6,2001:67c:4e8::/48,PROXY,no-resolve
+IP-CIDR6,2001:b28:f23d::/48,PROXY,no-resolve
+IP-CIDR6,2001:b28:f23f::/48,PROXY,no-resolve
+IP-CIDR6,2001:b28:f23c::/48,PROXY,no-resolve
+IP-CIDR6,2a0a:f280::/32,PROXY,no-resolve
+
+# Source 12: rules/JumpDesktop-PROXY.list
+# Policy: PROXY
+# Route all Jump Desktop traffic through proxy
+
+DOMAIN-SUFFIX,jumpdesktop.com,PROXY
+DOMAIN-KEYWORD,jumpdesktop,PROXY
+
+# Source 13: rules/Meta-FULL-FB-PROXY-Remote-DNS.list
+# Policy: PROXY
+# Facebook / Messenger / Instagram -> PROXY, to avoid RU DNS poisoning and GEOIP misrouting
+
+# =========================
+# META / FACEBOOK / MESSENGER / INSTAGRAM -> PROXY
+# Put this module ABOVE GEOIP,RU,DIRECT and ABOVE any Meta/WhatsApp IP-CIDR rules
+# =========================
+
+# --- Core domains ---
+DOMAIN-SUFFIX,facebook.com,PROXY
+DOMAIN-SUFFIX,fbcdn.net,PROXY
+DOMAIN-SUFFIX,fbsbx.com,PROXY
+DOMAIN-SUFFIX,messenger.com,PROXY
+DOMAIN-SUFFIX,instagram.com,PROXY
+DOMAIN-SUFFIX,cdninstagram.com,PROXY
+DOMAIN-SUFFIX,meta.com,PROXY
+
+# --- Facebook / Meta app API ---
+DOMAIN,graph.facebook.com,PROXY
+DOMAIN,graph-fallback.facebook.com,PROXY
+DOMAIN,payments-graph.facebook.com,PROXY
+DOMAIN,api.facebook.com,PROXY
+DOMAIN,b-api.facebook.com,PROXY
+DOMAIN,www.facebook.com,PROXY
+DOMAIN,m.facebook.com,PROXY
+DOMAIN,web.facebook.com,PROXY
+DOMAIN,gateway.facebook.com,PROXY
+DOMAIN,gateway-fallback.facebook.com,PROXY
+DOMAIN,lookaside.facebook.com,PROXY
+DOMAIN,rupload.facebook.com,PROXY
+DOMAIN,rupload-fallback.facebook.com,PROXY
+DOMAIN,developers.facebook.com,PROXY
+DOMAIN,accountscenter.facebook.com,PROXY
+DOMAIN,accounts.meta.com,PROXY
+
+# --- Messenger / realtime / chat / mqtt ---
+DOMAIN,edge-mqtt.facebook.com,PROXY
+DOMAIN,edge-mqtt-fallback.facebook.com,PROXY
+DOMAIN,edge-chat.facebook.com,PROXY
+DOMAIN,chat-e2ee.facebook.com,PROXY
+DOMAIN,mqtt.c10r.facebook.com,PROXY
+DOMAIN,mqtt.fallback.c10r.facebook.com,PROXY
+DOMAIN,chat-e2ee.c10r.facebook.com,PROXY
+DOMAIN,chat-e2ee-ig-p42.c10r.facebook.com,PROXY
+DOMAIN,dgw.c10r.facebook.com,PROXY
+DOMAIN,star.c10r.facebook.com,PROXY
+DOMAIN,star.fallback.c10r.facebook.com,PROXY
+DOMAIN,z-p42-chat-e2ee-ig.facebook.com,PROXY
+
+# --- Instagram explicit ---
+DOMAIN,www.instagram.com,PROXY
+DOMAIN,i.instagram.com,PROXY
+DOMAIN,api.instagram.com,PROXY
+DOMAIN,graph.instagram.com,PROXY
+DOMAIN,z-p42-instagram.c10r.facebook.com,PROXY
+
+# --- Media / uploads / CDN helpers ---
+DOMAIN-SUFFIX,xx.fbcdn.net,PROXY
+DOMAIN-SUFFIX,scontent.xx.fbcdn.net,PROXY
+DOMAIN-SUFFIX,video.xx.fbcdn.net,PROXY
+
+# --- Safety net for classic Meta ASNs often seen in logs ---
+# Keep BELOW domain rules. Useful only as backup if some Meta hosts appear without stable domain matching.
+IP-CIDR,31.13.24.0/21,PROXY,no-resolve
+IP-CIDR,31.13.64.0/18,PROXY,no-resolve
+IP-CIDR,66.220.144.0/20,PROXY,no-resolve
+IP-CIDR,69.63.176.0/20,PROXY,no-resolve
+IP-CIDR,69.171.224.0/19,PROXY,no-resolve
+IP-CIDR,74.119.76.0/22,PROXY,no-resolve
+IP-CIDR,102.132.96.0/20,PROXY,no-resolve
+IP-CIDR,129.134.0.0/16,PROXY,no-resolve
+IP-CIDR,157.240.0.0/16,PROXY,no-resolve
+IP-CIDR,173.252.64.0/18,PROXY,no-resolve
+IP-CIDR,185.60.216.0/22,PROXY,no-resolve
+
+# Source 14: rules/WhatsApp-Companion-WIDE.list
+# Policy: PROXY
+# WhatsApp with wider fallback for calls, but without fully swallowing all Meta traffic
+
+# --- App hints ---
+PROCESS-NAME,WhatsApp,PROXY
+USER-AGENT,WhatsApp*,PROXY
+
+# --- Core WhatsApp domains ---
+DOMAIN-SUFFIX,whatsapp.com,PROXY
+DOMAIN-SUFFIX,whatsapp.net,PROXY
+DOMAIN-SUFFIX,wa.me,PROXY
+DOMAIN-SUFFIX,g.whatsapp.net,PROXY
+DOMAIN-SUFFIX,v.whatsapp.net,PROXY
+DOMAIN-SUFFIX,mmg.whatsapp.net,PROXY
+DOMAIN-SUFFIX,media.whatsapp.net,PROXY
+DOMAIN-SUFFIX,static.whatsapp.net,PROXY
+DOMAIN-SUFFIX,cdn.whatsapp.net,PROXY
+DOMAIN-SUFFIX,pps.whatsapp.net,PROXY
+
+# --- Calls/media preference over UDP ---
+AND,((DOMAIN-SUFFIX,v.whatsapp.net),(PROTOCOL,UDP)),PROXY
+AND,((DOMAIN-SUFFIX,mmg.whatsapp.net),(PROTOCOL,UDP)),PROXY
+AND,((DOMAIN-SUFFIX,media.whatsapp.net),(PROTOCOL,UDP)),PROXY
+
+# --- IPv6 Meta fallback for calls ---
+AND,((IP-CIDR6,2a03:2880::/12,no-resolve),(PROTOCOL,UDP)),PROXY
+
+# --- Wider IPv4 fallback, but not full Meta swallow ---
+IP-CIDR,31.13.64.0/18,PROXY,no-resolve
+IP-CIDR,102.132.96.0/20,PROXY,no-resolve
+IP-CIDR,157.240.200.0/21,PROXY,no-resolve
+IP-CIDR,157.240.208.0/20,PROXY,no-resolve
+IP-CIDR,157.240.224.0/19,PROXY,no-resolve
+IP-CIDR,185.60.216.0/22,PROXY,no-resolve
+IP-CIDR,179.60.192.0/22,PROXY,no-resolve
+
+# --- Exact known hits ---
+IP-CIDR,31.13.84.48/32,PROXY,no-resolve
+IP-CIDR,185.60.218.51/32,PROXY,no-resolve
+IP-CIDR,157.240.252.62/32,PROXY,no-resolve
+IP-CIDR,157.240.253.62/32,PROXY,no-resolve
+IP-CIDR,157.240.223.62/32,PROXY,no-resolve
+IP-CIDR,157.240.0.62/32,PROXY,no-resolve
+
+# Source 15: rules/Manual-Proxy.list
+# Policy: PROXY
+# Принудительно отправляет домены обложек YouTube через PROXY
+
+DOMAIN,yt3.ggpht.com,PROXY
+DOMAIN,yt4.ggpht.com,PROXY
+DOMAIN,i.ytimg.com,PROXY
+DOMAIN-SUFFIX,ytimg.com,PROXY
+DOMAIN-SUFFIX,ggpht.com,PROXY
+
+DOMAIN-SUFFIX,pixabay.com,PROXY
+
+# AEZA 3x-ui panel
+IP-CIDR,62.60.230.167/32,PROXY,no-resolve
+
+# Hermes 3x-ui panel
+DOMAIN,hermes.routelink.ru,PROXY
+IP-CIDR,31.77.158.107/32,PROXY,no-resolve
+
+# Source 16: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/TikTok/TikTok.list
+# Policy: PROXY
+# NAME: TikTok
+# AUTHOR: blackmatrix7
+# REPO: https://github.com/blackmatrix7/ios_rule_script
+# UPDATED: 2025-08-10 02:08:00
+# DOMAIN: 4
+# DOMAIN-KEYWORD: 2
+# DOMAIN-SUFFIX: 25
+# USER-AGENT: 1
+# TOTAL: 32
+DOMAIN,lf16-effectcdn.byteeffecttos-g.com,PROXY
+DOMAIN,lf16-pkgcdn.pitaya-clientai.com,PROXY
+DOMAIN,p16-tiktokcdn-com.akamaized.net,PROXY
+DOMAIN,trae-api-sg.mchost.guru,PROXY
+DOMAIN-SUFFIX,bytedapm.com,PROXY
+DOMAIN-SUFFIX,bytegecko-i18n.com,PROXY
+DOMAIN-SUFFIX,byteintlapi.com,PROXY
+DOMAIN-SUFFIX,byteoversea.com,PROXY
+DOMAIN-SUFFIX,capcut.com,PROXY
+DOMAIN-SUFFIX,ibytedtos.com,PROXY
+DOMAIN-SUFFIX,ibyteimg.com,PROXY
+DOMAIN-SUFFIX,ipstatp.com,PROXY
+DOMAIN-SUFFIX,isnssdk.com,PROXY
+DOMAIN-SUFFIX,marscode.com,PROXY
+DOMAIN-SUFFIX,muscdn.com,PROXY
+DOMAIN-SUFFIX,musical.ly,PROXY
+DOMAIN-SUFFIX,sgpstatp.com,PROXY
+DOMAIN-SUFFIX,snssdk.com,PROXY
+DOMAIN-SUFFIX,tik-tokapi.com,PROXY
+DOMAIN-SUFFIX,tiktok.com,PROXY
+DOMAIN-SUFFIX,tiktokcdn-us.com,PROXY
+DOMAIN-SUFFIX,tiktokcdn.com,PROXY
+DOMAIN-SUFFIX,tiktokd.net,PROXY
+DOMAIN-SUFFIX,tiktokd.org,PROXY
+DOMAIN-SUFFIX,tiktokmusic.app,PROXY
+DOMAIN-SUFFIX,tiktokv.com,PROXY
+DOMAIN-SUFFIX,tiktokv.us,PROXY
+DOMAIN-SUFFIX,trae.ai,PROXY
+DOMAIN-SUFFIX,ttwebview.com,PROXY
+DOMAIN-KEYWORD,musical.ly,PROXY
+DOMAIN-KEYWORD,tiktok,PROXY
+USER-AGENT,TikTok*,PROXY
+
+# Source 17: https://raw.githubusercontent.com/Semporia/TikTok-Unlock/master/Surge/TikTok.list
+# Policy: PROXY
+# NAME: TikTok
+
+DOMAIN-KEYWORD,-tiktokcdn-com,PROXY
+
+# Source 18: rules/TikTok-HARD-PROXY.list
+# Policy: PROXY
+
+# -------------------------------------------------
+# -------------------------------------------------
+
+# -------------------------------------------------
+# 2) ВСТРОЕННЫЙ fallback (работает даже если rule-set не загрузился)
+# Core / API / App
+
+# CDN / Assets
+DOMAIN-SUFFIX,ttlivecdn.com,PROXY
+DOMAIN-SUFFIX,tiktokrow-cdn.com,PROXY
+
+# ByteDance infra / telemetry / sdk
+
+# Extra ecosystem (часто всплывает рядом)
+
+# Legacy/media
+
+# (встречается у части пользователей/регионов; держим как узкий DOMAIN)
+# -------------------------------------------------
+
+# -------------------------------------------------
+# 3) Keyword-ловушки (на случай новых поддоменов/вариаций)
+# -------------------------------------------------
+
+# -------------------------------------------------
+# 4) UA-страховка
+# -------------------------------------------------
+
+# -------------------------------------------------
+# 5) Слот под новые находки из логов
+# DOMAIN-SUFFIX,example.com,TikTok-Proxy
+# IP-CIDR,A.B.C.D/32,TikTok-Proxy,no-resolve
+# -------------------------------------------------

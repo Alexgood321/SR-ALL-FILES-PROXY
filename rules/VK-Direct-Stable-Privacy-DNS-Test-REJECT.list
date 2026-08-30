@@ -1,8 +1,0 @@
-# last_update=2026-08-30_20:38:34_UTC
-# Модуль: VK Direct Stable Privacy DNS Test
-# Блокировка рекламы и трекинга.
-# Политика REJECT задаётся в config/remote.conf.
-
-DOMAIN-SUFFIX,tracker-api.vk-analytics.ru
-DOMAIN-SUFFIX,vk-analytics.ru
-DOMAIN-SUFFIX,tracker-api.my.com
