@@ -1,7 +1,7 @@
 #!name=Unified Routing + System DNS
 #!desc=Единый модуль: DIRECT/PROXY/REJECT + выборочный System DNS. Использовать вместе с remote.conf.
 #!author=OpenAI + user
-#!version=1.1
+#!version=1.2
 
 # =============================================================================
 # ПАМЯТКА / НАЗНАЧЕНИЕ
@@ -84,6 +84,9 @@
 # 7. Общие CDN-маски Apple (например глобальные *.akamaized.net / *.fastly.net)
 #    намеренно не используются как широкие System DNS/DIRECT правила, чтобы не
 #    перехватывать чужие сервисы вроде TikTok и других пользователей общих CDN.
+# 8. Внутри [Rule] сохраняется порядок: REJECT overrides -> PROXY -> DIRECT ->
+#    широкие RU TLD catch-all. Внутри сервисных блоков более специфичные правила
+#    стоят выше более широких suffix/keyword правил.
 #
 # =============================================================================
 # ПРОИСХОЖДЕНИЕ
@@ -96,51 +99,36 @@
 [Rule]
 
 # ==================================================
-# REJECT-ARRAY RULES
+# 01) REJECT OVERRIDES
 # ==================================================
 
-# --- VK Direct Stable Privacy DNS Test ---
+# --- VK Direct Stable Privacy DNS Test / REJECT-ARRAY ---
 DOMAIN,alt-ad.mail.ru,REJECT-ARRAY
 DOMAIN,ad.mail.ru,REJECT-ARRAY
 
-# ==================================================
-# REJECT-TINYGIF RULES
-# ==================================================
-
-# --- VK Direct Stable Privacy DNS Test ---
+# --- VK Direct Stable Privacy DNS Test / REJECT-TINYGIF ---
 DOMAIN-SUFFIX,mradx.net,REJECT-TINYGIF
 
-# ==================================================
-# REJECT-DICT RULES
-# ==================================================
-
-# --- VK Direct Stable Privacy DNS Test ---
+# --- VK Direct Stable Privacy DNS Test / REJECT-DICT ---
 DOMAIN-SUFFIX,target.my.com,REJECT-DICT
 DOMAIN-SUFFIX,advertising.my.com,REJECT-DICT
 DOMAIN-SUFFIX,mytarget.com,REJECT-DICT
 
-# ==================================================
-# REJECT RULES
-# ==================================================
-
-# --- VK Direct Stable Privacy DNS Test ---
+# --- VK Direct Stable Privacy DNS Test / REJECT ---
 DOMAIN-SUFFIX,tracker-api.vk-analytics.ru,REJECT
 DOMAIN-SUFFIX,vk-analytics.ru,REJECT
 DOMAIN-SUFFIX,tracker-api.my.com,REJECT
 
-# ==================================================
-# REJECT-200 RULES
-# ==================================================
-
-# --- VK Direct Stable Privacy DNS Test ---
+# --- VK Direct Stable Privacy DNS Test / REJECT-200 ---
 DOMAIN-SUFFIX,top.mail.ru,REJECT-200
 DOMAIN,r.mail.ru,REJECT-200
 
 # ==================================================
-# PROXY RULES
+# 02) CRITICAL PROXY EXCEPTIONS
 # ==================================================
 
 # --- Manual Proxy ---
+DOMAIN,hermes.routelink.ru,PROXY
 DOMAIN,yt3.ggpht.com,PROXY
 DOMAIN,yt4.ggpht.com,PROXY
 DOMAIN,i.ytimg.com,PROXY
@@ -148,10 +136,17 @@ DOMAIN-SUFFIX,ytimg.com,PROXY
 DOMAIN-SUFFIX,ggpht.com,PROXY
 DOMAIN-SUFFIX,pixabay.com,PROXY
 IP-CIDR,62.60.230.167/32,PROXY,no-resolve
-DOMAIN,hermes.routelink.ru,PROXY
 IP-CIDR,31.77.158.107/32,PROXY,no-resolve
 
-# --- TikTok – HARD PROXY ---
+# ==================================================
+# 03) PROXY SERVICES
+# ==================================================
+
+# --- TikTok HARD PROXY ---
+USER-AGENT,TikTok*,PROXY
+DOMAIN,p16-tiktokcdn-com.akamaized.net,PROXY
+DOMAIN,lf16-effectcdn.byteeffecttos-g.com,PROXY
+DOMAIN,lf16-pkgcdn.pitaya-clientai.com,PROXY
 DOMAIN-SUFFIX,tiktok.com,PROXY
 DOMAIN-SUFFIX,tik-tokapi.com,PROXY
 DOMAIN-SUFFIX,tiktokv.com,PROXY
@@ -160,7 +155,6 @@ DOMAIN-SUFFIX,ttwebview.com,PROXY
 DOMAIN-SUFFIX,tiktokmusic.app,PROXY
 DOMAIN-SUFFIX,tiktokcdn.com,PROXY
 DOMAIN-SUFFIX,tiktokcdn-us.com,PROXY
-DOMAIN,p16-tiktokcdn-com.akamaized.net,PROXY
 DOMAIN-SUFFIX,ttlivecdn.com,PROXY
 DOMAIN-SUFFIX,tiktokrow-cdn.com,PROXY
 DOMAIN-SUFFIX,snssdk.com,PROXY
@@ -178,14 +172,13 @@ DOMAIN-SUFFIX,musical.ly,PROXY
 DOMAIN-SUFFIX,muscdn.com,PROXY
 DOMAIN-SUFFIX,tiktokd.net,PROXY
 DOMAIN-SUFFIX,tiktokd.org,PROXY
-DOMAIN,lf16-effectcdn.byteeffecttos-g.com,PROXY
-DOMAIN,lf16-pkgcdn.pitaya-clientai.com,PROXY
 DOMAIN-KEYWORD,tiktok,PROXY
 DOMAIN-KEYWORD,-tiktokcdn-com,PROXY
 DOMAIN-KEYWORD,musical.ly,PROXY
-USER-AGENT,TikTok*,PROXY
 
-# --- Telegram -> PROXY (Full) ---
+# --- Telegram PROXY Full ---
+DOMAIN,api.telegram.org,PROXY
+DOMAIN,my.telegram.org,PROXY
 DOMAIN-SUFFIX,telegram.org,PROXY
 DOMAIN-SUFFIX,t.me,PROXY
 DOMAIN-SUFFIX,telegram.me,PROXY
@@ -202,8 +195,6 @@ DOMAIN-SUFFIX,telegramdownload.com,PROXY
 DOMAIN-SUFFIX,stel.com,PROXY
 DOMAIN-SUFFIX,telega.one,PROXY
 DOMAIN-SUFFIX,telegram.space,PROXY
-DOMAIN,api.telegram.org,PROXY
-DOMAIN,my.telegram.org,PROXY
 IP-CIDR,91.108.4.0/22,PROXY,no-resolve
 IP-CIDR,91.108.8.0/22,PROXY,no-resolve
 IP-CIDR,91.108.12.0/22,PROXY,no-resolve
@@ -219,16 +210,13 @@ IP-CIDR6,2001:b28:f23f::/48,PROXY,no-resolve
 IP-CIDR6,2001:b28:f23c::/48,PROXY,no-resolve
 IP-CIDR6,2a0a:f280::/32,PROXY,no-resolve
 
-# --- JumpDesktop PROXY ---
-DOMAIN-SUFFIX,jumpdesktop.com,PROXY
-DOMAIN-KEYWORD,jumpdesktop,PROXY
-
 # --- WhatsApp Companion WIDE ---
 PROCESS-NAME,WhatsApp,PROXY
 USER-AGENT,WhatsApp*,PROXY
-DOMAIN-SUFFIX,whatsapp.com,PROXY
-DOMAIN-SUFFIX,whatsapp.net,PROXY
-DOMAIN-SUFFIX,wa.me,PROXY
+AND,((DOMAIN-SUFFIX,v.whatsapp.net),(PROTOCOL,UDP)),PROXY
+AND,((DOMAIN-SUFFIX,mmg.whatsapp.net),(PROTOCOL,UDP)),PROXY
+AND,((DOMAIN-SUFFIX,media.whatsapp.net),(PROTOCOL,UDP)),PROXY
+AND,((IP-CIDR6,2a03:2880::/12,no-resolve),(PROTOCOL,UDP)),PROXY
 DOMAIN-SUFFIX,g.whatsapp.net,PROXY
 DOMAIN-SUFFIX,v.whatsapp.net,PROXY
 DOMAIN-SUFFIX,mmg.whatsapp.net,PROXY
@@ -236,23 +224,15 @@ DOMAIN-SUFFIX,media.whatsapp.net,PROXY
 DOMAIN-SUFFIX,static.whatsapp.net,PROXY
 DOMAIN-SUFFIX,cdn.whatsapp.net,PROXY
 DOMAIN-SUFFIX,pps.whatsapp.net,PROXY
-AND,((DOMAIN-SUFFIX,v.whatsapp.net),(PROTOCOL,UDP)),PROXY
-AND,((DOMAIN-SUFFIX,mmg.whatsapp.net),(PROTOCOL,UDP)),PROXY
-AND,((DOMAIN-SUFFIX,media.whatsapp.net),(PROTOCOL,UDP)),PROXY
-AND,((IP-CIDR6,2a03:2880::/12,no-resolve),(PROTOCOL,UDP)),PROXY
+DOMAIN-SUFFIX,whatsapp.com,PROXY
+DOMAIN-SUFFIX,whatsapp.net,PROXY
+DOMAIN-SUFFIX,wa.me,PROXY
 IP-CIDR,31.13.64.0/18,PROXY,no-resolve
 IP-CIDR,102.132.96.0/20,PROXY,no-resolve
 IP-CIDR,185.60.216.0/22,PROXY,no-resolve
 IP-CIDR,179.60.192.0/22,PROXY,no-resolve
 
 # --- Meta FULL FB PROXY + Remote DNS ---
-DOMAIN-SUFFIX,facebook.com,PROXY
-DOMAIN-SUFFIX,fbcdn.net,PROXY
-DOMAIN-SUFFIX,fbsbx.com,PROXY
-DOMAIN-SUFFIX,messenger.com,PROXY
-DOMAIN-SUFFIX,instagram.com,PROXY
-DOMAIN-SUFFIX,cdninstagram.com,PROXY
-DOMAIN-SUFFIX,meta.com,PROXY
 DOMAIN,graph.facebook.com,PROXY
 DOMAIN,graph-fallback.facebook.com,PROXY
 DOMAIN,payments-graph.facebook.com,PROXY
@@ -286,9 +266,16 @@ DOMAIN,i.instagram.com,PROXY
 DOMAIN,api.instagram.com,PROXY
 DOMAIN,graph.instagram.com,PROXY
 DOMAIN,z-p42-instagram.c10r.facebook.com,PROXY
-DOMAIN-SUFFIX,xx.fbcdn.net,PROXY
 DOMAIN-SUFFIX,scontent.xx.fbcdn.net,PROXY
 DOMAIN-SUFFIX,video.xx.fbcdn.net,PROXY
+DOMAIN-SUFFIX,xx.fbcdn.net,PROXY
+DOMAIN-SUFFIX,facebook.com,PROXY
+DOMAIN-SUFFIX,fbcdn.net,PROXY
+DOMAIN-SUFFIX,fbsbx.com,PROXY
+DOMAIN-SUFFIX,messenger.com,PROXY
+DOMAIN-SUFFIX,instagram.com,PROXY
+DOMAIN-SUFFIX,cdninstagram.com,PROXY
+DOMAIN-SUFFIX,meta.com,PROXY
 IP-CIDR,31.13.24.0/21,PROXY,no-resolve
 IP-CIDR,66.220.144.0/20,PROXY,no-resolve
 IP-CIDR,69.63.176.0/20,PROXY,no-resolve
@@ -298,16 +285,27 @@ IP-CIDR,129.134.0.0/16,PROXY,no-resolve
 IP-CIDR,157.240.0.0/16,PROXY,no-resolve
 IP-CIDR,173.252.64.0/18,PROXY,no-resolve
 
+# --- JumpDesktop PROXY ---
+DOMAIN-SUFFIX,jumpdesktop.com,PROXY
+DOMAIN-KEYWORD,jumpdesktop,PROXY
+
 # --- TikTok upstream snapshot 2026-08-31 ---
 DOMAIN,trae-api-sg.mchost.guru,PROXY
 DOMAIN-SUFFIX,marscode.com,PROXY
 DOMAIN-SUFFIX,trae.ai,PROXY
 
 # ==================================================
-# DIRECT RULES
+# 04) DIRECT SERVICES
 # ==================================================
 
-# --- VK Direct Stable Privacy DNS Test ---
+# --- VK / Mail / OK / MY DIRECT ---
+DOMAIN,sun1-14.userapi.com,DIRECT
+DOMAIN-SUFFIX,cloud.mail.ru,DIRECT
+DOMAIN-SUFFIX,my.mail.ru,DIRECT
+DOMAIN-SUFFIX,e.mail.ru,DIRECT
+DOMAIN-SUFFIX,corp.mail.ru,DIRECT
+DOMAIN-SUFFIX,biz.mail.ru,DIRECT
+DOMAIN-SUFFIX,alt-aj-https.mail.ru,DIRECT
 DOMAIN-SUFFIX,vk.com,DIRECT
 DOMAIN-SUFFIX,vk.ru,DIRECT
 DOMAIN-SUFFIX,vkontakte.ru,DIRECT
@@ -323,64 +321,50 @@ DOMAIN-SUFFIX,vkpay.ru,DIRECT
 DOMAIN-SUFFIX,vk.team,DIRECT
 DOMAIN-SUFFIX,vkuseraudio.net,DIRECT
 DOMAIN-SUFFIX,mail.ru,DIRECT
-DOMAIN-SUFFIX,cloud.mail.ru,DIRECT
 DOMAIN-SUFFIX,my.com,DIRECT
 DOMAIN-SUFFIX,datacloudmail.ru,DIRECT
 DOMAIN-SUFFIX,mailcdn.ru,DIRECT
-DOMAIN-SUFFIX,my.mail.ru,DIRECT
-DOMAIN-SUFFIX,e.mail.ru,DIRECT
-DOMAIN-SUFFIX,corp.mail.ru,DIRECT
-DOMAIN-SUFFIX,biz.mail.ru,DIRECT
-DOMAIN-SUFFIX,alt-aj-https.mail.ru,DIRECT
 DOMAIN-SUFFIX,odnoklassniki.ru,DIRECT
 DOMAIN-SUFFIX,ok.ru,DIRECT
 DOMAIN-SUFFIX,okcdn.ru,DIRECT
 IP-CIDR,93.186.225.194/32,DIRECT,no-resolve
 
-# --- Apple DIRECT + System DNS MAX ---
-DOMAIN-SUFFIX,apple.com,DIRECT
-DOMAIN-SUFFIX,icloud.com,DIRECT
-DOMAIN-SUFFIX,me.com,DIRECT
-DOMAIN-SUFFIX,mac.com,DIRECT
-DOMAIN-SUFFIX,apple.news,DIRECT
-DOMAIN-SUFFIX,appleusercontent.com,DIRECT
-DOMAIN-SUFFIX,apps.apple.com,DIRECT
-DOMAIN-SUFFIX,itunes.apple.com,DIRECT
-DOMAIN-SUFFIX,itunes.com,DIRECT
-DOMAIN-SUFFIX,itunes-apple.com,DIRECT
-DOMAIN-SUFFIX,itunes-nocookie.com,DIRECT
-DOMAIN-SUFFIX,mzstatic.com,DIRECT
-DOMAIN-SUFFIX,aaplimg.com,DIRECT
-DOMAIN-SUFFIX,g.aaplimg.com,DIRECT
-DOMAIN-SUFFIX,appsto.re,DIRECT
+# --- Apple DIRECT + System DNS MAX + official network requirements 2026-07 ---
+# Exact endpoints first
+DOMAIN,token.safebrowsing.apple,DIRECT
+DOMAIN,updates.cdn-apple.com,DIRECT
+DOMAIN,app-site-association.cdn-apple.com,DIRECT
+DOMAIN,apple-relay.cloudflare.com,DIRECT
+DOMAIN,apple-relay.fastly-edge.com,DIRECT
+DOMAIN,apple-relay.apple.com,DIRECT
+DOMAIN,cp4.cloudflare.com,DIRECT
+DOMAIN,crl3.digicert.com,DIRECT
+DOMAIN,crl4.digicert.com,DIRECT
+DOMAIN,ocsp.digicert.com,DIRECT
+DOMAIN,ocsp.digicert.cn,DIRECT
+
+# Apple-specific/narrow suffixes before broad suffixes
+DOMAIN-SUFFIX,sf-api-token-service.itunes.apple.com,DIRECT
+DOMAIN-SUFFIX,silverbullet-external-ats.itunes.apple.com,DIRECT
 DOMAIN-SUFFIX,appstoreconnect.apple.com,DIRECT
 DOMAIN-SUFFIX,testflight.apple.com,DIRECT
 DOMAIN-SUFFIX,iadsdk.apple.com,DIRECT
-DOMAIN-SUFFIX,sf-api-token-service.itunes.apple.com,DIRECT
-DOMAIN-SUFFIX,silverbullet-external-ats.itunes.apple.com,DIRECT
 DOMAIN-SUFFIX,apps-marketplace.apple.com,DIRECT
 DOMAIN-SUFFIX,appattest.apple.com,DIRECT
-DOMAIN,token.safebrowsing.apple,DIRECT
-DOMAIN-SUFFIX,icloud-content.com,DIRECT
-DOMAIN-SUFFIX,cdn-apple.com,DIRECT
-DOMAIN-SUFFIX,apple-dns.net,DIRECT
-DOMAIN-SUFFIX,apple-mapkit.com,DIRECT
+DOMAIN-SUFFIX,apps.apple.com,DIRECT
+DOMAIN-SUFFIX,init.itunes.apple.com,DIRECT
+DOMAIN-SUFFIX,itunes.apple.com,DIRECT
 DOMAIN-SUFFIX,swcdn.apple.com,DIRECT
 DOMAIN-SUFFIX,swdist.apple.com,DIRECT
 DOMAIN-SUFFIX,swdownload.apple.com,DIRECT
 DOMAIN-SUFFIX,swquery.apple.com,DIRECT
 DOMAIN-SUFFIX,swscan.apple.com,DIRECT
 DOMAIN-SUFFIX,updates-http.cdn-apple.com,DIRECT
-DOMAIN,updates.cdn-apple.com,DIRECT
-DOMAIN,app-site-association.cdn-apple.com,DIRECT
 DOMAIN-SUFFIX,appldnld.apple.com,DIRECT
-DOMAIN-SUFFIX,push.apple.com,DIRECT
-DOMAIN-SUFFIX,push-apple.com,DIRECT
 DOMAIN-SUFFIX,courier.push.apple.com,DIRECT
-DOMAIN-SUFFIX,apple-cloudkit.com,DIRECT
+DOMAIN-SUFFIX,push.apple.com,DIRECT
 DOMAIN-SUFFIX,ess.apple.com,DIRECT
 DOMAIN-SUFFIX,identity.apple.com,DIRECT
-DOMAIN-SUFFIX,ids-apple.com,DIRECT
 DOMAIN-SUFFIX,guzzoni.apple.com,DIRECT
 DOMAIN-SUFFIX,gc.apple.com,DIRECT
 DOMAIN-SUFFIX,ls.apple.com,DIRECT
@@ -390,29 +374,52 @@ DOMAIN-SUFFIX,gdmf.apple.com,DIRECT
 DOMAIN-SUFFIX,deviceenrollment.apple.com,DIRECT
 DOMAIN-SUFFIX,deviceservices-external.apple.com,DIRECT
 DOMAIN-SUFFIX,albert.apple.com,DIRECT
-DOMAIN-SUFFIX,time.apple.com,DIRECT
 DOMAIN-SUFFIX,time-ios.apple.com,DIRECT
-DOMAIN-SUFFIX,init.itunes.apple.com,DIRECT
+DOMAIN-SUFFIX,time.apple.com,DIRECT
 DOMAIN-SUFFIX,iphone-ld.apple.com,DIRECT
 DOMAIN-SUFFIX,xp.apple.com,DIRECT
 DOMAIN-SUFFIX,mesu.apple.com,DIRECT
-DOMAIN-SUFFIX,ocsp.apple.com,DIRECT
 DOMAIN-SUFFIX,ocsp2.apple.com,DIRECT
+DOMAIN-SUFFIX,ocsp.apple.com,DIRECT
 DOMAIN-SUFFIX,valid.apple.com,DIRECT
 DOMAIN-SUFFIX,certs.apple.com,DIRECT
 DOMAIN-SUFFIX,crl.apple.com,DIRECT
-DOMAIN,apple-relay.cloudflare.com,DIRECT
-DOMAIN,apple-relay.fastly-edge.com,DIRECT
-DOMAIN,apple-relay.apple.com,DIRECT
 DOMAIN-SUFFIX,doh.dns.apple.com,DIRECT
+DOMAIN-SUFFIX,apple-native-relay.apple.com,DIRECT
 DOMAIN-SUFFIX,gateway.icloud.com,DIRECT
-DOMAIN-SUFFIX,mask.icloud.com,DIRECT
 DOMAIN-SUFFIX,mask-h2.icloud.com,DIRECT
 DOMAIN-SUFFIX,mask-api.icloud.com,DIRECT
+DOMAIN-SUFFIX,mask.icloud.com,DIRECT
 DOMAIN-SUFFIX,probe.icloud.com,DIRECT
 DOMAIN-SUFFIX,pong.icloud.com,DIRECT
 DOMAIN-SUFFIX,metrics.icloud.com,DIRECT
-DOMAIN-SUFFIX,apple-native-relay.apple.com,DIRECT
+DOMAIN-SUFFIX,g.aaplimg.com,DIRECT
+
+# Broad Apple-owned/service suffixes after specific endpoints
+DOMAIN-SUFFIX,apple.com,DIRECT
+DOMAIN-SUFFIX,icloud.com,DIRECT
+DOMAIN-SUFFIX,me.com,DIRECT
+DOMAIN-SUFFIX,mac.com,DIRECT
+DOMAIN-SUFFIX,apple.news,DIRECT
+DOMAIN-SUFFIX,appleusercontent.com,DIRECT
+DOMAIN-SUFFIX,itunes.com,DIRECT
+DOMAIN-SUFFIX,itunes-apple.com,DIRECT
+DOMAIN-SUFFIX,itunes-nocookie.com,DIRECT
+DOMAIN-SUFFIX,mzstatic.com,DIRECT
+DOMAIN-SUFFIX,aaplimg.com,DIRECT
+DOMAIN-SUFFIX,appsto.re,DIRECT
+DOMAIN-SUFFIX,icloud-content.com,DIRECT
+DOMAIN-SUFFIX,cdn-apple.com,DIRECT
+DOMAIN-SUFFIX,apple-dns.net,DIRECT
+DOMAIN-SUFFIX,apple-mapkit.com,DIRECT
+DOMAIN-SUFFIX,push-apple.com,DIRECT
+DOMAIN-SUFFIX,apple-cloudkit.com,DIRECT
+DOMAIN-SUFFIX,ids-apple.com,DIRECT
+DOMAIN-SUFFIX,apple-livephotoskit.com,DIRECT
+DOMAIN-SUFFIX,apzones.com,DIRECT
+DOMAIN-SUFFIX,icloud.com.cn,DIRECT
+
+# Apple/IP ranges preserved unchanged in this ordering-only step
 IP-CIDR,17.0.0.0/8,DIRECT,no-resolve
 IP-CIDR,172.224.0.0/12,DIRECT,no-resolve
 IP-CIDR6,2403:300::/32,DIRECT,no-resolve
@@ -420,8 +427,6 @@ IP-CIDR6,2620:149::/32,DIRECT,no-resolve
 IP-CIDR6,2a01:b740::/32,DIRECT,no-resolve
 
 # --- BiP DIRECT ---
-DOMAIN-SUFFIX,bip.com,DIRECT
-DOMAIN-SUFFIX,bip.ai,DIRECT
 DOMAIN,xmpp.bip.com,DIRECT
 DOMAIN,bipchannel.bip.com,DIRECT
 DOMAIN,dman.bip.com,DIRECT
@@ -431,29 +436,31 @@ DOMAIN,swf.bip.com,DIRECT
 DOMAIN,swfbu.bip.com,DIRECT
 DOMAIN,groups.bip.ai,DIRECT
 DOMAIN,tims.turkcell.com.tr,DIRECT
+DOMAIN-SUFFIX,bip.com,DIRECT
+DOMAIN-SUFFIX,bip.ai,DIRECT
 IP-CIDR,176.235.29.0/24,DIRECT,no-resolve
 IP-CIDR,176.235.227.0/24,DIRECT,no-resolve
 
 # --- Manual DIRECT ---
-DOMAIN-SUFFIX,2ip.io,DIRECT
 DOMAIN,new.tv.team,DIRECT
 DOMAIN,rus.epg.team,DIRECT
 DOMAIN,iptvx.one,DIRECT
 DOMAIN,epg.one,DIRECT
 DOMAIN,cdn.epg.one,DIRECT
 DOMAIN,ss-iptv.com,DIRECT
-DOMAIN-SUFFIX,tvtm.one,DIRECT
 DOMAIN,uhf-epg-backend.divine-leaf-f816.workers.dev,DIRECT
 DOMAIN,tbs01-edge11.itdc.ge,DIRECT
-IP-CIDR,188.225.31.197/32,DIRECT,no-resolve
-IP-CIDR,5.61.89.166/32,DIRECT,no-resolve
-DOMAIN-SUFFIX,lamro.workers.dev,DIRECT
 DOMAIN,flymaterez.net,DIRECT
 DOMAIN,statichdrezka.ac,DIRECT
 DOMAIN,static.voidboost.com,DIRECT
-DOMAIN-SUFFIX,vdbmate.org,DIRECT
 DOMAIN,getter.fun,DIRECT
-DOMAIN,sun1-14.userapi.com,DIRECT
+DOMAIN-SUFFIX,tvtm.one,DIRECT
+DOMAIN-SUFFIX,lamro.workers.dev,DIRECT
+DOMAIN-SUFFIX,vdbmate.org,DIRECT
+IP-CIDR,188.225.31.197/32,DIRECT,no-resolve
+IP-CIDR,5.61.89.166/32,DIRECT,no-resolve
+
+DOMAIN-SUFFIX,2ip.io,DIRECT
 DOMAIN-SUFFIX,blackmagicdesign.com,DIRECT
 DOMAIN-SUFFIX,iqos.ru,DIRECT
 DOMAIN-SUFFIX,z.ai,DIRECT
@@ -473,8 +480,8 @@ DOMAIN-SUFFIX,ozone.ru,DIRECT
 DOMAIN-SUFFIX,ozonusercontent.com,DIRECT
 DOMAIN-SUFFIX,wildberries.ru,DIRECT
 DOMAIN-SUFFIX,wb.ru,DIRECT
-DOMAIN-SUFFIX,sberbank.ru,DIRECT
 DOMAIN-SUFFIX,online.sberbank.ru,DIRECT
+DOMAIN-SUFFIX,sberbank.ru,DIRECT
 DOMAIN-SUFFIX,sber.ru,DIRECT
 DOMAIN-SUFFIX,alfabank.ru,DIRECT
 DOMAIN-SUFFIX,kinorium.com,DIRECT
@@ -487,10 +494,7 @@ DOMAIN-SUFFIX,appsflyer.com,DIRECT
 DOMAIN-SUFFIX,appsflyersdk.com,DIRECT
 DOMAIN-SUFFIX,whoosh.bike,DIRECT
 
-# --- RU TLD + RU Non-RU DIRECT System DNS ---
-DOMAIN-SUFFIX,ru,DIRECT
-DOMAIN-SUFFIX,su,DIRECT
-DOMAIN-SUFFIX,xn--p1ai,DIRECT
+# --- RU services outside RU TLD ---
 DOMAIN-SUFFIX,yandex.net,DIRECT
 DOMAIN-SUFFIX,yastatic.net,DIRECT
 DOMAIN-SUFFIX,yandex.st,DIRECT
@@ -507,15 +511,12 @@ DOMAIN-SUFFIX,premier.one,DIRECT
 DOMAIN-SUFFIX,pobeda.aero,DIRECT
 DOMAIN-SUFFIX,lenta.com,DIRECT
 
-# --- Apple official network requirements 2026-07 ---
-DOMAIN-SUFFIX,apple-livephotoskit.com,DIRECT
-DOMAIN-SUFFIX,apzones.com,DIRECT
-DOMAIN-SUFFIX,icloud.com.cn,DIRECT
-DOMAIN,cp4.cloudflare.com,DIRECT
-DOMAIN,crl3.digicert.com,DIRECT
-DOMAIN,crl4.digicert.com,DIRECT
-DOMAIN,ocsp.digicert.com,DIRECT
-DOMAIN,ocsp.digicert.cn,DIRECT
+# ==================================================
+# 05) BROAD RU TLD CATCH-ALL — KEEP LAST IN [Rule]
+# ==================================================
+DOMAIN-SUFFIX,ru,DIRECT
+DOMAIN-SUFFIX,su,DIRECT
+DOMAIN-SUFFIX,xn--p1ai,DIRECT
 
 [Host]
 # Only domains listed in this section bypass the global DNS path and use system DNS.
