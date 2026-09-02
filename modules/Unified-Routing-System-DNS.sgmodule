@@ -334,6 +334,7 @@ IP-CIDR,93.186.225.194/32,DIRECT,no-resolve
 DOMAIN,token.safebrowsing.apple,DIRECT
 DOMAIN,updates.cdn-apple.com,DIRECT
 DOMAIN,app-site-association.cdn-apple.com,DIRECT
+DOMAIN,app-site-association.networking.apple,DIRECT
 DOMAIN,apple-relay.cloudflare.com,DIRECT
 DOMAIN,apple-relay.fastly-edge.com,DIRECT
 DOMAIN,apple-relay.apple.com,DIRECT
@@ -652,6 +653,7 @@ updates-http.cdn-apple.com = server:system
 *.updates-http.cdn-apple.com = server:system
 updates.cdn-apple.com = server:system
 app-site-association.cdn-apple.com = server:system
+app-site-association.networking.apple = server:system
 appldnld.apple.com = server:system
 *.appldnld.apple.com = server:system
 ocsp.apple.com = server:system
