@@ -1,7 +1,7 @@
 #!name=Unified Routing + System DNS
 #!desc=Единый модуль: DIRECT/PROXY/REJECT + выборочный System DNS. Использовать вместе с remote.conf.
 #!author=OpenAI + user
-#!version=1.2
+#!version=1.3
 
 # =============================================================================
 # ПАМЯТКА / НАЗНАЧЕНИЕ
@@ -87,6 +87,41 @@
 # 8. Внутри [Rule] сохраняется порядок: REJECT overrides -> PROXY -> DIRECT ->
 #    широкие RU TLD catch-all. Внутри сервисных блоков более специфичные правила
 #    стоят выше более широких suffix/keyword правил.
+# 9. НЕ МЕНЯТЬ без прямого указания пользователя имена production release-assets
+#    remote.conf и Unified-Routing-System-DNS.sgmodule, а также постоянные URL вида
+#    /releases/latest/download/... Они уже установлены на устройствах и должны
+#    продолжать получать новые версии по тем же адресам.
+#
+# =============================================================================
+# ЖУРНАЛ АКТУАЛИЗАЦИИ / ИСТОЧНИКИ
+# =============================================================================
+# 2026-09-03 — полный аудит сервисных блоков и CIDR.
+# Принцип: официальные документы имеют приоритет; поддерживаемые community rule-set
+# используются только там, где сервис не публикует полный сетевой список. Реальные
+# PacketTunnel-логи устройств являются отдельным runtime-слоем проверки и могут
+# стать основанием для последующей точечной корректировки.
+#
+# Изменения 2026-09-03:
+# - WhatsApp: UDP IPv6 2a03:2880::/12 исправлен на 2a03:2880::/32.
+#   Старый /12 был неканоничным для указанного адреса и фактически охватывал
+#   огромную сеть 2a00::/12. /32 соответствует префиксу инфраструктуры Meta AS32934.
+#   Официальная проверка поведения звонков: WhatsApp Help Center
+#   https://faq.whatsapp.com/846009687015768/
+# - Apple: добавлен appldnld.apple.com.edgesuite.net для carrier updates.
+#   Официальный источник: https://support.apple.com/ru-ru/101555
+# - Telegram: добавлены tg.dev, contest.com и quiz.directory из официального
+#   Telegram Bug Bounty scope; telegram-cdn.org добавлен как подтверждённый
+#   Telegram CDN по поддерживаемым сетевым спискам и наблюдаемому Web CDN.
+#   Официальный источник: https://core.telegram.org/bug-bounty
+# - Meta / Instagram: добавлен legacy-домен instagr.am по поддерживаемому
+#   Instagram rule-set; широкие новые Meta CIDR намеренно не импортировались.
+# - VK: добавлены mvk.com, vk-cdn.me, vk-portal.net и vk.cc по поддерживаемому
+#   Shadowrocket VK rule-set; весь ASN VK намеренно не импортировался.
+# - Apple 172.224.0.0/12 остаётся отключён: это широкий Akamai CIDR, runtime-тесты
+#   App Store / App Preview / APNs прошли без него.
+#
+# Secondary rule-set baseline для Telegram/TikTok/VK/Instagram:
+# https://github.com/blackmatrix7/ios_rule_script
 #
 # =============================================================================
 # ПРОИСХОЖДЕНИЕ
@@ -190,6 +225,10 @@ DOMAIN-SUFFIX,graph.org,PROXY
 DOMAIN-SUFFIX,tx.me,PROXY
 DOMAIN-SUFFIX,telegramusercontent.com,PROXY
 DOMAIN-SUFFIX,cdn-telegram.org,PROXY
+DOMAIN-SUFFIX,telegram-cdn.org,PROXY
+DOMAIN-SUFFIX,tg.dev,PROXY
+DOMAIN-SUFFIX,contest.com,PROXY
+DOMAIN-SUFFIX,quiz.directory,PROXY
 DOMAIN-SUFFIX,comments.app,PROXY
 DOMAIN-SUFFIX,telegramdownload.com,PROXY
 DOMAIN-SUFFIX,stel.com,PROXY
@@ -216,7 +255,8 @@ USER-AGENT,WhatsApp*,PROXY
 AND,((DOMAIN-SUFFIX,v.whatsapp.net),(PROTOCOL,UDP)),PROXY
 AND,((DOMAIN-SUFFIX,mmg.whatsapp.net),(PROTOCOL,UDP)),PROXY
 AND,((DOMAIN-SUFFIX,media.whatsapp.net),(PROTOCOL,UDP)),PROXY
-AND,((IP-CIDR6,2a03:2880::/12,no-resolve),(PROTOCOL,UDP)),PROXY
+# 2026-09-03: исправлено /12 -> /32 после CIDR-аудита; /12 был чрезмерно широким.
+AND,((IP-CIDR6,2a03:2880::/32,no-resolve),(PROTOCOL,UDP)),PROXY
 DOMAIN-SUFFIX,g.whatsapp.net,PROXY
 DOMAIN-SUFFIX,v.whatsapp.net,PROXY
 DOMAIN-SUFFIX,mmg.whatsapp.net,PROXY
@@ -273,6 +313,7 @@ DOMAIN-SUFFIX,facebook.com,PROXY
 DOMAIN-SUFFIX,fbcdn.net,PROXY
 DOMAIN-SUFFIX,fbsbx.com,PROXY
 DOMAIN-SUFFIX,messenger.com,PROXY
+DOMAIN-SUFFIX,instagr.am,PROXY
 DOMAIN-SUFFIX,instagram.com,PROXY
 DOMAIN-SUFFIX,cdninstagram.com,PROXY
 DOMAIN-SUFFIX,meta.com,PROXY
@@ -309,6 +350,10 @@ DOMAIN-SUFFIX,alt-aj-https.mail.ru,DIRECT
 DOMAIN-SUFFIX,vk.com,DIRECT
 DOMAIN-SUFFIX,vk.ru,DIRECT
 DOMAIN-SUFFIX,vkontakte.ru,DIRECT
+DOMAIN-SUFFIX,mvk.com,DIRECT
+DOMAIN-SUFFIX,vk-cdn.me,DIRECT
+DOMAIN-SUFFIX,vk-portal.net,DIRECT
+DOMAIN-SUFFIX,vk.cc,DIRECT
 DOMAIN-SUFFIX,vkuser.net,DIRECT
 DOMAIN-SUFFIX,vkuserphoto.ru,DIRECT
 DOMAIN-SUFFIX,userapi.com,DIRECT
@@ -329,12 +374,13 @@ DOMAIN-SUFFIX,ok.ru,DIRECT
 DOMAIN-SUFFIX,okcdn.ru,DIRECT
 IP-CIDR,93.186.225.194/32,DIRECT,no-resolve
 
-# --- Apple DIRECT + System DNS MAX + official network requirements 2026-07 ---
+# --- Apple DIRECT + System DNS MAX + official network requirements 2026-09 ---
 # Exact endpoints first
 DOMAIN,token.safebrowsing.apple,DIRECT
 DOMAIN,updates.cdn-apple.com,DIRECT
 DOMAIN,app-site-association.cdn-apple.com,DIRECT
 DOMAIN,app-site-association.networking.apple,DIRECT
+DOMAIN,appldnld.apple.com.edgesuite.net,DIRECT
 DOMAIN,apple-relay.cloudflare.com,DIRECT
 DOMAIN,apple-relay.fastly-edge.com,DIRECT
 DOMAIN,apple-relay.apple.com,DIRECT
@@ -656,6 +702,7 @@ app-site-association.cdn-apple.com = server:system
 app-site-association.networking.apple = server:system
 appldnld.apple.com = server:system
 *.appldnld.apple.com = server:system
+appldnld.apple.com.edgesuite.net = server:system
 ocsp.apple.com = server:system
 *.ocsp.apple.com = server:system
 ocsp2.apple.com = server:system
@@ -735,7 +782,7 @@ pobeda.aero = server:system
 lenta.com = server:system
 *.lenta.com = server:system
 
-# --- Apple official network requirements 2026-07 ---
+# --- Apple official network requirements 2026-09 ---
 apple-livephotoskit.com = server:system
 *.apple-livephotoskit.com = server:system
 apzones.com = server:system
@@ -753,6 +800,14 @@ vkuser.net = server:system
 *.vkuser.net = server:system
 userapi.com = server:system
 mycdn.me = server:system
+mvk.com = server:system
+*.mvk.com = server:system
+vk-cdn.me = server:system
+*.vk-cdn.me = server:system
+vk-portal.net = server:system
+*.vk-portal.net = server:system
+vk.cc = server:system
+*.vk.cc = server:system
 vk-cdn.net = server:system
 *.vk-cdn.net = server:system
 vk-cdn.com = server:system
