@@ -7,6 +7,7 @@ from collections import Counter
 from dataclasses import dataclass
 import ipaddress
 from pathlib import Path
+import re
 import sys
 
 
@@ -31,6 +32,7 @@ SIMPLE_TYPES = {
 }
 IP_TYPES = {"IP-CIDR", "IP-CIDR6"}
 LOGICAL_TYPES = {"AND", "OR", "NOT"}
+CIDR_TOKEN_RE = re.compile(r"\b(IP-CIDR6|IP-CIDR),([^,()]+)(?:,no-resolve)?")
 FORBIDDEN_REMOTE_MARKERS = {
     "voip-pack.list",
     "proxy.list",
@@ -97,6 +99,20 @@ def split_top_level(line: str) -> list[str]:
     return fields
 
 
+def validate_network(rule_type: str, target: str) -> ipaddress.IPv4Network | ipaddress.IPv6Network:
+    try:
+        network = ipaddress.ip_network(target, strict=True)
+    except ValueError as error:
+        raise ValueError(
+            f"{rule_type} has invalid or non-canonical network {target!r}: {error}"
+        ) from error
+    if rule_type == "IP-CIDR" and network.version != 4:
+        raise ValueError("IP-CIDR requires an IPv4 network")
+    if rule_type == "IP-CIDR6" and network.version != 6:
+        raise ValueError("IP-CIDR6 requires an IPv6 network")
+    return network
+
+
 def validate_rule(line: str) -> str:
     rule_type = line.split(",", 1)[0]
     if rule_type in SIMPLE_TYPES:
@@ -110,16 +126,7 @@ def validate_rule(line: str) -> str:
             raise ValueError(f"{rule_type} requires 3 fields plus optional no-resolve")
         if len(fields) == 4 and fields[3] != "no-resolve":
             raise ValueError(f"{rule_type} fourth field must be no-resolve")
-        try:
-            network = ipaddress.ip_network(fields[1], strict=False)
-        except ValueError as error:
-            raise ValueError(
-                f"{rule_type} has invalid network {fields[1]!r}: {error}"
-            ) from error
-        if rule_type == "IP-CIDR" and network.version != 4:
-            raise ValueError("IP-CIDR requires an IPv4 network")
-        if rule_type == "IP-CIDR6" and network.version != 6:
-            raise ValueError("IP-CIDR6 requires an IPv6 network")
+        validate_network(rule_type, fields[1])
         policy = fields[2]
     elif rule_type in LOGICAL_TYPES:
         fields = split_top_level(line)
@@ -127,6 +134,8 @@ def validate_rule(line: str) -> str:
             raise ValueError(f"{rule_type} requires type, expression and policy")
         if not fields[1].startswith("((") or not fields[1].endswith("))"):
             raise ValueError(f"{rule_type} expression must be wrapped in double parentheses")
+        for nested_type, nested_target in CIDR_TOKEN_RE.findall(fields[1]):
+            validate_network(nested_type, nested_target)
         policy = fields[2]
     else:
         raise ValueError(f"unsupported rule type {rule_type}")
@@ -216,7 +225,7 @@ def semantic_cidr_checks(entries: list[RuleEntry]) -> tuple[list[str], list[str]
     for entry in entries:
         if entry.rule_type not in IP_TYPES:
             continue
-        parsed.append((entry, ipaddress.ip_network(entry.target, strict=False)))
+        parsed.append((entry, ipaddress.ip_network(entry.target, strict=True)))
 
     for index, (earlier, earlier_network) in enumerate(parsed):
         for later, later_network in parsed[index + 1 :]:
@@ -381,7 +390,8 @@ def main() -> int:
     )
     print(
         "Semantic V1 scope: DOMAIN/DOMAIN-SUFFIX, conservative DOMAIN-KEYWORD, "
-        "top-level CIDR containment/overlap, and basic [Host] conflicts. "
+        "top-level CIDR containment/overlap, basic [Host] conflicts, and strict "
+        "canonical CIDR syntax including CIDRs nested inside logical rules. "
         "Cross-class DOMAIN-vs-IP precedence is intentionally not inferred."
     )
 
