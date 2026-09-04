@@ -1,7 +1,7 @@
-#!name=Ads + Privacy Block
-#!desc=Опциональная блокировка рекламы/трекеров. Использовать отдельным модулем ВЫШЕ Unified Routing + System DNS.
+#!name=Ads + Privacy Block v1.1
+#!desc=Опциональная блокировка рекламы/трекеров. Использовать отдельным модулем ВЫШЕ Unified Routing + System DNS. Обновлено 2026-09-04.
 #!author=OpenAI + user
-#!version=1.0
+#!version=1.1
 
 # =============================================================================
 # НАЗНАЧЕНИЕ
@@ -11,12 +11,18 @@
 # обязательным для работы VPN.
 #
 # Рекомендуемое расположение в Shadowrocket:
-#   Ads + Privacy Block            <- выше
-#   Unified Routing + System DNS   <- ниже
+#   Локальный сертификат MITM       <- если используется
+#   YouTube module                  <- если используется
+#   Ads + Privacy Block v1.1        <- выше Unified
+#   Unified Routing + System DNS    <- ниже
 #
 # Причина: Shadowrocket применяет first-match и верхний модуль имеет более высокий
 # приоритет. Поэтому точечные REJECT здесь должны срабатывать раньше широких
 # PROXY/DIRECT правил Unified.
+#
+# Внутри этого файла более специфичные сервисные правила расположены выше широких
+# и потенциально более рискованных правил. Глобальные/широкие правила находятся
+# ближе к концу файла.
 #
 # Если после обновления приложение перестало запускаться, зависает или не загружает
 # контент, этот модуль можно временно отключить целиком для быстрой диагностики.
@@ -28,16 +34,39 @@
 # соответствующие SDK/сервисы, но плохо написанное приложение может ожидать ответ
 # рекламного SDK и зависать при его блокировке.
 #
-# AGGRESSIVE: правила DOMAIN-KEYWORD,ads и DOMAIN-SUFFIX,unity3d.com имеют широкую
-# область действия. Они перенесены из production Unified без изменения поведения,
-# но при любой новой регрессии должны проверяться первыми.
+# HIGH: bytepluscdn.com и byteplusvod.com перенесены из пользовательского TeraBox
+# модуля. В исходном модуле прямо отмечено, что их блокировка может ломать видео
+# внутри TeraBox. При проблемах с воспроизведением проверять этот блок первым.
+#
+# AGGRESSIVE: DOMAIN-SUFFIX,unity3d.com и DOMAIN-KEYWORD,ads имеют широкую область
+# действия. При любой новой регрессии проверять их в числе первых.
 #
 # ВАЖНО: DOMAIN-KEYWORD,ads может совпасть с любым hostname, содержащим "ads".
-# Уже известное пересечение: iadsdk.apple.com. Поэтому это правило повышенного риска.
+# Уже известное пересечение: iadsdk.apple.com. Поэтому правило оставлено последним
+# среди активных сервисных блоков, чтобы более специфичные правила срабатывали раньше.
 #
 # =============================================================================
 # ЖУРНАЛ АКТУАЛИЗАЦИИ
 # =============================================================================
+# 2026-09-04 — версия 1.1.
+# Добавлены 27 отсутствовавших активных REJECT-domain правил из двух пользовательских
+# модулей:
+#   - TeraBox – Ads & Trackers Block: 13 новых domain matches;
+#   - Yandex Analytics Lite Block: 14 новых REJECT-domain matches.
+#
+# Шесть TeraBox domain matches уже были покрыты текущим Ads + Privacy Block
+# (AppLovin/applvn, Pangle x3, Vungle); дубликаты не добавлялись, существующие
+# специализированные REJECT policy сохранены.
+#
+# Пять Yandex DIRECT-правил из Yandex Analytics Lite Block намеренно НЕ перенесены:
+# DIRECT/PROXY относятся к Unified Routing + System DNS, а Ads + Privacy содержит
+# только REJECT-политику.
+#
+# Добавлены отдельные группы Moloco, InMobi, Google Ads, MTGGlobals, Smadex,
+# Tobsnssdk, Liftoff, Apple Ads attribution, BytePlus и Yandex analytics/ads.
+# BytePlus помечен HIGH RISK по предупреждению исходного пользовательского модуля.
+# Сервисные правила перегруппированы: более специфичные выше, широкие/AGGRESSIVE ниже.
+#
 # 2026-09-04 — версия 1.0.
 # Создан отдельный Ads + Privacy Block. Из Unified перенесены все 28 активных
 # рекламных/privacy REJECT-правил без изменения их policy и без потери правил.
@@ -52,74 +81,189 @@
 #
 [Rule]
 
-# ==================================================
+# =============================================================================
 # 01) VK / MAIL / MYTARGET PRIVACY
-# ==================================================
-
-# --- REJECT-ARRAY ---
+# Назначение: реклама, аналитика и tracker endpoints VK/Mail/MyTarget.
+# Добавлено: 2026-09-04 | Обновлено: 2026-09-04 (v1.1: перегруппировка)
+# Источник: migration из прежнего Unified / production privacy block.
+# =============================================================================
 DOMAIN,alt-ad.mail.ru,REJECT-ARRAY
 DOMAIN,ad.mail.ru,REJECT-ARRAY
-
-# --- REJECT-TINYGIF ---
 DOMAIN-SUFFIX,mradx.net,REJECT-TINYGIF
-
-# --- REJECT-DICT ---
 DOMAIN-SUFFIX,target.my.com,REJECT-DICT
 DOMAIN-SUFFIX,advertising.my.com,REJECT-DICT
 DOMAIN-SUFFIX,mytarget.com,REJECT-DICT
-
-# --- REJECT ---
 DOMAIN-SUFFIX,tracker-api.vk-analytics.ru,REJECT
 DOMAIN-SUFFIX,vk-analytics.ru,REJECT
 DOMAIN-SUFFIX,tracker-api.my.com,REJECT
-
-# --- REJECT-200 ---
 DOMAIN-SUFFIX,top.mail.ru,REJECT-200
 DOMAIN,r.mail.ru,REJECT-200
 
-# ==================================================
-# 02) UHF IPTV / UNITY ADS
-# ==================================================
-# Более специфичные endpoints стоят выше широких suffix для сохранения first-match.
+# =============================================================================
+# 02) YANDEX ADS / METRICA / APPMETRICA / MARKET TRACKING
+# Назначение: Yandex advertising, Метрика/AppMetrica и Market tracking endpoints.
+# Добавлено: 2026-09-04 | Обновлено: 2026-09-04
+# Источник: пользовательский модуль "Yandex Analytics Lite Block" v1.1.
+# Примечание: Yandex core DIRECT-правила сюда не переносились.
+# =============================================================================
+DOMAIN-SUFFIX,an.yandex.ru,REJECT-200
+DOMAIN-SUFFIX,mc.yandex.ru,REJECT-200
+DOMAIN-SUFFIX,mc.yandex.com,REJECT
+DOMAIN-SUFFIX,metrika.yandex.ru,REJECT-200
+DOMAIN-SUFFIX,adfox.yandex.ru,REJECT
+DOMAIN-SUFFIX,mobile.yandexadexchange.net,REJECT
+DOMAIN-SUFFIX,adfstat.yandex.ru,REJECT
+DOMAIN-SUFFIX,appmetrica.yandex.ru,REJECT-200
+DOMAIN-SUFFIX,report.appmetrica.yandex.net,REJECT
+DOMAIN-SUFFIX,report.appmetrica.yango.com,REJECT
+DOMAIN-SUFFIX,rosenberg.appmetrica.yandex.net,REJECT
+DOMAIN-SUFFIX,startup.mobile.yandex.net,REJECT
+DOMAIN-SUFFIX,market-baobab.yandex.ru,REJECT
+DOMAIN-SUFFIX,market-click-baobab.yandex.ru,REJECT
+
+# =============================================================================
+# 03) MOLOCO
+# Назначение: Moloco advertising / ad delivery.
+# Добавлено: 2026-09-04 | Обновлено: 2026-09-04
+# Источник: пользовательский модуль "TeraBox – Ads & Trackers Block".
+# =============================================================================
+DOMAIN-SUFFIX,moloco.com,REJECT
+DOMAIN-SUFFIX,adsmoloco.com,REJECT
+
+# =============================================================================
+# 04) APPLOVIN
+# Назначение: AppLovin advertising SDK / delivery.
+# Добавлено: 2026-09-04 | Обновлено: 2026-09-04 (v1.1: источник TeraBox сверён)
+# Источник: UHF IPTV block; также присутствует в TeraBox module.
+# =============================================================================
+DOMAIN-SUFFIX,applovin.com,REJECT-DICT
+DOMAIN-SUFFIX,applvn.com,REJECT-DICT
+
+# =============================================================================
+# 05) INMOBI
+# Назначение: InMobi advertising / CDN endpoints.
+# Добавлено: 2026-09-04 | Обновлено: 2026-09-04
+# Источник: пользовательский модуль "TeraBox – Ads & Trackers Block".
+# =============================================================================
+DOMAIN-SUFFIX,inmobi.com,REJECT
+DOMAIN-SUFFIX,inmobicdn.net,REJECT
+
+# =============================================================================
+# 06) GOOGLE ADS / DOUBLECLICK
+# Назначение: Google advertising / attribution endpoints.
+# Добавлено: 2026-09-04 | Обновлено: 2026-09-04
+# Источник: пользовательский модуль "TeraBox – Ads & Trackers Block".
+# =============================================================================
+DOMAIN-SUFFIX,doubleclick.net,REJECT
+DOMAIN-SUFFIX,googleadservices.com,REJECT
+
+# =============================================================================
+# 07) MINTEGRAL / RAYJUMP
+# Назначение: Mintegral/Rayjump advertising SDK.
+# Добавлено: 2026-09-04 | Обновлено: 2026-09-04 (v1.1: перегруппировка)
+# Источник: UHF IPTV Ads Block.
+# =============================================================================
+DOMAIN-SUFFIX,mintegral.com,REJECT-DICT
+DOMAIN-SUFFIX,rayjump.com,REJECT-DICT
+
+# =============================================================================
+# 08) PANGLE
+# Назначение: Pangle/TikTok advertising delivery.
+# Добавлено: 2026-09-04 | Обновлено: 2026-09-04 (v1.1: источник TeraBox сверён)
+# Источник: UHF IPTV block; также присутствует в TeraBox module.
+# =============================================================================
+DOMAIN-SUFFIX,tiktokpangle.us,REJECT-DICT
+DOMAIN-SUFFIX,tiktokpangle-b.us,REJECT-DICT
+DOMAIN-SUFFIX,tiktokpangle-cdn-us.com,REJECT-VIDEO
+
+# =============================================================================
+# 09) VUNGLE
+# Назначение: Vungle advertising SDK.
+# Добавлено: 2026-09-04 | Обновлено: 2026-09-04 (v1.1: источник TeraBox сверён)
+# Источник: UHF IPTV block; также присутствует в TeraBox module.
+# =============================================================================
+DOMAIN-SUFFIX,vungle.com,REJECT-DICT
+
+# =============================================================================
+# 10) MTGGLOBALS
+# Назначение: advertising endpoint, замеченный в TeraBox runtime/log-derived module.
+# Добавлено: 2026-09-04 | Обновлено: 2026-09-04
+# Источник: пользовательский модуль "TeraBox – Ads & Trackers Block".
+# =============================================================================
+DOMAIN-SUFFIX,mtgglobals.com,REJECT
+
+# =============================================================================
+# 11) SMADEX
+# Назначение: Smadex advertising endpoint.
+# Добавлено: 2026-09-04 | Обновлено: 2026-09-04
+# Источник: пользовательский модуль "TeraBox – Ads & Trackers Block".
+# =============================================================================
+DOMAIN-SUFFIX,smadex.com,REJECT
+
+# =============================================================================
+# 12) TOBSNSSDK
+# Назначение: SDK endpoint, добавленный по TeraBox ad/tracker наблюдениям.
+# Добавлено: 2026-09-04 | Обновлено: 2026-09-04
+# Источник: пользовательский модуль "TeraBox – Ads & Trackers Block".
+# =============================================================================
+DOMAIN-SUFFIX,tobsnssdk.com,REJECT
+
+# =============================================================================
+# 13) LIFTOFF CREATIVES
+# Назначение: Liftoff advertising creatives.
+# Добавлено: 2026-09-04 | Обновлено: 2026-09-04
+# Источник: пользовательский модуль "TeraBox – Ads & Trackers Block".
+# =============================================================================
+DOMAIN-SUFFIX,liftoff-creatives.io,REJECT
+
+# =============================================================================
+# 14) APPLE ADS ATTRIBUTION
+# Назначение: Apple Ads attribution endpoint.
+# Добавлено: 2026-09-04 | Обновлено: 2026-09-04
+# Источник: пользовательский модуль "TeraBox – Ads & Trackers Block".
+# Примечание: в исходном модуле правило отмечено как optional.
+# =============================================================================
+DOMAIN-SUFFIX,app-ads-services.com,REJECT
+
+# =============================================================================
+# 15) BYTEPLUS MEDIA — HIGH RISK
+# Назначение: BytePlus CDN/VOD endpoints, присутствовавшие в TeraBox block module.
+# Добавлено: 2026-09-04 | Обновлено: 2026-09-04
+# Источник: пользовательский модуль "TeraBox – Ads & Trackers Block".
+# РИСК: исходный модуль предупреждает, что блокировка может ломать видео TeraBox.
+# При проблемах с видео сначала временно отключать/проверять именно эти два правила.
+# =============================================================================
+DOMAIN-SUFFIX,bytepluscdn.com,REJECT
+DOMAIN-SUFFIX,byteplusvod.com,REJECT
+
+# =============================================================================
+# 16) UHF IPTV / UNITY ADS — AGGRESSIVE ROOT SUFFIX
+# Назначение: Unity Ads/Mediation endpoints.
+# Добавлено: 2026-09-04 | Обновлено: 2026-09-04 (v1.1: блок перемещён ниже)
+# Источник: пользовательский UHF IPTV Ads Block / production migration.
+# =============================================================================
 DOMAIN-SUFFIX,mediation.unity3d.com,REJECT-DICT
 DOMAIN-SUFFIX,config.unityads.unity3d.com,REJECT-DICT
 DOMAIN,cdn.iads.unity3d.com,REJECT-VIDEO
 DOMAIN-SUFFIX,iads.unity3d.com,REJECT-DICT
 DOMAIN-SUFFIX,unityads.unity3d.com,REJECT-VIDEO
 DOMAIN-SUFFIX,isx.unity3d.com,REJECT-200
-
-# AGGRESSIVE: весь unity3d.com, а не только рекламные endpoints.
 DOMAIN-SUFFIX,unity3d.com,REJECT-200
 
-# ==================================================
-# 03) APPLOVIN
-# ==================================================
-DOMAIN-SUFFIX,applovin.com,REJECT-DICT
-DOMAIN-SUFFIX,applvn.com,REJECT-DICT
-
-# ==================================================
-# 04) MINTEGRAL / RAYJUMP
-# ==================================================
-DOMAIN-SUFFIX,mintegral.com,REJECT-DICT
-DOMAIN-SUFFIX,rayjump.com,REJECT-DICT
-
-# ==================================================
-# 05) PANGLE
-# ==================================================
-DOMAIN-SUFFIX,tiktokpangle.us,REJECT-DICT
-DOMAIN-SUFFIX,tiktokpangle-b.us,REJECT-DICT
-DOMAIN-SUFFIX,tiktokpangle-cdn-us.com,REJECT-VIDEO
-
-# ==================================================
-# 06) VUNGLE
-# ==================================================
-DOMAIN-SUFFIX,vungle.com,REJECT-DICT
-
-# ==================================================
-# 07) GLOBAL / ATTRIBUTION / ANALYTICS
-# ==================================================
-
-# AGGRESSIVE: глобально ловит любой hostname с подстрокой "ads".
-DOMAIN-KEYWORD,ads,REJECT-TINYGIF
-
+# =============================================================================
+# 17) META ANALYTICS
+# Назначение: точечный Meta/Facebook analytics endpoint.
+# Добавлено: 2026-09-04 | Обновлено: 2026-09-04 (v1.1: перегруппировка)
+# Источник: production migration.
+# =============================================================================
 DOMAIN,ep2.facebook.com,REJECT-200
+
+# =============================================================================
+# 18) GLOBAL KEYWORD ADS — AGGRESSIVE / LAST
+# Назначение: fallback-блокировка hostname с подстрокой "ads".
+# Добавлено: 2026-09-04 | Обновлено: 2026-09-04 (v1.1: перемещено последним)
+# Источник: production migration.
+# РИСК: может блокировать легитимные hostname, содержащие "ads".
+# Более специфичные правила выше должны получать свой собственный REJECT policy.
+# =============================================================================
+DOMAIN-KEYWORD,ads,REJECT-TINYGIF
