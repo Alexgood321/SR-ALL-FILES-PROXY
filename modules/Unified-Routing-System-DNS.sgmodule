@@ -1,4 +1,4 @@
-#!name=Unified Routing + System DNS
+#!name=Unified Routing + System DNS v1.9
 #!desc=Единый модуль DIRECT/PROXY + выборочный System DNS. Использовать вместе с remote.conf.
 #!author=OpenAI + user
 #!version=1.9
