@@ -1,7 +1,7 @@
 #!name=Unified Routing + System DNS
-#!desc=Единый модуль: DIRECT/PROXY/REJECT + выборочный System DNS. Использовать вместе с remote.conf.
+#!desc=Единый модуль DIRECT/PROXY + выборочный System DNS. Использовать вместе с remote.conf.
 #!author=OpenAI + user
-#!version=1.5
+#!version=1.6
 
 # =============================================================================
 # ПАМЯТКА / НАЗНАЧЕНИЕ
@@ -13,18 +13,15 @@
 # параметры, GEOIP,RU,DIRECT и FINAL,PROXY.
 # Этот модуль НЕ содержит [General] и не меняет глобальный DNS для всего трафика.
 #
+# С версии 1.6 рекламные/privacy REJECT-правила вынесены в отдельный опциональный
+# modules/Ads-Privacy-Block.sgmodule. Unified остаётся обязательной routing/DNS базой.
+#
 # =============================================================================
 # ЧТО ВХОДИТ В МОДУЛЬ
 # =============================================================================
-# Маршрутизация и блокировки:
+# Маршрутизация:
 #   - DIRECT
 #   - PROXY
-#   - REJECT
-#   - REJECT-ARRAY
-#   - REJECT-TINYGIF
-#   - REJECT-VIDEO
-#   - REJECT-DICT
-#   - REJECT-200
 #
 # Типы правил:
 #   - DOMAIN / DOMAIN-SUFFIX / DOMAIN-KEYWORD
@@ -37,8 +34,7 @@
 #   - WhatsApp: домены + IPv4/IPv6 + UDP/VoIP
 #   - Meta / Facebook / Messenger / Instagram
 #   - TikTok: жёсткий PROXY + встроенный snapshot внешних rule-set
-#   - VK / Mail / OK / MY: DIRECT + privacy/ad/tracker REJECT-правила
-#   - UHF IPTV: отдельный блок блокировки рекламных SDK/баннеров/видео
+#   - VK / Mail / OK / MY: DIRECT
 #   - Apple: DIRECT + выборочный System DNS
 #   - BiP
 #   - JumpDesktop
@@ -86,7 +82,7 @@
 # 7. Общие CDN-маски Apple (например глобальные *.akamaized.net / *.fastly.net)
 #    намеренно не используются как широкие System DNS/DIRECT правила, чтобы не
 #    перехватывать чужие сервисы вроде TikTok и других пользователей общих CDN.
-# 8. Внутри [Rule] сохраняется порядок: REJECT overrides -> PROXY -> DIRECT ->
+# 8. Внутри [Rule] сохраняется порядок: CRITICAL PROXY -> PROXY -> DIRECT ->
 #    широкие RU TLD catch-all. Внутри сервисных блоков более специфичные правила
 #    стоят выше более широких suffix/keyword правил.
 # 9. НЕ МЕНЯТЬ без прямого указания пользователя имена production release-assets
@@ -98,24 +94,29 @@
 #     возможная зона влияния и основание (официальный источник / runtime-лог).
 #     Это нужно для последующего сопоставления PacketTunnel-логов с моментом,
 #     когда конкретное поведение могло измениться.
+# 11. Ads-Privacy-Block.sgmodule является ОПЦИОНАЛЬНЫМ. Если он используется,
+#     размещать его выше Unified, чтобы его REJECT срабатывали до PROXY/DIRECT.
 #
 # =============================================================================
 # ЖУРНАЛ АКТУАЛИЗАЦИИ / ИСТОЧНИКИ
 # =============================================================================
+# 2026-09-04 — разделение Ads/Privacy и routing/DNS / версия 1.6.
+# Все 28 активных REJECT-правил удалены из Unified и без изменения policy перенесены
+# в отдельный modules/Ads-Privacy-Block.sgmodule версии 1.0.
+# В Unified после разделения остаются только DIRECT/PROXY routing и [Host] System DNS.
+# [Host], DNS-политика, IP/CIDR и сервисные DIRECT/PROXY правила этим изменением
+# не менялись. Возможная зона влияния: устройства, где ранее блокировка рекламы
+# приходила из Unified, должны включить Ads + Privacy Block отдельно. При совместном
+# использовании Ads-модуль должен стоять выше Unified по приоритету.
+# Причина: отделить необязательный и потенциально ломающий приложения ad/privacy
+# слой от обязательной сетевой маршрутизации, упростить диагностику PacketTunnel.
+#
 # 2026-09-04 — UHF IPTV Ads Block / версия 1.5.
-# Интегрирован отдельный пользовательский блок UHF IPTV – Ads Block (Banner + Video):
+# Историческая запись: UHF Ads был временно интегрирован прямо в Unified.
 # Unity Ads/Mediation, AppLovin, Mintegral/Rayjump, Pangle, Vungle, ep2.facebook.com
-# и общий DOMAIN-KEYWORD,ads. Блок размещён в REJECT OVERRIDES выше PROXY/DIRECT,
-# чтобы рекламные endpoints не перехватывались широкими TikTok/Meta правилами.
-# Более специфичные Unity config/video правила поставлены выше широких suffix,
-# чтобы first-match сохранял назначенный REJECT-DICT/REJECT-VIDEO ответ.
-# vk-analytics.ru повторно не добавлялся: он уже блокируется глобальным REJECT выше;
-# это сознательное отличие от исходного UHF-файла, где указан REJECT-200.
-# Важно: DOMAIN-KEYWORD,ads является глобальным широким правилом и может затронуть
-# любой домен с подстрокой "ads", не только UHF. При новой регрессии рекламы/SDK
-# или неожиданной блокировке другого приложения этот rule проверять одним из первых.
-# Validator расширен только на поддержку штатной политики Shadowrocket REJECT-VIDEO.
-# [Host] и DNS-политика в версии 1.5 не изменялись.
+# и DOMAIN-KEYWORD,ads были размещены в REJECT OVERRIDES выше PROXY/DIRECT.
+# В версии 1.6 этот блок вместе со старым VK/Mail privacy REJECT перенесён в
+# Ads-Privacy-Block.sgmodule; эта запись сохранена только для audit trail.
 #
 # 2026-09-03 — диагностический audit trail / версия 1.4.
 # Добавлено постоянное правило ведения истории изменений внутри самого модуля.
@@ -183,65 +184,7 @@
 [Rule]
 
 # ==================================================
-# 01) REJECT OVERRIDES
-# ==================================================
-
-# --- VK Direct Stable Privacy DNS Test / REJECT-ARRAY ---
-DOMAIN,alt-ad.mail.ru,REJECT-ARRAY
-DOMAIN,ad.mail.ru,REJECT-ARRAY
-
-# --- VK Direct Stable Privacy DNS Test / REJECT-TINYGIF ---
-DOMAIN-SUFFIX,mradx.net,REJECT-TINYGIF
-
-# --- VK Direct Stable Privacy DNS Test / REJECT-DICT ---
-DOMAIN-SUFFIX,target.my.com,REJECT-DICT
-DOMAIN-SUFFIX,advertising.my.com,REJECT-DICT
-DOMAIN-SUFFIX,mytarget.com,REJECT-DICT
-
-# --- VK Direct Stable Privacy DNS Test / REJECT ---
-DOMAIN-SUFFIX,tracker-api.vk-analytics.ru,REJECT
-DOMAIN-SUFFIX,vk-analytics.ru,REJECT
-DOMAIN-SUFFIX,tracker-api.my.com,REJECT
-
-# --- VK Direct Stable Privacy DNS Test / REJECT-200 ---
-DOMAIN-SUFFIX,top.mail.ru,REJECT-200
-DOMAIN,r.mail.ru,REJECT-200
-
-# --- UHF IPTV ADS BLOCK / 2026-09-04 ---
-# Specific Unity endpoints first: first-match must preserve response type.
-DOMAIN-SUFFIX,mediation.unity3d.com,REJECT-DICT
-DOMAIN-SUFFIX,config.unityads.unity3d.com,REJECT-DICT
-DOMAIN,cdn.iads.unity3d.com,REJECT-VIDEO
-DOMAIN-SUFFIX,iads.unity3d.com,REJECT-DICT
-DOMAIN-SUFFIX,unityads.unity3d.com,REJECT-VIDEO
-DOMAIN-SUFFIX,isx.unity3d.com,REJECT-200
-DOMAIN-SUFFIX,unity3d.com,REJECT-200
-
-# AppLovin
-DOMAIN-SUFFIX,applovin.com,REJECT-DICT
-DOMAIN-SUFFIX,applvn.com,REJECT-DICT
-
-# Mintegral / Rayjump
-DOMAIN-SUFFIX,mintegral.com,REJECT-DICT
-DOMAIN-SUFFIX,rayjump.com,REJECT-DICT
-
-# Pangle
-DOMAIN-SUFFIX,tiktokpangle.us,REJECT-DICT
-DOMAIN-SUFFIX,tiktokpangle-b.us,REJECT-DICT
-DOMAIN-SUFFIX,tiktokpangle-cdn-us.com,REJECT-VIDEO
-
-# Vungle
-DOMAIN-SUFFIX,vungle.com,REJECT-DICT
-
-# Universal banner keyword from the source UHF module. GLOBAL scope, intentionally broad.
-DOMAIN-KEYWORD,ads,REJECT-TINYGIF
-
-# Attribution / analytics
-DOMAIN,ep2.facebook.com,REJECT-200
-# vk-analytics.ru is already blocked above with REJECT; do not duplicate as REJECT-200.
-
-# ==================================================
-# 02) CRITICAL PROXY EXCEPTIONS
+# 01) CRITICAL PROXY EXCEPTIONS
 # ==================================================
 
 # --- Manual Proxy ---
@@ -256,7 +199,7 @@ IP-CIDR,62.60.230.167/32,PROXY,no-resolve
 IP-CIDR,31.77.158.107/32,PROXY,no-resolve
 
 # ==================================================
-# 03) PROXY SERVICES
+# 02) PROXY SERVICES
 # ==================================================
 
 # --- TikTok HARD PROXY ---
@@ -418,7 +361,7 @@ DOMAIN-SUFFIX,marscode.com,PROXY
 DOMAIN-SUFFIX,trae.ai,PROXY
 
 # ==================================================
-# 04) DIRECT SERVICES
+# 03) DIRECT SERVICES
 # ==================================================
 
 # --- VK / Mail / OK / MY DIRECT ---
@@ -656,7 +599,7 @@ DOMAIN-SUFFIX,pobeda.aero,DIRECT
 DOMAIN-SUFFIX,lenta.com,DIRECT
 
 # ==================================================
-# 05) BROAD RU TLD CATCH-ALL — KEEP LAST IN [Rule]
+# 04) BROAD RU TLD CATCH-ALL — KEEP LAST IN [Rule]
 # ==================================================
 DOMAIN-SUFFIX,ru,DIRECT
 DOMAIN-SUFFIX,su,DIRECT
