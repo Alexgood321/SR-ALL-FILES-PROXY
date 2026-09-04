@@ -1,7 +1,7 @@
 #!name=Unified Routing + System DNS
 #!desc=Единый модуль DIRECT/PROXY + выборочный System DNS. Использовать вместе с remote.conf.
 #!author=OpenAI + user
-#!version=1.7
+#!version=1.8
 
 # =============================================================================
 # ПАМЯТКА / НАЗНАЧЕНИЕ
@@ -40,8 +40,9 @@
 #   - JumpDesktop
 #   - Manual DIRECT
 #   - Manual PROXY
+#   - ЕМИАС: DIRECT + System DNS
 #   - RU TLD: .ru / .su / .рф
-#   - российские сервисы на иностранных TLD (.com/.net/.tv/.aero/.one/.st и др.)
+#   - российские сервисы на иностранных TLD (.com/.net/.tv/.aero/.one/.st/.info и др.)
 #
 # =============================================================================
 # DNS-ЛОГИКА
@@ -99,6 +100,14 @@
 # =============================================================================
 # ЖУРНАЛ АКТУАЛИЗАЦИИ / ИСТОЧНИКИ
 # =============================================================================
+# 2026-09-05 — ЕМИАС / версия 1.8.
+# Добавлен DOMAIN-SUFFIX,emias.info,DIRECT и записи emias.info / *.emias.info
+# в [Host] с server:system. Причина: ЕМИАС использует российский сервисный домен
+# в зоне .info, поэтому общий .ru/.su/.рф catch-all его не покрывает.
+# Зона влияния узкая: только emias.info и его поддомены. Остальные госресурсы в
+# .ru/.gov.ru уже покрываются общим DIRECT + System DNS и отдельно не дублируются.
+# Post-change runtime на устройствах ещё не проверен.
+#
 # 2026-09-04 — runtime-коррекция WHOOSH/X5 / версия 1.7.
 # WHOOSH:
 # - удалены DOMAIN-SUFFIX,appsflyer.com,DIRECT и appsflyersdk.com,DIRECT: runtime
@@ -600,6 +609,7 @@ DOMAIN-SUFFIX,yandex.st,DIRECT
 DOMAIN-SUFFIX,dgis.com,DIRECT
 DOMAIN-SUFFIX,wbstatic.net,DIRECT
 DOMAIN-SUFFIX,x5static.net,DIRECT
+DOMAIN-SUFFIX,emias.info,DIRECT
 DOMAIN-SUFFIX,avito.st,DIRECT
 DOMAIN-SUFFIX,sberbank.com,DIRECT
 DOMAIN-SUFFIX,vtb.com,DIRECT
@@ -801,6 +811,8 @@ wbstatic.net = server:system
 *.wbstatic.net = server:system
 x5static.net = server:system
 *.x5static.net = server:system
+emias.info = server:system
+*.emias.info = server:system
 avito.st = server:system
 *.avito.st = server:system
 sberbank.com = server:system
