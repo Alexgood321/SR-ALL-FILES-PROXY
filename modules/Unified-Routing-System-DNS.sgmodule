@@ -1,7 +1,7 @@
 #!name=Unified Routing + System DNS
 #!desc=Единый модуль: DIRECT/PROXY/REJECT + выборочный System DNS. Использовать вместе с remote.conf.
 #!author=OpenAI + user
-#!version=1.4
+#!version=1.5
 
 # =============================================================================
 # ПАМЯТКА / НАЗНАЧЕНИЕ
@@ -22,6 +22,7 @@
 #   - REJECT
 #   - REJECT-ARRAY
 #   - REJECT-TINYGIF
+#   - REJECT-VIDEO
 #   - REJECT-DICT
 #   - REJECT-200
 #
@@ -37,6 +38,7 @@
 #   - Meta / Facebook / Messenger / Instagram
 #   - TikTok: жёсткий PROXY + встроенный snapshot внешних rule-set
 #   - VK / Mail / OK / MY: DIRECT + privacy/ad/tracker REJECT-правила
+#   - UHF IPTV: отдельный блок блокировки рекламных SDK/баннеров/видео
 #   - Apple: DIRECT + выборочный System DNS
 #   - BiP
 #   - JumpDesktop
@@ -100,6 +102,21 @@
 # =============================================================================
 # ЖУРНАЛ АКТУАЛИЗАЦИИ / ИСТОЧНИКИ
 # =============================================================================
+# 2026-09-04 — UHF IPTV Ads Block / версия 1.5.
+# Интегрирован отдельный пользовательский блок UHF IPTV – Ads Block (Banner + Video):
+# Unity Ads/Mediation, AppLovin, Mintegral/Rayjump, Pangle, Vungle, ep2.facebook.com
+# и общий DOMAIN-KEYWORD,ads. Блок размещён в REJECT OVERRIDES выше PROXY/DIRECT,
+# чтобы рекламные endpoints не перехватывались широкими TikTok/Meta правилами.
+# Более специфичные Unity config/video правила поставлены выше широких suffix,
+# чтобы first-match сохранял назначенный REJECT-DICT/REJECT-VIDEO ответ.
+# vk-analytics.ru повторно не добавлялся: он уже блокируется глобальным REJECT выше;
+# это сознательное отличие от исходного UHF-файла, где указан REJECT-200.
+# Важно: DOMAIN-KEYWORD,ads является глобальным широким правилом и может затронуть
+# любой домен с подстрокой "ads", не только UHF. При новой регрессии рекламы/SDK
+# или неожиданной блокировке другого приложения этот rule проверять одним из первых.
+# Validator расширен только на поддержку штатной политики Shadowrocket REJECT-VIDEO.
+# [Host] и DNS-политика в версии 1.5 не изменялись.
+#
 # 2026-09-03 — диагностический audit trail / версия 1.4.
 # Добавлено постоянное правило ведения истории изменений внутри самого модуля.
 # В версии 1.4 маршрутизация и DNS НЕ изменялись: изменены только комментарии,
@@ -189,6 +206,39 @@ DOMAIN-SUFFIX,tracker-api.my.com,REJECT
 # --- VK Direct Stable Privacy DNS Test / REJECT-200 ---
 DOMAIN-SUFFIX,top.mail.ru,REJECT-200
 DOMAIN,r.mail.ru,REJECT-200
+
+# --- UHF IPTV ADS BLOCK / 2026-09-04 ---
+# Specific Unity endpoints first: first-match must preserve response type.
+DOMAIN-SUFFIX,mediation.unity3d.com,REJECT-DICT
+DOMAIN-SUFFIX,config.unityads.unity3d.com,REJECT-DICT
+DOMAIN,cdn.iads.unity3d.com,REJECT-VIDEO
+DOMAIN-SUFFIX,iads.unity3d.com,REJECT-DICT
+DOMAIN-SUFFIX,unityads.unity3d.com,REJECT-VIDEO
+DOMAIN-SUFFIX,isx.unity3d.com,REJECT-200
+DOMAIN-SUFFIX,unity3d.com,REJECT-200
+
+# AppLovin
+DOMAIN-SUFFIX,applovin.com,REJECT-DICT
+DOMAIN-SUFFIX,applvn.com,REJECT-DICT
+
+# Mintegral / Rayjump
+DOMAIN-SUFFIX,mintegral.com,REJECT-DICT
+DOMAIN-SUFFIX,rayjump.com,REJECT-DICT
+
+# Pangle
+DOMAIN-SUFFIX,tiktokpangle.us,REJECT-DICT
+DOMAIN-SUFFIX,tiktokpangle-b.us,REJECT-DICT
+DOMAIN-SUFFIX,tiktokpangle-cdn-us.com,REJECT-VIDEO
+
+# Vungle
+DOMAIN-SUFFIX,vungle.com,REJECT-DICT
+
+# Universal banner keyword from the source UHF module. GLOBAL scope, intentionally broad.
+DOMAIN-KEYWORD,ads,REJECT-TINYGIF
+
+# Attribution / analytics
+DOMAIN,ep2.facebook.com,REJECT-200
+# vk-analytics.ru is already blocked above with REJECT; do not duplicate as REJECT-200.
 
 # ==================================================
 # 02) CRITICAL PROXY EXCEPTIONS
