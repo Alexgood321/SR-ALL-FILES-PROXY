@@ -1,7 +1,7 @@
 #!name=Unified Routing + System DNS
 #!desc=Единый модуль DIRECT/PROXY + выборочный System DNS. Использовать вместе с remote.conf.
 #!author=OpenAI + user
-#!version=1.6
+#!version=1.7
 
 # =============================================================================
 # ПАМЯТКА / НАЗНАЧЕНИЕ
@@ -38,7 +38,6 @@
 #   - Apple: DIRECT + выборочный System DNS
 #   - BiP
 #   - JumpDesktop
-#   - WHOOSH
 #   - Manual DIRECT
 #   - Manual PROXY
 #   - RU TLD: .ru / .su / .рф
@@ -100,6 +99,24 @@
 # =============================================================================
 # ЖУРНАЛ АКТУАЛИЗАЦИИ / ИСТОЧНИКИ
 # =============================================================================
+# 2026-09-04 — runtime-коррекция WHOOSH/X5 / версия 1.7.
+# WHOOSH:
+# - удалены DOMAIN-SUFFIX,appsflyer.com,DIRECT и appsflyersdk.com,DIRECT: runtime
+#   показал, что эти глобальные AppsFlyer suffix отправляли DIRECT трафик не только
+#   WHOOSH, но и других приложений;
+# - удалён DOMAIN-SUFFIX,whoosh.bike,DIRECT и обе записи whoosh.bike из [Host].
+#   WHOOSH теперь специально не форсируется: домены проходят по обычной политике
+#   remote.conf/FINAL,PROXY и глобальной DNS-схеме. Это диагностический A/B после
+#   пользовательского симптома «приложение не открывается»; сами whoosh.bike в
+#   предыдущих логах успешно резолвились через System DNS и подключались DIRECT.
+# X5 / Пятёрочка:
+# - добавлен DOMAIN-SUFFIX,x5static.net,DIRECT;
+# - x5static.net и *.x5static.net добавлены в [Host] как server:system.
+# Основание: PacketTunnel-логи 2026-09-04 показали 5ka-media.x5static.net,
+# x5m-cdn.x5static.net и catalog-images.x5static.net через FINAL,PROXY при том,
+# что это CDN X5. Зона влияния узкая: только x5static.net.
+# Post-change runtime на устройствах ещё не проверен.
+#
 # 2026-09-04 — разделение Ads/Privacy и routing/DNS / версия 1.6.
 # Все 28 активных REJECT-правил удалены из Unified и без изменения policy перенесены
 # в отдельный modules/Ads-Privacy-Block.sgmodule версии 1.0.
@@ -576,17 +593,13 @@ DOMAIN-SUFFIX,2gis.com,DIRECT
 DOMAIN-SUFFIX,postmypost.io,DIRECT
 IP-CIDR,46.174.49.29/32,DIRECT,no-resolve
 
-# --- WHOOSH DIRECT ---
-DOMAIN-SUFFIX,appsflyer.com,DIRECT
-DOMAIN-SUFFIX,appsflyersdk.com,DIRECT
-DOMAIN-SUFFIX,whoosh.bike,DIRECT
-
 # --- RU services outside RU TLD ---
 DOMAIN-SUFFIX,yandex.net,DIRECT
 DOMAIN-SUFFIX,yastatic.net,DIRECT
 DOMAIN-SUFFIX,yandex.st,DIRECT
 DOMAIN-SUFFIX,dgis.com,DIRECT
 DOMAIN-SUFFIX,wbstatic.net,DIRECT
+DOMAIN-SUFFIX,x5static.net,DIRECT
 DOMAIN-SUFFIX,avito.st,DIRECT
 DOMAIN-SUFFIX,sberbank.com,DIRECT
 DOMAIN-SUFFIX,vtb.com,DIRECT
@@ -786,6 +799,8 @@ dgis.com = server:system
 *.dgis.com = server:system
 wbstatic.net = server:system
 *.wbstatic.net = server:system
+x5static.net = server:system
+*.x5static.net = server:system
 avito.st = server:system
 *.avito.st = server:system
 sberbank.com = server:system
@@ -844,7 +859,5 @@ vk.team = server:system
 vkuseraudio.net = server:system
 ozonusercontent.com = server:system
 *.ozonusercontent.com = server:system
-whoosh.bike = server:system
-*.whoosh.bike = server:system
 postmypost.io = server:system
 *.postmypost.io = server:system
