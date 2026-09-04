@@ -1,7 +1,7 @@
 #!name=Unified Routing + System DNS
 #!desc=Единый модуль DIRECT/PROXY + выборочный System DNS. Использовать вместе с remote.conf.
 #!author=OpenAI + user
-#!version=1.8
+#!version=1.9
 
 # =============================================================================
 # ПАМЯТКА / НАЗНАЧЕНИЕ
@@ -40,6 +40,7 @@
 #   - JumpDesktop
 #   - Manual DIRECT
 #   - Manual PROXY
+#   - MAX Messenger IP-check endpoints: DIRECT
 #   - ЕМИАС: DIRECT + System DNS
 #   - RU TLD: .ru / .su / .рф
 #   - российские сервисы на иностранных TLD (.com/.net/.tv/.aero/.one/.st/.info и др.)
@@ -100,6 +101,21 @@
 # =============================================================================
 # ЖУРНАЛ АКТУАЛИЗАЦИИ / ИСТОЧНИКИ
 # =============================================================================
+# 2026-09-05 — MAX Messenger IP-check consistency / версия 1.9.
+# Добавлены точечные DOMAIN,api.ipify.org,DIRECT и
+# DOMAIN,checkip.amazonaws.com,DIRECT.
+# Причина: reverse engineering MAX подтвердил, что приложение использует эти два
+# публичных endpoint среди источников определения внешнего IP вместе с Yandex,
+# Mail.ru и ifconfig.me, которые в текущей split-routing политике уже идут DIRECT.
+# Цель: не допускать ситуации, когда часть IP-check MAX видит реальный публичный IP,
+# а другая часть через FINAL,PROXY получает exit-IP приватного VLESS/VPN-сервера.
+# Оба правила намеренно точечные, не suffix/keyword. Они глобальны: любой клиент,
+# обращающийся именно к этим двум endpoint, увидит direct public IP устройства.
+# Telegram/WhatsApp reachability-домены MAX этим изменением НЕ переводились DIRECT.
+# Основание: публичный reverse engineering MAX, Habr 2026-09:
+# https://habr.com/ru/articles/1006666/
+# Post-change runtime на устройствах ещё не проверен.
+#
 # 2026-09-05 — ЕМИАС / версия 1.8.
 # Добавлен DOMAIN-SUFFIX,emias.info,DIRECT и записи emias.info / *.emias.info
 # в [Host] с server:system. Причина: ЕМИАС использует российский сервисный домен
@@ -572,6 +588,12 @@ DOMAIN-SUFFIX,lamro.workers.dev,DIRECT
 DOMAIN-SUFFIX,vdbmate.org,DIRECT
 IP-CIDR,188.225.31.197/32,DIRECT,no-resolve
 IP-CIDR,5.61.89.166/32,DIRECT,no-resolve
+
+# --- MAX Messenger external-IP consistency ---
+# Reverse engineering confirms MAX uses these public IP-check endpoints.
+# Keep them DIRECT so split routing does not expose the VPN/VLESS exit IP here.
+DOMAIN,api.ipify.org,DIRECT
+DOMAIN,checkip.amazonaws.com,DIRECT
 
 DOMAIN-SUFFIX,2ip.io,DIRECT
 DOMAIN-SUFFIX,blackmagicdesign.com,DIRECT
