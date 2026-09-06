@@ -1,7 +1,7 @@
-#!name=Ads + Privacy Block v1.3
+#!name=Ads + Privacy Block v1.4
 #!desc=Опциональная блокировка рекламы/трекеров. Использовать отдельным модулем ВЫШЕ Unified Routing + System DNS. Обновлено 2026-09-06.
 #!author=OpenAI + user
-#!version=1.3
+#!version=1.4
 
 # =============================================================================
 # НАЗНАЧЕНИЕ
@@ -13,7 +13,7 @@
 # Рекомендуемое расположение в Shadowrocket:
 #   Локальный сертификат MITM       <- если используется
 #   YouTube module                  <- если используется
-#   Ads + Privacy Block v1.3        <- выше Unified
+#   Ads + Privacy Block v1.4        <- выше Unified
 #   Unified Routing + System DNS    <- ниже
 #
 # Причина: Shadowrocket применяет first-match и верхний модуль имеет более высокий
@@ -46,6 +46,19 @@
 # =============================================================================
 # ЖУРНАЛ АКТУАЛИЗАЦИИ
 # =============================================================================
+# 2026-09-06 — версия 1.4 / Yandex Metrica, Webvisor и Yads.
+# - добавлены DOMAIN-SUFFIX,webvisor.com,REJECT,
+#   DOMAIN-SUFFIX,yandexmetrica.com,REJECT и DOMAIN-SUFFIX,yads.tech,REJECT;
+# - основание: поддерживаемый v2fly/domain-list-community data/yandex помечает
+#   webvisor.com, yandexmetrica.com и yads.tech как advertising/tracking (@ads);
+# - webvisor.com и yandexmetrica.com относятся к аналитике/Метрике, yads.tech — к
+#   рекламной инфраструктуре; в Unified эти домены намеренно НЕ переводятся DIRECT;
+# - RISK WATCH: yandexmetrica.com может использоваться встроенной аналитикой сайтов,
+#   webview и приложений. Если после v1.4 конкретное приложение перестанет нормально
+#   запускаться, авторизоваться или загружать контент, первым A/B-проверять именно
+#   DOMAIN-SUFFIX,yandexmetrica.com,REJECT, затем webvisor.com;
+# - runtime после добавления этих трёх правил ещё не проверен.
+#
 # 2026-09-06 — версия 1.3 / Adfox runtime gap.
 # - добавлен точечный DOMAIN,ads.adfox.ru,REJECT;
 # - причина: PacketTunnel-логи iPhone 2026-09-06 показали ads.adfox.ru через
@@ -122,14 +135,20 @@ DOMAIN,r.mail.ru,REJECT
 # =============================================================================
 # 02) YANDEX ADS / METRICA / APPMETRICA / MARKET TRACKING
 # Назначение: Yandex advertising, Метрика/AppMetrica и Market tracking endpoints.
-# Добавлено: 2026-09-04 | Обновлено: 2026-09-06 (v1.3: ads.adfox.ru)
-# Источник: пользовательский модуль "Yandex Analytics Lite Block" v1.1 + runtime.
+# Добавлено: 2026-09-04 | Обновлено: 2026-09-06 (v1.4: Metrica/Webvisor/Yads)
+# Источник: пользовательский модуль "Yandex Analytics Lite Block" v1.1 + runtime
+# + v2fly/domain-list-community data/yandex.
 # Примечание: Yandex core DIRECT-правила сюда не переносились.
 # =============================================================================
 DOMAIN-SUFFIX,an.yandex.ru,REJECT
 DOMAIN-SUFFIX,mc.yandex.ru,REJECT
 DOMAIN-SUFFIX,mc.yandex.com,REJECT
 DOMAIN-SUFFIX,metrika.yandex.ru,REJECT
+# Добавлено 2026-09-06. RISK WATCH: при регрессии приложения первым временно
+# отключать yandexmetrica.com, затем webvisor.com; runtime v1.4 пока не проверен.
+DOMAIN-SUFFIX,yandexmetrica.com,REJECT
+DOMAIN-SUFFIX,webvisor.com,REJECT
+DOMAIN-SUFFIX,yads.tech,REJECT
 DOMAIN,ads.adfox.ru,REJECT
 DOMAIN-SUFFIX,adfox.yandex.ru,REJECT
 DOMAIN-SUFFIX,mobile.yandexadexchange.net,REJECT

@@ -1,7 +1,7 @@
-#!name=Unified Routing + System DNS v1.10
+#!name=Unified Routing + System DNS v1.11
 #!desc=Единый модуль DIRECT/PROXY + выборочный System DNS. Использовать вместе с remote.conf.
 #!author=OpenAI + user
-#!version=1.10
+#!version=1.11
 
 # =============================================================================
 # ПАМЯТКА / НАЗНАЧЕНИЕ
@@ -101,6 +101,25 @@
 # =============================================================================
 # ЖУРНАЛ АКТУАЛИЗАЦИИ / ИСТОЧНИКИ
 # =============================================================================
+# 2026-09-06 — расширение RU/Yandex/VK/TikTok coverage / версия 1.11.
+# TikTok/ByteDance: по согласованной HARD PROXY политике добавлены ttdns2.com и
+# hypstarcdn.com. ttdns2.com имеет более широкий ByteDance scope, поэтому правило
+# осознанно может затронуть не только TikTok, но и родственные ByteDance endpoints.
+# VK: tamtam.chat добавлен в DIRECT + [Host] server:system как инфраструктура TamTam.
+# Российские/российско-ориентированные сервисы на non-RU TLD добавлены одновременно
+# в DIRECT и System DNS: alfabank.st, yandex.com, shedevrum.ai, shedevrum.com,
+# sourcecraft.dev, tochka-tech.com, edadeal.io, taxsee.com, bronevik.com, moex.com,
+# okko.sport, fix-price.com, korona.com, bank131.com, chizhik.club, okolo.app,
+# yandex.cloud, yandexcloud.net, clstorage.net, static-storage.net, tilda.cc,
+# kinescopecdn.net.
+# tilda.cc — намеренное пользовательское исключение: весь root/suffix Tilda идёт
+# DIRECT + System DNS ради стабильного прямого доступа, несмотря на shared hosting.
+# donationalerts.com намеренно НЕ добавлен: текущая ownership-проверка не даёт
+# основания считать его VK/RU-инфраструктурой для нашей DIRECT policy.
+# Основание: maintained v2fly/domain-list-community RU/Yandex/X5/bank lists,
+# профильные сервисные источники и подтверждённое пользователем routing-решение.
+# Post-change runtime на устройствах ещё не проверен.
+#
 # 2026-09-06 — VK/TikTok domain coverage / версия 1.10.
 # VK: добавлены 7 подтверждённых доменов/суффиксов в DIRECT и соответствующие
 # записи [Host] server:system: vk.link, vk.me, vkuseraudio.com, vkuserlive.com,
@@ -287,6 +306,8 @@ DOMAIN-SUFFIX,byteicdn.com,PROXY
 DOMAIN-SUFFIX,sgsnssdk.com,PROXY
 DOMAIN-SUFFIX,ttoverseaus.net,PROXY
 DOMAIN-SUFFIX,ttwstatic.com,PROXY
+DOMAIN-SUFFIX,ttdns2.com,PROXY
+DOMAIN-SUFFIX,hypstarcdn.com,PROXY
 DOMAIN-SUFFIX,ipstatp.com,PROXY
 DOMAIN-SUFFIX,sgpstatp.com,PROXY
 DOMAIN-SUFFIX,bytedapm.com,PROXY
@@ -462,6 +483,7 @@ DOMAIN-SUFFIX,vkuserlive.com,DIRECT
 DOMAIN-SUFFIX,vkuserlive.net,DIRECT
 DOMAIN-SUFFIX,vkuservideo.com,DIRECT
 DOMAIN-SUFFIX,vkuservideo.net,DIRECT
+DOMAIN-SUFFIX,tamtam.chat,DIRECT
 DOMAIN-SUFFIX,mail.ru,DIRECT
 DOMAIN-SUFFIX,my.com,DIRECT
 DOMAIN-SUFFIX,datacloudmail.ru,DIRECT
@@ -672,6 +694,28 @@ DOMAIN-SUFFIX,okko.tv,DIRECT
 DOMAIN-SUFFIX,premier.one,DIRECT
 DOMAIN-SUFFIX,pobeda.aero,DIRECT
 DOMAIN-SUFFIX,lenta.com,DIRECT
+DOMAIN-SUFFIX,alfabank.st,DIRECT
+DOMAIN-SUFFIX,yandex.com,DIRECT
+DOMAIN-SUFFIX,shedevrum.ai,DIRECT
+DOMAIN-SUFFIX,shedevrum.com,DIRECT
+DOMAIN-SUFFIX,sourcecraft.dev,DIRECT
+DOMAIN-SUFFIX,tochka-tech.com,DIRECT
+DOMAIN-SUFFIX,edadeal.io,DIRECT
+DOMAIN-SUFFIX,taxsee.com,DIRECT
+DOMAIN-SUFFIX,bronevik.com,DIRECT
+DOMAIN-SUFFIX,moex.com,DIRECT
+DOMAIN-SUFFIX,okko.sport,DIRECT
+DOMAIN-SUFFIX,fix-price.com,DIRECT
+DOMAIN-SUFFIX,korona.com,DIRECT
+DOMAIN-SUFFIX,bank131.com,DIRECT
+DOMAIN-SUFFIX,chizhik.club,DIRECT
+DOMAIN-SUFFIX,okolo.app,DIRECT
+DOMAIN-SUFFIX,yandex.cloud,DIRECT
+DOMAIN-SUFFIX,yandexcloud.net,DIRECT
+DOMAIN-SUFFIX,clstorage.net,DIRECT
+DOMAIN-SUFFIX,static-storage.net,DIRECT
+DOMAIN-SUFFIX,tilda.cc,DIRECT
+DOMAIN-SUFFIX,kinescopecdn.net,DIRECT
 
 # ==================================================
 # 04) BROAD RU TLD CATCH-ALL — KEEP LAST IN [Rule]
@@ -851,6 +895,8 @@ vkuservideo.com = server:system
 *.vkuservideo.com = server:system
 vkuservideo.net = server:system
 *.vkuservideo.net = server:system
+tamtam.chat = server:system
+*.tamtam.chat = server:system
 *.mail.ru = server:system
 *.my.com = server:system
 *.cloud.mail.ru = server:system
@@ -899,6 +945,50 @@ pobeda.aero = server:system
 *.pobeda.aero = server:system
 lenta.com = server:system
 *.lenta.com = server:system
+alfabank.st = server:system
+*.alfabank.st = server:system
+yandex.com = server:system
+*.yandex.com = server:system
+shedevrum.ai = server:system
+*.shedevrum.ai = server:system
+shedevrum.com = server:system
+*.shedevrum.com = server:system
+sourcecraft.dev = server:system
+*.sourcecraft.dev = server:system
+tochka-tech.com = server:system
+*.tochka-tech.com = server:system
+edadeal.io = server:system
+*.edadeal.io = server:system
+taxsee.com = server:system
+*.taxsee.com = server:system
+bronevik.com = server:system
+*.bronevik.com = server:system
+moex.com = server:system
+*.moex.com = server:system
+okko.sport = server:system
+*.okko.sport = server:system
+fix-price.com = server:system
+*.fix-price.com = server:system
+korona.com = server:system
+*.korona.com = server:system
+bank131.com = server:system
+*.bank131.com = server:system
+chizhik.club = server:system
+*.chizhik.club = server:system
+okolo.app = server:system
+*.okolo.app = server:system
+yandex.cloud = server:system
+*.yandex.cloud = server:system
+yandexcloud.net = server:system
+*.yandexcloud.net = server:system
+clstorage.net = server:system
+*.clstorage.net = server:system
+static-storage.net = server:system
+*.static-storage.net = server:system
+tilda.cc = server:system
+*.tilda.cc = server:system
+kinescopecdn.net = server:system
+*.kinescopecdn.net = server:system
 
 # --- Apple official network requirements 2026-09 ---
 apple-livephotoskit.com = server:system
