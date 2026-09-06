@@ -1,7 +1,7 @@
-#!name=Unified Routing + System DNS v1.9
+#!name=Unified Routing + System DNS v1.10
 #!desc=Единый модуль DIRECT/PROXY + выборочный System DNS. Использовать вместе с remote.conf.
 #!author=OpenAI + user
-#!version=1.9
+#!version=1.10
 
 # =============================================================================
 # ПАМЯТКА / НАЗНАЧЕНИЕ
@@ -101,6 +101,21 @@
 # =============================================================================
 # ЖУРНАЛ АКТУАЛИЗАЦИИ / ИСТОЧНИКИ
 # =============================================================================
+# 2026-09-06 — VK/TikTok domain coverage / версия 1.10.
+# VK: добавлены 7 подтверждённых доменов/суффиксов в DIRECT и соответствующие
+# записи [Host] server:system: vk.link, vk.me, vkuseraudio.com, vkuserlive.com,
+# vkuserlive.net, vkuservideo.com, vkuservideo.net. Цель: закрыть CDN/media и
+# VK Messenger/short-link инфраструктуру, которая не покрывалась текущим набором.
+# TikTok: добавлены 8 подтверждённых международных ByteDance/TikTok suffix в HARD
+# PROXY: bytefcdn-oversea.com, bytefcdn-ttpeu.com, byteglb.com, byteicdn.com,
+# byteoversea.net, sgsnssdk.com, ttoverseaus.net, ttwstatic.com.
+# ttdns2.com и hypstarcdn.com намеренно НЕ добавлены: первый используется шире
+# TikTok внутри ByteDance, второй имеет менее однозначную актуальность именно для
+# TikTok. Зона влияния изменений ограничена перечисленными suffix.
+# Основание: поддерживаемые rule-set v2fly/domain-list-community data/vk,
+# Repcz/Tool Shadowrocket TikTok.list (2026-08-29), дополнительная сверка v2fly
+# data/tiktok и data/bytedance. Post-change runtime на устройствах ещё не проверен.
+#
 # 2026-09-05 — MAX Messenger IP-check consistency / версия 1.9.
 # Добавлены точечные DOMAIN,api.ipify.org,DIRECT и
 # DOMAIN,checkip.amazonaws.com,DIRECT.
@@ -264,6 +279,14 @@ DOMAIN-SUFFIX,isnssdk.com,PROXY
 DOMAIN-SUFFIX,ibyteimg.com,PROXY
 DOMAIN-SUFFIX,ibytedtos.com,PROXY
 DOMAIN-SUFFIX,byteoversea.com,PROXY
+DOMAIN-SUFFIX,byteoversea.net,PROXY
+DOMAIN-SUFFIX,bytefcdn-oversea.com,PROXY
+DOMAIN-SUFFIX,bytefcdn-ttpeu.com,PROXY
+DOMAIN-SUFFIX,byteglb.com,PROXY
+DOMAIN-SUFFIX,byteicdn.com,PROXY
+DOMAIN-SUFFIX,sgsnssdk.com,PROXY
+DOMAIN-SUFFIX,ttoverseaus.net,PROXY
+DOMAIN-SUFFIX,ttwstatic.com,PROXY
 DOMAIN-SUFFIX,ipstatp.com,PROXY
 DOMAIN-SUFFIX,sgpstatp.com,PROXY
 DOMAIN-SUFFIX,bytedapm.com,PROXY
@@ -421,6 +444,8 @@ DOMAIN-SUFFIX,mvk.com,DIRECT
 DOMAIN-SUFFIX,vk-cdn.me,DIRECT
 DOMAIN-SUFFIX,vk-portal.net,DIRECT
 DOMAIN-SUFFIX,vk.cc,DIRECT
+DOMAIN-SUFFIX,vk.link,DIRECT
+DOMAIN-SUFFIX,vk.me,DIRECT
 DOMAIN-SUFFIX,vkuser.net,DIRECT
 DOMAIN-SUFFIX,vkuserphoto.ru,DIRECT
 DOMAIN-SUFFIX,userapi.com,DIRECT
@@ -432,6 +457,11 @@ DOMAIN-SUFFIX,vkvideo.ru,DIRECT
 DOMAIN-SUFFIX,vkpay.ru,DIRECT
 DOMAIN-SUFFIX,vk.team,DIRECT
 DOMAIN-SUFFIX,vkuseraudio.net,DIRECT
+DOMAIN-SUFFIX,vkuseraudio.com,DIRECT
+DOMAIN-SUFFIX,vkuserlive.com,DIRECT
+DOMAIN-SUFFIX,vkuserlive.net,DIRECT
+DOMAIN-SUFFIX,vkuservideo.com,DIRECT
+DOMAIN-SUFFIX,vkuservideo.net,DIRECT
 DOMAIN-SUFFIX,mail.ru,DIRECT
 DOMAIN-SUFFIX,my.com,DIRECT
 DOMAIN-SUFFIX,datacloudmail.ru,DIRECT
@@ -807,6 +837,20 @@ vk.com = server:system
 *.userapi.com = server:system
 *.mycdn.me = server:system
 *.vkuseraudio.net = server:system
+vk.link = server:system
+*.vk.link = server:system
+vk.me = server:system
+*.vk.me = server:system
+vkuseraudio.com = server:system
+*.vkuseraudio.com = server:system
+vkuserlive.com = server:system
+*.vkuserlive.com = server:system
+vkuserlive.net = server:system
+*.vkuserlive.net = server:system
+vkuservideo.com = server:system
+*.vkuservideo.com = server:system
+vkuservideo.net = server:system
+*.vkuservideo.net = server:system
 *.mail.ru = server:system
 *.my.com = server:system
 *.cloud.mail.ru = server:system
