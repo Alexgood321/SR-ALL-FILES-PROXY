@@ -133,3 +133,23 @@ When architecture changes, update the relevant documentation in the same work wh
 - `AGENTS.md` when an architectural invariant for future automation changes.
 
 Do not leave README or agent instructions claiming that Unified contains REJECT/ad blocking after those rules have been moved to the optional Ads module.
+
+## 8. GitHub Pages / Shadowrocket deep links
+
+`docs/redirect.html` is the repository's first-party HTTPS bridge for Shadowrocket deep links. GitHub Pages must publish it from `main:/docs`.
+
+User-facing install buttons in `README.md` should use only:
+
+`https://alexgood321.github.io/SR-ALL-FILES-PROXY/redirect.html`
+
+Do not reintroduce LOWERTOP or other third-party redirect services unless the user explicitly decides to migrate away from the first-party redirect.
+
+The redirect must remain closed, not generic:
+
+- accept only supported `shadowrocket://` deep-link forms used by this project;
+- accept only the stable production assets of `Alexgood321/SR-ALL-FILES-PROXY`;
+- reject arbitrary external destinations and unsupported schemes;
+- do not turn it into a general-purpose open redirect;
+- do not add analytics, third-party scripts, or unrelated network dependencies without an explicit decision.
+
+Changes to `docs/redirect.html`, its allowed asset list, GitHub Pages source, or README deep-link URLs are user-facing delivery changes. Verify the Pages URL and at least one representative deep link separately from release-asset validation. A working GitHub Pages redirect does not by itself prove that Shadowrocket accepted/imported the target on a device.
