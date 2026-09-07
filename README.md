@@ -1,13 +1,29 @@
 # SR-ALL-FILES-PROXY
 
-Конфигурация Shadowrocket с раздельными слоями: базовый `remote.conf`, обязательная сервисная маршрутизация + выборочный System DNS, отдельная опциональная блокировка рекламы/трекеров и отдельный YouTube-модуль.
+Актуальная конфигурация Shadowrocket с раздельными слоями: базовый `remote.conf`, обязательная сервисная маршрутизация + выборочный System DNS, отдельная опциональная блокировка рекламы/трекеров и отдельный YouTube-модуль. Production delivery публикуется через стабильные `releases/latest/download/...` URL.
+
+## Быстрая установка в Shadowrocket
+
+GitHub не делает `shadowrocket://` URL-Scheme обычной кликабельной ссылкой, поэтому кнопки ниже используют HTTPS redirect LOWERTOP и затем передают стабильный GitHub release URL в Shadowrocket.
+
+| Компонент | Назначение | Добавить в Shadowrocket |
+| --- | --- | --- |
+| `remote.conf` | Базовая конфигурация, DNS, `GEOIP,RU,DIRECT`, `FINAL,PROXY` | [📥 Добавить конфиг](https://lowertop.github.io/Shadowrocket-First/redirect.html?url=shadowrocket%3A%2F%2Fconfig%2Fadd%2Fhttps%3A%2F%2Fgithub.com%2FAlexgood321%2FSR-ALL-FILES-PROXY%2Freleases%2Flatest%2Fdownload%2Fremote.conf) |
+| `Unified-Routing-System-DNS.sgmodule` | Основная сервисная маршрутизация `DIRECT / PROXY` + выборочный System DNS | [📥 Добавить модуль](https://lowertop.github.io/Shadowrocket-First/redirect.html?url=shadowrocket%3A%2F%2Finstall%3Fmodule%3Dhttps%3A%2F%2Fgithub.com%2FAlexgood321%2FSR-ALL-FILES-PROXY%2Freleases%2Flatest%2Fdownload%2FUnified-Routing-System-DNS.sgmodule) |
+| `Ads-Privacy-Block.sgmodule` | Опциональный `REJECT` для рекламы, analytics и trackers | [📥 Добавить модуль](https://lowertop.github.io/Shadowrocket-First/redirect.html?url=shadowrocket%3A%2F%2Finstall%3Fmodule%3Dhttps%3A%2F%2Fgithub.com%2FAlexgood321%2FSR-ALL-FILES-PROXY%2Freleases%2Flatest%2Fdownload%2FAds-Privacy-Block.sgmodule) |
+| `Youtube-Config.sgmodule` | Отдельная YouTube MITM / Rewrite / Script функциональность | [📥 Добавить модуль](https://lowertop.github.io/Shadowrocket-First/redirect.html?url=shadowrocket%3A%2F%2Finstall%3Fmodule%3Dhttps%3A%2F%2Fgithub.com%2FAlexgood321%2FSR-ALL-FILES-PROXY%2Freleases%2Flatest%2Fdownload%2FYoutube-Config.sgmodule) |
+| `RU-TLD-RU-Non-RU-DIRECT-System-DNS.sgmodule` | Legacy / standalone RU routing + System DNS | [📥 Добавить legacy-модуль](https://lowertop.github.io/Shadowrocket-First/redirect.html?url=shadowrocket%3A%2F%2Finstall%3Fmodule%3Dhttps%3A%2F%2Fgithub.com%2FAlexgood321%2FSR-ALL-FILES-PROXY%2Freleases%2Flatest%2Fdownload%2FRU-TLD-RU-Non-RU-DIRECT-System-DNS.sgmodule) |
+
+> `RU-TLD-RU-Non-RU-DIRECT-System-DNS.sgmodule` не нужно включать параллельно с Unified: его политика уже интегрирована в Unified.
+>
+> Приватный Local Certificate Module намеренно не публикуется в этом репозитории.
 
 ## Основная схема
 
 Рекомендуемая базовая конфигурация:
 
 1. `remote.conf` — глобальные параметры Shadowrocket, DNS по умолчанию, `GEOIP,RU,DIRECT` и `FINAL,PROXY`.
-2. `Unified Routing + System DNS` — основная сервисная маршрутизация `DIRECT / PROXY` и выборочный `server:system` для нужных доменов.
+2. `Unified Routing + System DNS` — основная сервисная маршрутизация `DIRECT / PROXY`, IP/CIDR service routing и выборочный `server:system` для нужных доменов.
 3. `Ads + Privacy Block` — опциональный слой `REJECT` для рекламы, analytics и trackers. Если используется, модуль должен располагаться выше Unified по приоритету.
 4. `YouTube Module` — отдельная специализированная функциональность MITM / Rewrite / Script; не является частью основной routing/DNS-схемы.
 
@@ -21,19 +37,16 @@
 - Unified Routing + System DNS: https://github.com/Alexgood321/SR-ALL-FILES-PROXY/releases/latest/download/Unified-Routing-System-DNS.sgmodule
 - Ads + Privacy Block: https://github.com/Alexgood321/SR-ALL-FILES-PROXY/releases/latest/download/Ads-Privacy-Block.sgmodule
 - YouTube Module: https://github.com/Alexgood321/SR-ALL-FILES-PROXY/releases/latest/download/Youtube-Config.sgmodule
-
-Legacy / standalone вариант, который не нужно включать параллельно с Unified:
-
-- RU TLD + RU Non-RU DIRECT System DNS: https://github.com/Alexgood321/SR-ALL-FILES-PROXY/releases/latest/download/RU-TLD-RU-Non-RU-DIRECT-System-DNS.sgmodule
+- Legacy / standalone RU TLD + RU Non-RU DIRECT System DNS: https://github.com/Alexgood321/SR-ALL-FILES-PROXY/releases/latest/download/RU-TLD-RU-Non-RU-DIRECT-System-DNS.sgmodule
 
 ## Архитектура файлов
 
 - `config/remote.conf` — глобальные и базовые настройки, DNS-схема, `GEOIP,RU,DIRECT` и `FINAL,PROXY`.
-- `modules/Unified-Routing-System-DNS.sgmodule` — обязательный основной модуль сервисной маршрутизации `DIRECT / PROXY` + выборочный System DNS через `[Host]`. Рекламных/privacy `REJECT`-правил в нём нет.
+- `modules/Unified-Routing-System-DNS.sgmodule` — обязательный основной модуль сервисной маршрутизации `DIRECT / PROXY`, IP/CIDR routing + выборочный System DNS через `[Host]`. Рекламных/privacy `REJECT`-правил в нём нет.
 - `modules/Ads-Privacy-Block.sgmodule` — отдельный опциональный модуль со всеми рекламными/privacy `REJECT`-правилами. При совместном использовании должен находиться выше Unified.
 - `modules/RU-TLD-RU-Non-RU-DIRECT-System-DNS.sgmodule` — legacy / standalone вариант RU TLD и российских non-RU доменов через DIRECT + System DNS. Его политика уже интегрирована в Unified, поэтому параллельно с Unified его включать не нужно.
 - `modules/Youtube-Config.sgmodule` — отдельная YouTube-функциональность MITM / Rewrite / Script.
-- `modules/youtube.response.js` — скрипт YouTube через `raw.githubusercontent.com`; он не входит в release delivery как отдельный `.sgmodule` asset.
+- `modules/youtube.response.js` — внутренний скрипт YouTube через `raw.githubusercontent.com`; отдельно в Shadowrocket не устанавливается и не входит в release delivery как `.sgmodule` asset.
 
 ## DNS и RU-маршрутизация
 
@@ -52,7 +65,7 @@ Delivery публикуется в versioned GitHub Releases. Publication workfl
 
 - не изменяет содержимое репозитория и не делает commit/push;
 - берёт стабильный `main` как источник delivery;
-- публикует top-level `.sgmodule` assets и `remote.conf`;
+- публикует `remote.conf` и все top-level `modules/*.sgmodule` assets;
 - проверяет SHA256/размеры release assets;
 - проверяет versioned download URL и постоянные `releases/latest/download/...` byte-for-byte против выбранного стабильного `main`.
 
