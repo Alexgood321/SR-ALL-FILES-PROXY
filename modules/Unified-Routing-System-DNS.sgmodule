@@ -1,7 +1,7 @@
-#!name=Unified Routing + System DNS v1.11
+#!name=Unified Routing + System DNS v1.12
 #!desc=Единый модуль DIRECT/PROXY + выборочный System DNS. Использовать вместе с remote.conf.
 #!author=OpenAI + user
-#!version=1.11
+#!version=1.12
 
 # =============================================================================
 # ПАМЯТКА / НАЗНАЧЕНИЕ
@@ -30,7 +30,7 @@
 #   - AND-правила, включая UDP/VoIP
 #
 # Сервисы и группы правил:
-#   - Telegram: домены + официальные IPv4/IPv6 CIDR
+#   - Telegram: домены + подтверждённые IPv4/IPv6 CIDR
 #   - WhatsApp: домены + IPv4/IPv6 + UDP/VoIP
 #   - Meta / Facebook / Messenger / Instagram
 #   - TikTok: жёсткий PROXY + встроенный snapshot внешних rule-set
@@ -101,6 +101,15 @@
 # =============================================================================
 # ЖУРНАЛ АКТУАЛИЗАЦИИ / ИСТОЧНИКИ
 # =============================================================================
+# 2026-09-07 — Telegram IPv4 coverage / версия 1.12.
+# Добавлен IP-CIDR,95.161.64.0/20,PROXY,no-resolve в Telegram PROXY Full.
+# Диапазон анонсируется AS62041 Telegram Messenger Inc; RIPE route object для /20
+# связан с ORG-TMI4-RIPE/MNT-TELEGRAM. Дополнительная сверка maintained Telegram
+# rule-set подтверждает использование именно этого префикса Telegram.
+# Зона влияния ограничена 95.161.64.0/20; правило ставит весь подтверждённый
+# Telegram-префикс в PROXY независимо от возможной GeoIP-классификации устройства.
+# Post-change runtime на устройствах ещё не проверен.
+#
 # 2026-09-06 — расширение RU/Yandex/VK/TikTok coverage / версия 1.11.
 # TikTok/ByteDance: по согласованной HARD PROXY политике добавлены ttdns2.com и
 # hypstarcdn.com. ttdns2.com имеет более широкий ByteDance scope, поэтому правило
@@ -351,8 +360,9 @@ IP-CIDR,91.108.12.0/22,PROXY,no-resolve
 IP-CIDR,91.108.16.0/22,PROXY,no-resolve
 IP-CIDR,91.108.20.0/22,PROXY,no-resolve
 IP-CIDR,91.108.56.0/22,PROXY,no-resolve
-IP-CIDR,149.154.160.0/20,PROXY,no-resolve
 IP-CIDR,91.105.192.0/23,PROXY,no-resolve
+IP-CIDR,95.161.64.0/20,PROXY,no-resolve
+IP-CIDR,149.154.160.0/20,PROXY,no-resolve
 IP-CIDR,185.76.151.0/24,PROXY,no-resolve
 IP-CIDR6,2001:67c:4e8::/48,PROXY,no-resolve
 IP-CIDR6,2001:b28:f23d::/48,PROXY,no-resolve
