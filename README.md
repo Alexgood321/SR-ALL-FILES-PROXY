@@ -4,15 +4,15 @@
 
 ## Быстрая установка в Shadowrocket
 
-GitHub не делает `shadowrocket://` URL-Scheme обычной кликабельной ссылкой, поэтому кнопки ниже используют HTTPS redirect LOWERTOP и затем передают стабильный GitHub release URL в Shadowrocket.
+GitHub не делает `shadowrocket://` URL-Scheme обычной кликабельной ссылкой, поэтому кнопки ниже используют собственный HTTPS redirect этого репозитория через GitHub Pages и затем передают стабильный GitHub release URL в Shadowrocket.
 
 | Компонент | Назначение | Добавить в Shadowrocket |
 | --- | --- | --- |
-| `remote.conf` | Базовая конфигурация, DNS, `GEOIP,RU,DIRECT`, `FINAL,PROXY` | [📥 Добавить конфиг](https://lowertop.github.io/Shadowrocket-First/redirect.html?url=shadowrocket%3A%2F%2Fconfig%2Fadd%2Fhttps%3A%2F%2Fgithub.com%2FAlexgood321%2FSR-ALL-FILES-PROXY%2Freleases%2Flatest%2Fdownload%2Fremote.conf) |
-| `Unified-Routing-System-DNS.sgmodule` | Основная сервисная маршрутизация `DIRECT / PROXY` + выборочный System DNS | [📥 Добавить модуль](https://lowertop.github.io/Shadowrocket-First/redirect.html?url=shadowrocket%3A%2F%2Finstall%3Fmodule%3Dhttps%3A%2F%2Fgithub.com%2FAlexgood321%2FSR-ALL-FILES-PROXY%2Freleases%2Flatest%2Fdownload%2FUnified-Routing-System-DNS.sgmodule) |
-| `Ads-Privacy-Block.sgmodule` | Опциональный `REJECT` для рекламы, analytics и trackers | [📥 Добавить модуль](https://lowertop.github.io/Shadowrocket-First/redirect.html?url=shadowrocket%3A%2F%2Finstall%3Fmodule%3Dhttps%3A%2F%2Fgithub.com%2FAlexgood321%2FSR-ALL-FILES-PROXY%2Freleases%2Flatest%2Fdownload%2FAds-Privacy-Block.sgmodule) |
-| `Youtube-Config.sgmodule` | Отдельная YouTube MITM / Rewrite / Script функциональность | [📥 Добавить модуль](https://lowertop.github.io/Shadowrocket-First/redirect.html?url=shadowrocket%3A%2F%2Finstall%3Fmodule%3Dhttps%3A%2F%2Fgithub.com%2FAlexgood321%2FSR-ALL-FILES-PROXY%2Freleases%2Flatest%2Fdownload%2FYoutube-Config.sgmodule) |
-| `RU-TLD-RU-Non-RU-DIRECT-System-DNS.sgmodule` | Legacy / standalone RU routing + System DNS | [📥 Добавить legacy-модуль](https://lowertop.github.io/Shadowrocket-First/redirect.html?url=shadowrocket%3A%2F%2Finstall%3Fmodule%3Dhttps%3A%2F%2Fgithub.com%2FAlexgood321%2FSR-ALL-FILES-PROXY%2Freleases%2Flatest%2Fdownload%2FRU-TLD-RU-Non-RU-DIRECT-System-DNS.sgmodule) |
+| `remote.conf` | Базовая конфигурация, DNS, `GEOIP,RU,DIRECT`, `FINAL,PROXY` | [📥 Добавить конфиг](https://alexgood321.github.io/SR-ALL-FILES-PROXY/redirect.html?url=shadowrocket%3A%2F%2Fconfig%2Fadd%2Fhttps%3A%2F%2Fgithub.com%2FAlexgood321%2FSR-ALL-FILES-PROXY%2Freleases%2Flatest%2Fdownload%2Fremote.conf) |
+| `Unified-Routing-System-DNS.sgmodule` | Основная сервисная маршрутизация `DIRECT / PROXY` + выборочный System DNS | [📥 Добавить модуль](https://alexgood321.github.io/SR-ALL-FILES-PROXY/redirect.html?url=shadowrocket%3A%2F%2Finstall%3Fmodule%3Dhttps%3A%2F%2Fgithub.com%2FAlexgood321%2FSR-ALL-FILES-PROXY%2Freleases%2Flatest%2Fdownload%2FUnified-Routing-System-DNS.sgmodule) |
+| `Ads-Privacy-Block.sgmodule` | Опциональный `REJECT` для рекламы, analytics и trackers | [📥 Добавить модуль](https://alexgood321.github.io/SR-ALL-FILES-PROXY/redirect.html?url=shadowrocket%3A%2F%2Finstall%3Fmodule%3Dhttps%3A%2F%2Fgithub.com%2FAlexgood321%2FSR-ALL-FILES-PROXY%2Freleases%2Flatest%2Fdownload%2FAds-Privacy-Block.sgmodule) |
+| `Youtube-Config.sgmodule` | Отдельная YouTube MITM / Rewrite / Script функциональность | [📥 Добавить модуль](https://alexgood321.github.io/SR-ALL-FILES-PROXY/redirect.html?url=shadowrocket%3A%2F%2Finstall%3Fmodule%3Dhttps%3A%2F%2Fgithub.com%2FAlexgood321%2FSR-ALL-FILES-PROXY%2Freleases%2Flatest%2Fdownload%2FYoutube-Config.sgmodule) |
+| `RU-TLD-RU-Non-RU-DIRECT-System-DNS.sgmodule` | Legacy / standalone RU routing + System DNS | [📥 Добавить legacy-модуль](https://alexgood321.github.io/SR-ALL-FILES-PROXY/redirect.html?url=shadowrocket%3A%2F%2Finstall%3Fmodule%3Dhttps%3A%2F%2Fgithub.com%2FAlexgood321%2FSR-ALL-FILES-PROXY%2Freleases%2Flatest%2Fdownload%2FRU-TLD-RU-Non-RU-DIRECT-System-DNS.sgmodule) |
 
 > `RU-TLD-RU-Non-RU-DIRECT-System-DNS.sgmodule` не нужно включать параллельно с Unified: его политика уже интегрирована в Unified.
 >
