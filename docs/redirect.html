@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Открываем Shadowrocket</title>
+  <style>
+    :root { color-scheme: light dark; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: Canvas; color: CanvasText; }
+    main { width: min(92vw, 560px); text-align: center; padding: 32px; }
+    h1 { margin: 0 0 12px; font-size: 28px; }
+    p { margin: 0 0 24px; line-height: 1.45; opacity: .8; }
+    .actions { display: grid; gap: 12px; }
+    a { display: block; padding: 14px 18px; border-radius: 12px; text-decoration: none; font-weight: 600; }
+    #open { background: #0a84ff; color: #fff; }
+    #source { border: 1px solid color-mix(in srgb, CanvasText 22%, transparent); color: CanvasText; }
+    #error { display: none; color: #ff453a; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Открываем Shadowrocket</h1>
+    <p id="status">Если приложение не открылось автоматически, нажмите кнопку ниже.</p>
+    <p id="error">Некорректная или неподдерживаемая ссылка.</p>
+    <div class="actions">
+      <a id="open" href="#">Открыть в Shadowrocket</a>
+      <a id="source" href="#" rel="noreferrer">Открыть исходный файл</a>
+    </div>
+  </main>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const repoBase = 'https://github.com/Alexgood321/SR-ALL-FILES-PROXY/releases/latest/download/';
+      const configPrefix = 'shadowrocket://config/add/' + repoBase;
+      const modulePrefix = 'shadowrocket://install?module=' + repoBase;
+      const allowedConfig = new Set(['remote.conf']);
+      const allowedModules = new Set([
+        'Unified-Routing-System-DNS.sgmodule',
+        'Ads-Privacy-Block.sgmodule',
+        'Youtube-Config.sgmodule',
+        'RU-TLD-RU-Non-RU-DIRECT-System-DNS.sgmodule'
+      ]);
+
+      const params = new URLSearchParams(window.location.search);
+      const target = params.get('url') || '';
+      let sourceUrl = '';
+      let valid = false;
+
+      if (target.startsWith(configPrefix)) {
+        const file = target.slice(configPrefix.length);
+        valid = allowedConfig.has(file);
+        if (valid) sourceUrl = repoBase + file;
+      } else if (target.startsWith(modulePrefix)) {
+        const file = target.slice(modulePrefix.length);
+        valid = allowedModules.has(file);
+        if (valid) sourceUrl = repoBase + file;
+      }
+
+      const open = document.getElementById('open');
+      const source = document.getElementById('source');
+
+      if (!valid) {
+        document.getElementById('status').style.display = 'none';
+        document.getElementById('error').style.display = 'block';
+        open.style.display = 'none';
+        source.style.display = 'none';
+        return;
+      }
+
+      open.href = target;
+      source.href = sourceUrl;
+
+      // The README click is already a user gesture. Try the custom scheme immediately,
+      // but keep a visible button for Safari/WebView cases where automatic launch is blocked.
+      window.setTimeout(() => {
+        window.location.href = target;
+      }, 80);
+    })();
+  </script>
+</body>
+</html>
