@@ -59,6 +59,23 @@ GitHub не делает `shadowrocket://` URL-Scheme обычной клика�
 
 Правило `GEOIP,RU,DIRECT` находится в `remote.conf` и использует GeoIP-механику Shadowrocket.
 
+### Фактическая DNS-цепочка
+
+Наблюдаемое runtime-поведение текущей связки `remote.conf + Unified` подтверждено PacketTunnel-логом iPhone 10.09.2026.
+
+Для домена, которому Unified назначил `server:system` в `[Host]`:
+
+1. Shadowrocket отправляет DNS-запрос в текущий System DNS сети.
+2. Если ответа нет, выполняется ещё одна попытка через System DNS.
+3. Если System DNS снова не ответил, используется `fallback-dns-server` из `remote.conf`: `https://freedns.controld.com/p0#proxy`.
+4. Если не отвечает и fallback, DNS-запрос завершается ошибкой.
+
+Важно: основной `dns-server = https://cloudflare-dns.com/dns-query#proxy` **не вставляется между System DNS и ControlD** для домена, явно закреплённого за `server:system`.
+
+Для обычного домена, которого нет в `[Host]`, цепочка другая: основной Cloudflare DoH через `#proxy`, затем при его отказе `fallback-dns-server` ControlD через `#proxy`.
+
+Это описание фиксирует фактически наблюдавшийся runtime текущей конфигурации. После изменения DNS-параметров `remote.conf` или поведения/версии Shadowrocket цепочку нужно подтвердить повторно по PacketTunnel-логам.
+
 ## Delivery
 
 Delivery публикуется в versioned GitHub Releases. Publication workflow:
