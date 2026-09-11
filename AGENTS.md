@@ -2,6 +2,27 @@
 
 These rules apply to Codex and any automated coding agent working with this repository.
 
+## Project purpose
+
+This repository is an actively maintained Shadowrocket production configuration, not a static collection of copied rule lists.
+
+The project continuously studies and maintains real-world routing, DNS, filtering, and service reachability behavior across different networks and devices. Work normally includes discovering service infrastructure, validating ownership and relevance, comparing it with current production policy, making narrowly scoped changes when justified, publishing them through stable delivery URLs, and then checking actual device/runtime behavior from PacketTunnel logs.
+
+Core operating model:
+
+1. Observe real behavior and monitor infrastructure changes.
+2. Verify domains, IPs, CIDRs, ASNs, CDN/API/reachability endpoints and ownership using appropriate evidence.
+3. Compare findings with current `DIRECT / PROXY / REJECT` and DNS policy.
+4. Prefer minimal, service-specific rules over broad speculative masks.
+5. Change production only when there is a clear routing/DNS reason and understood blast radius.
+6. Validate static configuration and release delivery separately.
+7. Validate actual Shadowrocket/device behavior separately through runtime evidence when needed.
+8. Preserve a clear distinction between confirmed facts, inference, unverified areas, and hypotheses.
+
+The goal is predictable and maintainable network behavior, not maximum rule count. A new source, newly discovered endpoint, or rule-set entry is a discovery signal, not automatically a reason to add a rule.
+
+DNS is treated as part of the routing architecture. `remote.conf` owns the global DNS baseline; Unified can selectively assign System DNS through `[Host]`. Runtime retry/fallback behavior may be documented when observed, but a single PacketTunnel event must not be promoted into a universal Shadowrocket guarantee.
+
 ## 1. Safe push rule
 
 Before every push to `main`:
