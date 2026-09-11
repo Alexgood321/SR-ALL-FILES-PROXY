@@ -63,18 +63,22 @@ GitHub не делает `shadowrocket://` URL-Scheme обычной клика�
 
 Наблюдаемое runtime-поведение текущей связки `remote.conf + Unified` подтверждено PacketTunnel-логом iPhone 10.09.2026.
 
-Для домена, которому Unified назначил `server:system` в `[Host]`:
+Для домена, которому Unified назначил `server:system` в `[Host]`, в наблюдаемом runtime Shadowrocket выполнил следующую последовательность:
 
-1. Shadowrocket отправляет DNS-запрос в текущий System DNS сети.
-2. Если ответа нет, выполняется ещё одна попытка через System DNS.
-3. Если System DNS снова не ответил, используется `fallback-dns-server` из `remote.conf`: `https://freedns.controld.com/p0#proxy`.
+1. DNS-запрос в текущий System DNS сети.
+2. Повторную попытку через тот же System DNS.
+3. После неудачи — переход на `fallback-dns-server` из `remote.conf`: `https://freedns.controld.com/p0#proxy`.
 4. Если не отвечает и fallback, DNS-запрос завершается ошибкой.
 
-Важно: основной `dns-server = https://cloudflare-dns.com/dns-query#proxy` **не вставляется между System DNS и ControlD** для домена, явно закреплённого за `server:system`.
+Важно: основной `dns-server = https://cloudflare-dns.com/dns-query#proxy` **не вставлялся между System DNS и ControlD** для наблюдаемого домена, явно закреплённого за `server:system`.
 
-Для обычного домена, которого нет в `[Host]`, цепочка другая: основной Cloudflare DoH через `#proxy`, затем при его отказе `fallback-dns-server` ControlD через `#proxy`.
+Для обычного домена, которого нет в `[Host]`, наблюдаемая схема другая: основной Cloudflare DoH через `#proxy`, затем при его отказе `fallback-dns-server` ControlD через `#proxy`.
 
-Это описание фиксирует фактически наблюдавшийся runtime текущей конфигурации. После изменения DNS-параметров `remote.conf` или поведения/версии Shadowrocket цепочку нужно подтвердить повторно по PacketTunnel-логам.
+`DIRECT` в `[Rule]` сам по себе не включает System DNS: `server:system` применяется только к доменам, явно назначенным ему в `[Host]`. ControlD fallback идёт через PROXY из-за `#proxy`.
+
+Fallback полезен при деградации локального/провайдерского DNS, но требует рабочего внешнего network/proxy path. В наблюдаемом Wi-Fi TVHit runtime одновременно переставали отвечать локальный System DNS и внешний proxy path, поэтому и System DNS, и ControlD fallback закономерно могли завершаться fail.
+
+Это описание фиксирует фактически наблюдавшийся runtime текущей конфигурации, а не универсальный внутренний алгоритм Shadowrocket. В частности, из одного PacketTunnel-наблюдения нельзя выводить гарантированное число System DNS retry для всех версий и сценариев. После изменения DNS-параметров `remote.conf` или поведения/версии Shadowrocket цепочку нужно подтвердить повторно по PacketTunnel-логам.
 
 ## Delivery
 
