@@ -76,7 +76,28 @@ GitHub не делает `shadowrocket://` URL-Scheme обычной клика�
 
 Правило `GEOIP,RU,DIRECT` находится в `remote.conf` и использует GeoIP-механику Shadowrocket.
 
-DNS-поведение в проекте рассматривается как часть общей routing-политики, а не как отдельная магическая таблица. Глобальный DNS задаётся базовым конфигом, а `server:system` применяется выборочно через Unified. Реальную последовательность резолвинга, retry/fallback и влияние конкретной сети мы подтверждаем по `PacketTunnel`-логам и не объявляем универсальным поведением Shadowrocket без runtime-доказательств.
+### Фактическая DNS-цепочка
+
+Подтверждено по `PacketTunnel` runtime на iPhone 10.09.2026 для текущей связки `remote.conf + Unified`.
+
+Для домена, которому в Unified через `[Host]` назначен `server:system`, наблюдаемая последовательность такая:
+
+1. запрос отправляется в текущий **System DNS** сети;
+2. если ответа нет, Shadowrocket делает **повторную попытку через System DNS**;
+3. если System DNS снова не отвечает, используется `fallback-dns-server` из `remote.conf`, сейчас это **ControlD через PROXY**: `https://freedns.controld.com/p0#proxy`;
+4. если недоступен и fallback, DNS-запрос завершается ошибкой.
+
+Коротко:
+
+`[Host] server:system → System DNS → повтор System DNS → ControlD #proxy → fail`
+
+Основной `dns-server = https://cloudflare-dns.com/dns-query#proxy` **не вставляется между System DNS и ControlD** для домена, явно закреплённого за `server:system`.
+
+Для обычного домена, которого нет в `[Host]`, наблюдаемая цепочка другая:
+
+`Cloudflare DoH #proxy → ControlD #proxy → fail`
+
+Это именно подтверждённое runtime-поведение текущей конфигурации и текущей версии Shadowrocket, а не универсальная гарантия навсегда. После изменения DNS-параметров `remote.conf` или поведения/версии Shadowrocket цепочку следует подтверждать повторно по `PacketTunnel`-логам.
 
 ## Delivery
 
