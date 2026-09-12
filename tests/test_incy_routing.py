@@ -133,6 +133,13 @@ class IncyRoutingGenerationTests(unittest.TestCase):
         for line in no_resolve:
             self.assertEqual(ledger[line].status, "PORTED WITH SEMANTIC GAP")
 
+    def test_tun_excluded_routes_are_semantic_gap(self) -> None:
+        ledger = {item.raw: item for item in self.items if item.source == "config/remote.conf"}
+        item = ledger["tun-excluded-routes: 100.64.0.0/10"]
+        self.assertEqual(item.status, "PORTED WITH SEMANTIC GAP")
+        self.assertIn("TUN", item.reason)
+        self.assertIn("100.64.0.0/10", self.profile["DirectIp"])
+
     def test_host_server_system_is_not_misused_as_dns_hosts(self) -> None:
         host_lines = gen.section_lines(self.unified_text, "Host")
         self.assertTrue(host_lines)
@@ -147,13 +154,13 @@ class IncyRoutingGenerationTests(unittest.TestCase):
 
     def test_report_explicitly_records_dns_and_runtime_gaps(self) -> None:
         required = (
-            "Selective `[Host] server:system`",
+            "Выборочный `[Host] server:system`",
             "DNS fallback",
             "Domestic DNS",
             "no-resolve",
-            "Exact `DOMAIN` is adapted",
-            "do **not** prove INCY import",
-            "Rollback",
+            "`tun-excluded-routes`",
+            "не подтверждают импорт INCY",
+            "Откат",
         )
         for marker in required:
             self.assertIn(marker, self.report)
