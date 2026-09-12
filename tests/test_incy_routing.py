@@ -151,7 +151,7 @@ class IncyRoutingGenerationTests(unittest.TestCase):
             "DNS fallback",
             "Domestic DNS",
             "no-resolve",
-            "Domain matcher representation",
+            "Exact `DOMAIN` is adapted",
             "do **not** prove INCY import",
             "Rollback",
         )
