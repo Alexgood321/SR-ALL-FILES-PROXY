@@ -1,0 +1,3924 @@
+{
+  "dns": {
+    "queryStrategy": "UseIPv4",
+    "disableFallback": false,
+    "disableFallbackIfMatch": true,
+    "enableParallelQuery": false,
+    "tag": "dns-internal",
+    "servers": [
+      {
+        "address": "localhost",
+        "domains": [
+          "full:amp-api-search-edge.apps.apple.com",
+          "full:amp-api-edge.apps.apple.com",
+          "full:amp-api.apps.apple.com",
+          "full:api-edge.apps.apple.com",
+          "full:api.apps.apple.com",
+          "full:bag.itunes.apple.com",
+          "full:sf-api-token-service.itunes.apple.com",
+          "full:silverbullet-external-ats.itunes.apple.com",
+          "full:silverbullet-external-ats.v.aaplimg.com",
+          "full:apps.mzstatic.com",
+          "full:apps.mzstatic.com.g.aaplimg.com",
+          "full:is1-ssl.mzstatic.com",
+          "full:tr.iadsdk.apple.com",
+          "full:apple.com",
+          "domain:apple.com",
+          "full:icloud.com",
+          "domain:icloud.com",
+          "full:me.com",
+          "domain:me.com",
+          "full:mac.com",
+          "domain:mac.com",
+          "full:apple.news",
+          "domain:apple.news",
+          "full:appleusercontent.com",
+          "domain:appleusercontent.com",
+          "full:apps.apple.com",
+          "domain:apps.apple.com",
+          "full:itunes.apple.com",
+          "domain:itunes.apple.com",
+          "full:itunes.com",
+          "domain:itunes.com",
+          "full:itunes-apple.com",
+          "domain:itunes-apple.com",
+          "full:itunes-nocookie.com",
+          "domain:itunes-nocookie.com",
+          "full:mzstatic.com",
+          "domain:mzstatic.com",
+          "full:aaplimg.com",
+          "domain:aaplimg.com",
+          "full:g.aaplimg.com",
+          "domain:g.aaplimg.com",
+          "full:appsto.re",
+          "domain:appsto.re",
+          "full:appstoreconnect.apple.com",
+          "domain:appstoreconnect.apple.com",
+          "full:testflight.apple.com",
+          "domain:testflight.apple.com",
+          "full:iadsdk.apple.com",
+          "domain:iadsdk.apple.com",
+          "full:icloud-content.com",
+          "domain:icloud-content.com",
+          "full:cdn-apple.com",
+          "domain:cdn-apple.com",
+          "full:apple-dns.net",
+          "domain:apple-dns.net",
+          "full:apple-mapkit.com",
+          "domain:apple-mapkit.com",
+          "full:push.apple.com",
+          "domain:push.apple.com",
+          "full:push-apple.com",
+          "domain:push-apple.com",
+          "full:courier.push.apple.com",
+          "full:apple-cloudkit.com",
+          "domain:apple-cloudkit.com",
+          "full:ess.apple.com",
+          "domain:ess.apple.com",
+          "full:identity.apple.com",
+          "domain:identity.apple.com",
+          "full:ids-apple.com",
+          "domain:ids-apple.com",
+          "full:guzzoni.apple.com",
+          "domain:guzzoni.apple.com",
+          "full:gc.apple.com",
+          "domain:gc.apple.com",
+          "full:ls.apple.com",
+          "domain:ls.apple.com",
+          "full:gs-loc.apple.com",
+          "domain:gs-loc.apple.com",
+          "full:captive.apple.com",
+          "domain:captive.apple.com",
+          "full:gdmf.apple.com",
+          "domain:gdmf.apple.com",
+          "full:deviceenrollment.apple.com",
+          "domain:deviceenrollment.apple.com",
+          "full:deviceservices-external.apple.com",
+          "domain:deviceservices-external.apple.com",
+          "full:albert.apple.com",
+          "domain:albert.apple.com",
+          "full:time.apple.com",
+          "domain:time.apple.com",
+          "full:time-ios.apple.com",
+          "domain:time-ios.apple.com",
+          "full:init.itunes.apple.com",
+          "domain:init.itunes.apple.com",
+          "full:iphone-ld.apple.com",
+          "domain:iphone-ld.apple.com",
+          "full:xp.apple.com",
+          "domain:xp.apple.com",
+          "full:mesu.apple.com",
+          "domain:mesu.apple.com",
+          "full:swcdn.apple.com",
+          "domain:swcdn.apple.com",
+          "full:swdist.apple.com",
+          "domain:swdist.apple.com",
+          "full:swdownload.apple.com",
+          "domain:swdownload.apple.com",
+          "full:swquery.apple.com",
+          "domain:swquery.apple.com",
+          "full:swscan.apple.com",
+          "domain:swscan.apple.com",
+          "full:updates-http.cdn-apple.com",
+          "domain:updates-http.cdn-apple.com",
+          "full:updates.cdn-apple.com",
+          "full:app-site-association.cdn-apple.com",
+          "full:app-site-association.networking.apple",
+          "full:appldnld.apple.com",
+          "domain:appldnld.apple.com",
+          "full:appldnld.apple.com.edgesuite.net",
+          "full:ocsp.apple.com",
+          "domain:ocsp.apple.com",
+          "full:ocsp2.apple.com",
+          "domain:ocsp2.apple.com",
+          "full:valid.apple.com",
+          "domain:valid.apple.com",
+          "full:certs.apple.com",
+          "full:crl.apple.com",
+          "full:appattest.apple.com",
+          "domain:appattest.apple.com",
+          "full:apps-marketplace.apple.com",
+          "domain:apps-marketplace.apple.com",
+          "full:token.safebrowsing.apple",
+          "full:apple-relay.cloudflare.com",
+          "full:apple-relay.fastly-edge.com",
+          "full:apple-relay.apple.com",
+          "full:doh.dns.apple.com",
+          "full:gateway.icloud.com",
+          "full:mask.icloud.com",
+          "full:mask-h2.icloud.com",
+          "full:mask-api.icloud.com",
+          "full:probe.icloud.com",
+          "full:pong.icloud.com",
+          "full:metrics.icloud.com",
+          "full:apple-native-relay.apple.com",
+          "full:vk.com",
+          "domain:vk.com",
+          "domain:vk.ru",
+          "domain:vkuserphoto.ru",
+          "domain:userapi.com",
+          "domain:mycdn.me",
+          "domain:vkuseraudio.net",
+          "full:vk.link",
+          "domain:vk.link",
+          "full:vk.me",
+          "domain:vk.me",
+          "full:vkuseraudio.com",
+          "domain:vkuseraudio.com",
+          "full:vkuserlive.com",
+          "domain:vkuserlive.com",
+          "full:vkuserlive.net",
+          "domain:vkuserlive.net",
+          "full:vkuservideo.com",
+          "domain:vkuservideo.com",
+          "full:vkuservideo.net",
+          "domain:vkuservideo.net",
+          "full:tamtam.chat",
+          "domain:tamtam.chat",
+          "domain:mail.ru",
+          "domain:my.com",
+          "domain:cloud.mail.ru",
+          "full:ru",
+          "domain:ru",
+          "full:su",
+          "domain:su",
+          "full:xn--p1ai",
+          "domain:xn--p1ai",
+          "full:my.com",
+          "full:yandex.net",
+          "domain:yandex.net",
+          "full:yastatic.net",
+          "domain:yastatic.net",
+          "full:yandex.st",
+          "domain:yandex.st",
+          "full:2gis.com",
+          "domain:2gis.com",
+          "full:dgis.com",
+          "domain:dgis.com",
+          "full:wbstatic.net",
+          "domain:wbstatic.net",
+          "full:x5static.net",
+          "domain:x5static.net",
+          "full:emias.info",
+          "domain:emias.info",
+          "full:avito.st",
+          "domain:avito.st",
+          "full:sberbank.com",
+          "domain:sberbank.com",
+          "full:vtb.com",
+          "domain:vtb.com",
+          "full:alfabank.com",
+          "domain:alfabank.com",
+          "full:sovcombank.com",
+          "domain:sovcombank.com",
+          "full:tochka.com",
+          "domain:tochka.com",
+          "full:okko.tv",
+          "domain:okko.tv",
+          "full:premier.one",
+          "domain:premier.one",
+          "full:pobeda.aero",
+          "domain:pobeda.aero",
+          "full:lenta.com",
+          "domain:lenta.com",
+          "full:alfabank.st",
+          "domain:alfabank.st",
+          "full:yandex.com",
+          "domain:yandex.com",
+          "full:shedevrum.ai",
+          "domain:shedevrum.ai",
+          "full:shedevrum.com",
+          "domain:shedevrum.com",
+          "full:sourcecraft.dev",
+          "domain:sourcecraft.dev",
+          "full:tochka-tech.com",
+          "domain:tochka-tech.com",
+          "full:edadeal.io",
+          "domain:edadeal.io",
+          "full:taxsee.com",
+          "domain:taxsee.com",
+          "full:bronevik.com",
+          "domain:bronevik.com",
+          "full:moex.com",
+          "domain:moex.com",
+          "full:okko.sport",
+          "domain:okko.sport",
+          "full:fix-price.com",
+          "domain:fix-price.com",
+          "full:korona.com",
+          "domain:korona.com",
+          "full:bank131.com",
+          "domain:bank131.com",
+          "full:chizhik.club",
+          "domain:chizhik.club",
+          "full:okolo.app",
+          "domain:okolo.app",
+          "full:yandex.cloud",
+          "domain:yandex.cloud",
+          "full:yandexcloud.net",
+          "domain:yandexcloud.net",
+          "full:clstorage.net",
+          "domain:clstorage.net",
+          "full:static-storage.net",
+          "domain:static-storage.net",
+          "full:tilda.cc",
+          "domain:tilda.cc",
+          "full:kinescopecdn.net",
+          "domain:kinescopecdn.net",
+          "full:apple-livephotoskit.com",
+          "domain:apple-livephotoskit.com",
+          "full:apzones.com",
+          "domain:apzones.com",
+          "full:icloud.com.cn",
+          "domain:icloud.com.cn",
+          "full:cp4.cloudflare.com",
+          "full:crl3.digicert.com",
+          "full:crl4.digicert.com",
+          "full:ocsp.digicert.com",
+          "full:ocsp.digicert.cn",
+          "full:vkuser.net",
+          "domain:vkuser.net",
+          "full:userapi.com",
+          "full:mycdn.me",
+          "full:mvk.com",
+          "domain:mvk.com",
+          "full:vk-cdn.me",
+          "domain:vk-cdn.me",
+          "full:vk-portal.net",
+          "domain:vk-portal.net",
+          "full:vk.cc",
+          "domain:vk.cc",
+          "full:vk-cdn.net",
+          "domain:vk-cdn.net",
+          "full:vk-cdn.com",
+          "domain:vk-cdn.com",
+          "full:vkvd.net",
+          "domain:vkvd.net",
+          "full:vk.team",
+          "domain:vk.team",
+          "full:vkuseraudio.net",
+          "full:ozonusercontent.com",
+          "domain:ozonusercontent.com",
+          "full:postmypost.io",
+          "domain:postmypost.io"
+        ],
+        "skipFallback": true,
+        "queryStrategy": "UseIPv4"
+      },
+      {
+        "address": "https://freedns.controld.com/p0",
+        "domains": [
+          "full:amp-api-search-edge.apps.apple.com",
+          "full:amp-api-edge.apps.apple.com",
+          "full:amp-api.apps.apple.com",
+          "full:api-edge.apps.apple.com",
+          "full:api.apps.apple.com",
+          "full:bag.itunes.apple.com",
+          "full:sf-api-token-service.itunes.apple.com",
+          "full:silverbullet-external-ats.itunes.apple.com",
+          "full:silverbullet-external-ats.v.aaplimg.com",
+          "full:apps.mzstatic.com",
+          "full:apps.mzstatic.com.g.aaplimg.com",
+          "full:is1-ssl.mzstatic.com",
+          "full:tr.iadsdk.apple.com",
+          "full:apple.com",
+          "domain:apple.com",
+          "full:icloud.com",
+          "domain:icloud.com",
+          "full:me.com",
+          "domain:me.com",
+          "full:mac.com",
+          "domain:mac.com",
+          "full:apple.news",
+          "domain:apple.news",
+          "full:appleusercontent.com",
+          "domain:appleusercontent.com",
+          "full:apps.apple.com",
+          "domain:apps.apple.com",
+          "full:itunes.apple.com",
+          "domain:itunes.apple.com",
+          "full:itunes.com",
+          "domain:itunes.com",
+          "full:itunes-apple.com",
+          "domain:itunes-apple.com",
+          "full:itunes-nocookie.com",
+          "domain:itunes-nocookie.com",
+          "full:mzstatic.com",
+          "domain:mzstatic.com",
+          "full:aaplimg.com",
+          "domain:aaplimg.com",
+          "full:g.aaplimg.com",
+          "domain:g.aaplimg.com",
+          "full:appsto.re",
+          "domain:appsto.re",
+          "full:appstoreconnect.apple.com",
+          "domain:appstoreconnect.apple.com",
+          "full:testflight.apple.com",
+          "domain:testflight.apple.com",
+          "full:iadsdk.apple.com",
+          "domain:iadsdk.apple.com",
+          "full:icloud-content.com",
+          "domain:icloud-content.com",
+          "full:cdn-apple.com",
+          "domain:cdn-apple.com",
+          "full:apple-dns.net",
+          "domain:apple-dns.net",
+          "full:apple-mapkit.com",
+          "domain:apple-mapkit.com",
+          "full:push.apple.com",
+          "domain:push.apple.com",
+          "full:push-apple.com",
+          "domain:push-apple.com",
+          "full:courier.push.apple.com",
+          "full:apple-cloudkit.com",
+          "domain:apple-cloudkit.com",
+          "full:ess.apple.com",
+          "domain:ess.apple.com",
+          "full:identity.apple.com",
+          "domain:identity.apple.com",
+          "full:ids-apple.com",
+          "domain:ids-apple.com",
+          "full:guzzoni.apple.com",
+          "domain:guzzoni.apple.com",
+          "full:gc.apple.com",
+          "domain:gc.apple.com",
+          "full:ls.apple.com",
+          "domain:ls.apple.com",
+          "full:gs-loc.apple.com",
+          "domain:gs-loc.apple.com",
+          "full:captive.apple.com",
+          "domain:captive.apple.com",
+          "full:gdmf.apple.com",
+          "domain:gdmf.apple.com",
+          "full:deviceenrollment.apple.com",
+          "domain:deviceenrollment.apple.com",
+          "full:deviceservices-external.apple.com",
+          "domain:deviceservices-external.apple.com",
+          "full:albert.apple.com",
+          "domain:albert.apple.com",
+          "full:time.apple.com",
+          "domain:time.apple.com",
+          "full:time-ios.apple.com",
+          "domain:time-ios.apple.com",
+          "full:init.itunes.apple.com",
+          "domain:init.itunes.apple.com",
+          "full:iphone-ld.apple.com",
+          "domain:iphone-ld.apple.com",
+          "full:xp.apple.com",
+          "domain:xp.apple.com",
+          "full:mesu.apple.com",
+          "domain:mesu.apple.com",
+          "full:swcdn.apple.com",
+          "domain:swcdn.apple.com",
+          "full:swdist.apple.com",
+          "domain:swdist.apple.com",
+          "full:swdownload.apple.com",
+          "domain:swdownload.apple.com",
+          "full:swquery.apple.com",
+          "domain:swquery.apple.com",
+          "full:swscan.apple.com",
+          "domain:swscan.apple.com",
+          "full:updates-http.cdn-apple.com",
+          "domain:updates-http.cdn-apple.com",
+          "full:updates.cdn-apple.com",
+          "full:app-site-association.cdn-apple.com",
+          "full:app-site-association.networking.apple",
+          "full:appldnld.apple.com",
+          "domain:appldnld.apple.com",
+          "full:appldnld.apple.com.edgesuite.net",
+          "full:ocsp.apple.com",
+          "domain:ocsp.apple.com",
+          "full:ocsp2.apple.com",
+          "domain:ocsp2.apple.com",
+          "full:valid.apple.com",
+          "domain:valid.apple.com",
+          "full:certs.apple.com",
+          "full:crl.apple.com",
+          "full:appattest.apple.com",
+          "domain:appattest.apple.com",
+          "full:apps-marketplace.apple.com",
+          "domain:apps-marketplace.apple.com",
+          "full:token.safebrowsing.apple",
+          "full:apple-relay.cloudflare.com",
+          "full:apple-relay.fastly-edge.com",
+          "full:apple-relay.apple.com",
+          "full:doh.dns.apple.com",
+          "full:gateway.icloud.com",
+          "full:mask.icloud.com",
+          "full:mask-h2.icloud.com",
+          "full:mask-api.icloud.com",
+          "full:probe.icloud.com",
+          "full:pong.icloud.com",
+          "full:metrics.icloud.com",
+          "full:apple-native-relay.apple.com",
+          "full:vk.com",
+          "domain:vk.com",
+          "domain:vk.ru",
+          "domain:vkuserphoto.ru",
+          "domain:userapi.com",
+          "domain:mycdn.me",
+          "domain:vkuseraudio.net",
+          "full:vk.link",
+          "domain:vk.link",
+          "full:vk.me",
+          "domain:vk.me",
+          "full:vkuseraudio.com",
+          "domain:vkuseraudio.com",
+          "full:vkuserlive.com",
+          "domain:vkuserlive.com",
+          "full:vkuserlive.net",
+          "domain:vkuserlive.net",
+          "full:vkuservideo.com",
+          "domain:vkuservideo.com",
+          "full:vkuservideo.net",
+          "domain:vkuservideo.net",
+          "full:tamtam.chat",
+          "domain:tamtam.chat",
+          "domain:mail.ru",
+          "domain:my.com",
+          "domain:cloud.mail.ru",
+          "full:ru",
+          "domain:ru",
+          "full:su",
+          "domain:su",
+          "full:xn--p1ai",
+          "domain:xn--p1ai",
+          "full:my.com",
+          "full:yandex.net",
+          "domain:yandex.net",
+          "full:yastatic.net",
+          "domain:yastatic.net",
+          "full:yandex.st",
+          "domain:yandex.st",
+          "full:2gis.com",
+          "domain:2gis.com",
+          "full:dgis.com",
+          "domain:dgis.com",
+          "full:wbstatic.net",
+          "domain:wbstatic.net",
+          "full:x5static.net",
+          "domain:x5static.net",
+          "full:emias.info",
+          "domain:emias.info",
+          "full:avito.st",
+          "domain:avito.st",
+          "full:sberbank.com",
+          "domain:sberbank.com",
+          "full:vtb.com",
+          "domain:vtb.com",
+          "full:alfabank.com",
+          "domain:alfabank.com",
+          "full:sovcombank.com",
+          "domain:sovcombank.com",
+          "full:tochka.com",
+          "domain:tochka.com",
+          "full:okko.tv",
+          "domain:okko.tv",
+          "full:premier.one",
+          "domain:premier.one",
+          "full:pobeda.aero",
+          "domain:pobeda.aero",
+          "full:lenta.com",
+          "domain:lenta.com",
+          "full:alfabank.st",
+          "domain:alfabank.st",
+          "full:yandex.com",
+          "domain:yandex.com",
+          "full:shedevrum.ai",
+          "domain:shedevrum.ai",
+          "full:shedevrum.com",
+          "domain:shedevrum.com",
+          "full:sourcecraft.dev",
+          "domain:sourcecraft.dev",
+          "full:tochka-tech.com",
+          "domain:tochka-tech.com",
+          "full:edadeal.io",
+          "domain:edadeal.io",
+          "full:taxsee.com",
+          "domain:taxsee.com",
+          "full:bronevik.com",
+          "domain:bronevik.com",
+          "full:moex.com",
+          "domain:moex.com",
+          "full:okko.sport",
+          "domain:okko.sport",
+          "full:fix-price.com",
+          "domain:fix-price.com",
+          "full:korona.com",
+          "domain:korona.com",
+          "full:bank131.com",
+          "domain:bank131.com",
+          "full:chizhik.club",
+          "domain:chizhik.club",
+          "full:okolo.app",
+          "domain:okolo.app",
+          "full:yandex.cloud",
+          "domain:yandex.cloud",
+          "full:yandexcloud.net",
+          "domain:yandexcloud.net",
+          "full:clstorage.net",
+          "domain:clstorage.net",
+          "full:static-storage.net",
+          "domain:static-storage.net",
+          "full:tilda.cc",
+          "domain:tilda.cc",
+          "full:kinescopecdn.net",
+          "domain:kinescopecdn.net",
+          "full:apple-livephotoskit.com",
+          "domain:apple-livephotoskit.com",
+          "full:apzones.com",
+          "domain:apzones.com",
+          "full:icloud.com.cn",
+          "domain:icloud.com.cn",
+          "full:cp4.cloudflare.com",
+          "full:crl3.digicert.com",
+          "full:crl4.digicert.com",
+          "full:ocsp.digicert.com",
+          "full:ocsp.digicert.cn",
+          "full:vkuser.net",
+          "domain:vkuser.net",
+          "full:userapi.com",
+          "full:mycdn.me",
+          "full:mvk.com",
+          "domain:mvk.com",
+          "full:vk-cdn.me",
+          "domain:vk-cdn.me",
+          "full:vk-portal.net",
+          "domain:vk-portal.net",
+          "full:vk.cc",
+          "domain:vk.cc",
+          "full:vk-cdn.net",
+          "domain:vk-cdn.net",
+          "full:vk-cdn.com",
+          "domain:vk-cdn.com",
+          "full:vkvd.net",
+          "domain:vkvd.net",
+          "full:vk.team",
+          "domain:vk.team",
+          "full:vkuseraudio.net",
+          "full:ozonusercontent.com",
+          "domain:ozonusercontent.com",
+          "full:postmypost.io",
+          "domain:postmypost.io"
+        ],
+        "skipFallback": true,
+        "queryStrategy": "UseIPv4"
+      },
+      {
+        "address": "https://cloudflare-dns.com/dns-query",
+        "queryStrategy": "UseIPv4"
+      },
+      {
+        "address": "https://freedns.controld.com/p0",
+        "queryStrategy": "UseIPv4"
+      }
+    ]
+  },
+  "routing": {
+    "domainStrategy": "IPIfNonMatch",
+    "rules": [
+      {
+        "domain": [
+          "full:alt-ad.mail.ru"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "full:ad.mail.ru"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:mradx.net"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:target.my.com"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:advertising.my.com"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:mytarget.com"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:tracker-api.vk-analytics.ru"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:vk-analytics.ru"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:tracker-api.my.com"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:top.mail.ru"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "full:r.mail.ru"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:an.yandex.ru"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:mc.yandex.ru"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:mc.yandex.com"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:metrika.yandex.ru"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:yandexmetrica.com"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:webvisor.com"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:yads.tech"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "full:ads.adfox.ru"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:adfox.yandex.ru"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:mobile.yandexadexchange.net"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:adfstat.yandex.ru"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:appmetrica.yandex.ru"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:report.appmetrica.yandex.net"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:report.appmetrica.yango.com"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:rosenberg.appmetrica.yandex.net"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:startup.mobile.yandex.net"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:market-baobab.yandex.ru"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:market-click-baobab.yandex.ru"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:moloco.com"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:adsmoloco.com"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:applovin.com"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:applvn.com"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:inmobi.com"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:inmobicdn.net"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:doubleclick.net"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:googleadservices.com"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:mintegral.com"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:rayjump.com"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:tiktokpangle.us"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:tiktokpangle-b.us"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:tiktokpangle-cdn-us.com"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:vungle.com"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:mtgglobals.com"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:smadex.com"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:tobsnssdk.com"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:liftoff-creatives.io"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:app-ads-services.com"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:bytepluscdn.com"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:byteplusvod.com"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:mediation.unity3d.com"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:config.unityads.unity3d.com"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "full:cdn.iads.unity3d.com"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:iads.unity3d.com"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:unityads.unity3d.com"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:isx.unity3d.com"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:unity3d.com"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "full:ep2.facebook.com"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:advlion.com"
+        ],
+        "type": "field",
+        "outboundTag": "block"
+      },
+      {
+        "type": "field",
+        "inboundTag": [
+          "dns-internal"
+        ],
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:hermes.routelink.ru"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:yt3.ggpht.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:yt4.ggpht.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:i.ytimg.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:ytimg.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:ggpht.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:pixabay.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "ip": [
+          "62.60.230.167/32"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "ip": [
+          "31.77.158.107/32"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:p16-tiktokcdn-com.akamaized.net"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:lf16-effectcdn.byteeffecttos-g.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:lf16-pkgcdn.pitaya-clientai.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:tiktok.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:tik-tokapi.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:tiktokv.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:tiktokv.us"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:ttwebview.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:tiktokmusic.app"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:tiktokcdn.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:tiktokcdn-us.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:ttlivecdn.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:tiktokrow-cdn.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:snssdk.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:isnssdk.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:ibyteimg.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:ibytedtos.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:byteoversea.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:byteoversea.net"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:bytefcdn-oversea.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:bytefcdn-ttpeu.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:byteglb.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:byteicdn.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:sgsnssdk.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:ttoverseaus.net"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:ttwstatic.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:ttdns2.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:hypstarcdn.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:ipstatp.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:sgpstatp.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:bytedapm.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:byteintlapi.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:bytegecko-i18n.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:capcut.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:musical.ly"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:muscdn.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:tiktokd.net"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:tiktokd.org"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "keyword:tiktok"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "keyword:-tiktokcdn-com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "keyword:musical.ly"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:api.telegram.org"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:my.telegram.org"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:telegram.org"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:t.me"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:telegram.me"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:telegram.dog"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:telegra.ph"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:telesco.pe"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:tdesktop.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:graph.org"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:tx.me"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:telegramusercontent.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:cdn-telegram.org"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:telegram-cdn.org"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:tg.dev"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:contest.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:quiz.directory"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:comments.app"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:telegramdownload.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:stel.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:telega.one"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:telegram.space"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "ip": [
+          "91.108.4.0/22"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "ip": [
+          "91.108.8.0/22"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "ip": [
+          "91.108.12.0/22"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "ip": [
+          "91.108.16.0/22"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "ip": [
+          "91.108.20.0/22"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "ip": [
+          "91.108.56.0/22"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "ip": [
+          "91.105.192.0/23"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "ip": [
+          "95.161.64.0/20"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "ip": [
+          "149.154.160.0/20"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "ip": [
+          "185.76.151.0/24"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "ip": [
+          "2001:67c:4e8::/48"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "ip": [
+          "2001:b28:f23d::/48"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "ip": [
+          "2001:b28:f23f::/48"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "ip": [
+          "2001:b28:f23c::/48"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "ip": [
+          "2a0a:f280::/32"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "process": [
+          "WhatsApp"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:v.whatsapp.net"
+        ],
+        "type": "field",
+        "network": "udp",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:mmg.whatsapp.net"
+        ],
+        "type": "field",
+        "network": "udp",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:media.whatsapp.net"
+        ],
+        "type": "field",
+        "network": "udp",
+        "outboundTag": "proxy"
+      },
+      {
+        "ip": [
+          "2a03:2880::/32"
+        ],
+        "type": "field",
+        "network": "udp",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:g.whatsapp.net"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:v.whatsapp.net"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:mmg.whatsapp.net"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:media.whatsapp.net"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:static.whatsapp.net"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:cdn.whatsapp.net"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:pps.whatsapp.net"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:whatsapp.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:whatsapp.net"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:wa.me"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "ip": [
+          "31.13.64.0/18"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "ip": [
+          "102.132.96.0/20"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "ip": [
+          "185.60.216.0/22"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "ip": [
+          "179.60.192.0/22"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:graph.facebook.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:graph-fallback.facebook.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:payments-graph.facebook.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:api.facebook.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:b-api.facebook.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:www.facebook.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:m.facebook.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:web.facebook.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:gateway.facebook.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:gateway-fallback.facebook.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:lookaside.facebook.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:rupload.facebook.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:rupload-fallback.facebook.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:developers.facebook.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:accountscenter.facebook.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:accounts.meta.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:edge-mqtt.facebook.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:edge-mqtt-fallback.facebook.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:edge-chat.facebook.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:chat-e2ee.facebook.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:mqtt.c10r.facebook.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:mqtt.fallback.c10r.facebook.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:chat-e2ee.c10r.facebook.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:chat-e2ee-ig-p42.c10r.facebook.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:dgw.c10r.facebook.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:star.c10r.facebook.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:star.fallback.c10r.facebook.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:z-p42-chat-e2ee-ig.facebook.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:www.instagram.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:i.instagram.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:api.instagram.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:graph.instagram.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:z-p42-instagram.c10r.facebook.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:scontent.xx.fbcdn.net"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:video.xx.fbcdn.net"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:xx.fbcdn.net"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:facebook.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:fbcdn.net"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:fbsbx.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:messenger.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:instagr.am"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:instagram.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:cdninstagram.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:meta.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "ip": [
+          "31.13.24.0/21"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "ip": [
+          "66.220.144.0/20"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "ip": [
+          "69.63.176.0/20"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "ip": [
+          "69.171.224.0/19"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "ip": [
+          "74.119.76.0/22"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "ip": [
+          "129.134.0.0/16"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "ip": [
+          "157.240.0.0/16"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "ip": [
+          "173.252.64.0/18"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:jumpdesktop.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "keyword:jumpdesktop"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:trae-api-sg.mchost.guru"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:marscode.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:trae.ai"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "full:sun1-14.userapi.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:cloud.mail.ru"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:my.mail.ru"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:e.mail.ru"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:corp.mail.ru"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:biz.mail.ru"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:alt-aj-https.mail.ru"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:vk.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:vk.ru"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:vkontakte.ru"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:mvk.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:vk-cdn.me"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:vk-portal.net"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:vk.cc"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:vk.link"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:vk.me"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:vkuser.net"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:vkuserphoto.ru"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:userapi.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:mycdn.me"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:vk-cdn.net"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:vk-cdn.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:vkvd.net"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:vkvideo.ru"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:vkpay.ru"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:vk.team"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:vkuseraudio.net"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:vkuseraudio.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:vkuserlive.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:vkuserlive.net"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:vkuservideo.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:vkuservideo.net"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:tamtam.chat"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:mail.ru"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:my.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:datacloudmail.ru"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:mailcdn.ru"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:odnoklassniki.ru"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:ok.ru"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:okcdn.ru"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "ip": [
+          "93.186.225.194/32"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:token.safebrowsing.apple"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:updates.cdn-apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:app-site-association.cdn-apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:app-site-association.networking.apple"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:appldnld.apple.com.edgesuite.net"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:apple-relay.cloudflare.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:apple-relay.fastly-edge.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:apple-relay.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:cp4.cloudflare.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:crl3.digicert.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:crl4.digicert.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:ocsp.digicert.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:ocsp.digicert.cn"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:sf-api-token-service.itunes.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:silverbullet-external-ats.itunes.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:appstoreconnect.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:testflight.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:iadsdk.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:apps-marketplace.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:appattest.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:apps.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:init.itunes.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:itunes.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:swcdn.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:swdist.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:swdownload.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:swquery.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:swscan.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:updates-http.cdn-apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:appldnld.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:courier.push.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:push.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:ess.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:identity.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:guzzoni.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:gc.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:ls.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:gs-loc.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:captive.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:gdmf.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:deviceenrollment.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:deviceservices-external.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:albert.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:time-ios.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:time.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:iphone-ld.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:xp.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:mesu.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:ocsp2.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:ocsp.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:valid.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:certs.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:crl.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:doh.dns.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:apple-native-relay.apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:gateway.icloud.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:mask-h2.icloud.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:mask-api.icloud.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:mask.icloud.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:probe.icloud.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:pong.icloud.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:metrics.icloud.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:g.aaplimg.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:icloud.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:me.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:mac.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:apple.news"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:appleusercontent.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:itunes.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:itunes-apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:itunes-nocookie.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:mzstatic.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:aaplimg.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:appsto.re"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:icloud-content.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:cdn-apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:apple-dns.net"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:apple-mapkit.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:push-apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:apple-cloudkit.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:ids-apple.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:apple-livephotoskit.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:apzones.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:icloud.com.cn"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "ip": [
+          "17.0.0.0/8"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "ip": [
+          "2403:300::/32"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "ip": [
+          "2620:149::/32"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "ip": [
+          "2a01:b740::/32"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:xmpp.bip.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:bipchannel.bip.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:dman.bip.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:fts.bip.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:imos.bip.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:swf.bip.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:swfbu.bip.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:groups.bip.ai"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:tims.turkcell.com.tr"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:bip.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:bip.ai"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "ip": [
+          "176.235.29.0/24"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "ip": [
+          "176.235.227.0/24"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:new.tv.team"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:rus.epg.team"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:iptvx.one"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:epg.one"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:cdn.epg.one"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:ss-iptv.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:uhf-epg-backend.divine-leaf-f816.workers.dev"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:tbs01-edge11.itdc.ge"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:flymaterez.net"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:statichdrezka.ac"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:static.voidboost.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:getter.fun"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:tvtm.one"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:lamro.workers.dev"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:vdbmate.org"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "ip": [
+          "188.225.31.197/32"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "ip": [
+          "5.61.89.166/32"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:api.ipify.org"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:checkip.amazonaws.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:2ip.io"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:blackmagicdesign.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:iqos.ru"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:z.ai"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:chatglm.cn"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:clients.vigbo.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:aliexpress.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:ifconfig.me"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:radiorecord.ru"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:hostingradio.ru"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "keyword:radiorecord"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:tinkoff.ru"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:tbank.ru"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:tinkoffinsurance.ru"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:cdn-tinkoff.ru"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:ozon.ru"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:ozone.ru"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:ozonusercontent.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:wildberries.ru"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:wb.ru"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:online.sberbank.ru"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:sberbank.ru"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:sber.ru"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:alfabank.ru"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:kinorium.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:2gis.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:postmypost.io"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "ip": [
+          "46.174.49.29/32"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:yandex.net"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:yastatic.net"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:yandex.st"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:dgis.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:wbstatic.net"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:x5static.net"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:emias.info"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:avito.st"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:sberbank.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:vtb.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:alfabank.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:sovcombank.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:tochka.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:okko.tv"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:premier.one"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:pobeda.aero"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:lenta.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:alfabank.st"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:yandex.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:shedevrum.ai"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:shedevrum.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:sourcecraft.dev"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:tochka-tech.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:edadeal.io"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:taxsee.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:bronevik.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:moex.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:okko.sport"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:fix-price.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:korona.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:bank131.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:chizhik.club"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:okolo.app"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:yandex.cloud"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:yandexcloud.net"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:clstorage.net"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:static-storage.net"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:tilda.cc"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:kinescopecdn.net"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:ru"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:su"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:xn--p1ai"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "type": "field",
+        "ip": [
+          "192.168.0.0/16"
+        ],
+        "outboundTag": "direct"
+      },
+      {
+        "type": "field",
+        "ip": [
+          "10.0.0.0/8"
+        ],
+        "outboundTag": "direct"
+      },
+      {
+        "type": "field",
+        "ip": [
+          "172.16.0.0/12"
+        ],
+        "outboundTag": "direct"
+      },
+      {
+        "type": "field",
+        "ip": [
+          "100.64.0.0/10"
+        ],
+        "outboundTag": "direct"
+      },
+      {
+        "type": "field",
+        "ip": [
+          "127.0.0.0/8"
+        ],
+        "outboundTag": "direct"
+      },
+      {
+        "type": "field",
+        "ip": [
+          "169.254.0.0/16"
+        ],
+        "outboundTag": "direct"
+      },
+      {
+        "type": "field",
+        "ip": [
+          "192.0.0.0/24"
+        ],
+        "outboundTag": "direct"
+      },
+      {
+        "type": "field",
+        "ip": [
+          "192.0.2.0/24"
+        ],
+        "outboundTag": "direct"
+      },
+      {
+        "type": "field",
+        "ip": [
+          "192.88.99.0/24"
+        ],
+        "outboundTag": "direct"
+      },
+      {
+        "type": "field",
+        "ip": [
+          "198.51.100.0/24"
+        ],
+        "outboundTag": "direct"
+      },
+      {
+        "type": "field",
+        "ip": [
+          "203.0.113.0/24"
+        ],
+        "outboundTag": "direct"
+      },
+      {
+        "type": "field",
+        "ip": [
+          "224.0.0.0/4"
+        ],
+        "outboundTag": "direct"
+      },
+      {
+        "type": "field",
+        "ip": [
+          "255.255.255.255/32"
+        ],
+        "outboundTag": "direct"
+      },
+      {
+        "type": "field",
+        "ip": [
+          "239.255.255.250/32"
+        ],
+        "outboundTag": "direct"
+      },
+      {
+        "type": "field",
+        "ip": [
+          "geoip:ru"
+        ],
+        "outboundTag": "direct"
+      },
+      {
+        "type": "field",
+        "ip": [
+          "0.0.0.0/0",
+          "::/0"
+        ],
+        "outboundTag": "proxy"
+      }
+    ]
+  }
+}
