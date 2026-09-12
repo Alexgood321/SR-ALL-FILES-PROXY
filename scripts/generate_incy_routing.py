@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Generate the INCY routing profile from canonical Shadowrocket production policy.
+"""Generate INCY routing from canonical Shadowrocket production policy.
 
-Canonical sources are intentionally limited to:
+Canonical sources only:
 - config/remote.conf
 - modules/Unified-Routing-System-DNS.sgmodule
 - modules/Ads-Privacy-Block.sgmodule
@@ -12,7 +12,6 @@ YouTube/MITM assets are intentionally outside this conversion.
 from __future__ import annotations
 
 import argparse
-import base64
 import hashlib
 import ipaddress
 import json
@@ -98,11 +97,10 @@ def add_unique(bucket: list[str], seen: set[str], value: str) -> bool:
 
 
 def map_domain(rule_type: str, value: str) -> str:
-    """Preserve Shadowrocket exact-vs-suffix scope with Xray-style matchers.
+    """Preserve exact-vs-suffix scope with Xray-style matcher notation.
 
-    INCY's official routing page documents specific domains/categories but does not
-    spell out these matcher prefixes. Therefore this conversion is explicitly
-    classified as ADAPTED/E2E-required in the generated report, not proven parity.
+    INCY documents specific domains/categories but not these prefixes explicitly on
+    the routing page, so this mapping remains ADAPTED/E2E-required.
     """
     value = value.strip().lower().rstrip(".")
     if rule_type == "DOMAIN":
@@ -114,7 +112,6 @@ def map_domain(rule_type: str, value: str) -> str:
 
 def parse_rule(line: str) -> tuple[str, str | None, str | None, list[str]]:
     rule_type = line.split(",", 1)[0].strip()
-
     if rule_type in DOMAIN_TYPES | IP_TYPES | {
         "DOMAIN-KEYWORD",
         "PROCESS-NAME",
@@ -178,22 +175,15 @@ def convert() -> tuple[dict, list[Item], dict[str, int]]:
     items: list[Item] = []
     counts: Counter[str] = Counter()
 
-    # remote.conf: GEOIP,RU,DIRECT -> geoip:ru, FINAL,PROXY -> GlobalProxy=true.
     add_unique(profile["DirectIp"], seen["DirectIp"], "geoip:ru")
     counts["PORTED"] += 1
-    items.append(
-        Item(
-            "config/remote.conf",
-            "GEOIP,RU,DIRECT",
-            "PORTED",
-            "DirectIp: geoip:ru",
-            "INCY documents geoip categories in DirectIp.",
-            "RU IP traffic can be evaluated for DIRECT after domain rules.",
-        )
-    )
+    items.append(Item(
+        "config/remote.conf", "GEOIP,RU,DIRECT", "PORTED",
+        "DirectIp: geoip:ru",
+        "INCY documents geoip categories in DirectIp.",
+        "RU IP traffic can be evaluated for DIRECT after domain rules.",
+    ))
 
-    # Carry network CIDRs from both skip-proxy and tun-excluded-routes. Hostname and
-    # wildcard skip-proxy tokens are not guessed into INCY domain rules.
     for key in ("skip-proxy", "tun-excluded-routes"):
         for token in general.get(key, "").split(","):
             token = token.strip()
@@ -204,125 +194,83 @@ def convert() -> tuple[dict, list[Item], dict[str, int]]:
             except ValueError:
                 if key == "skip-proxy":
                     counts["INTENTIONALLY NOT PORTED"] += 1
-                    items.append(
-                        Item(
-                            "config/remote.conf",
-                            f"{key}: {token}",
-                            "INTENTIONALLY NOT PORTED",
-                            None,
-                            "Shadowrocket skip-proxy hostname/wildcard semantics do not have a documented 1:1 INCY field; several tokens are also covered by Unified.",
-                            "No broader INCY domain rule is invented.",
-                        )
-                    )
+                    items.append(Item(
+                        "config/remote.conf", f"{key}: {token}",
+                        "INTENTIONALLY NOT PORTED", None,
+                        "Shadowrocket skip-proxy hostname/wildcard semantics have no documented 1:1 INCY field; several tokens are also covered by Unified.",
+                        "No broader INCY domain rule is invented.",
+                    ))
                 continue
 
             canonical = str(network)
             if add_unique(profile["DirectIp"], seen["DirectIp"], canonical):
                 counts["PORTED"] += 1
-                items.append(
-                    Item(
-                        "config/remote.conf",
-                        f"{key}: {token}",
-                        "PORTED",
-                        f"DirectIp: {canonical}",
-                        "Closest documented INCY equivalent for a network that must remain outside the proxy path.",
-                        "Network remains DIRECT in the INCY profile.",
-                    )
-                )
+                items.append(Item(
+                    "config/remote.conf", f"{key}: {token}", "PORTED",
+                    f"DirectIp: {canonical}",
+                    "Closest documented INCY equivalent for a network that must remain outside the proxy path.",
+                    "Network remains DIRECT in the INCY profile.",
+                ))
             else:
                 counts["SKIPPED AS DUPLICATE"] += 1
-                items.append(
-                    Item(
-                        "config/remote.conf",
-                        f"{key}: {token}",
-                        "SKIPPED AS DUPLICATE",
-                        f"DirectIp: {canonical}",
-                        "The same canonical network was already emitted from remote.conf.",
-                        "No policy loss.",
-                    )
-                )
+                items.append(Item(
+                    "config/remote.conf", f"{key}: {token}",
+                    "SKIPPED AS DUPLICATE", f"DirectIp: {canonical}",
+                    "The same canonical network was already emitted from remote.conf.",
+                    "No policy loss.",
+                ))
 
     counts["PORTED"] += 1
-    items.append(
-        Item(
-            "config/remote.conf",
-            "FINAL,PROXY",
-            "PORTED",
-            "GlobalProxy: true",
-            "INCY GlobalProxy=true defines unmatched traffic as PROXY.",
-            "Default route remains PROXY.",
-        )
-    )
+    items.append(Item(
+        "config/remote.conf", "FINAL,PROXY", "PORTED", "GlobalProxy: true",
+        "INCY GlobalProxy=true defines unmatched traffic as PROXY.",
+        "Default route remains PROXY.",
+    ))
 
     def consume_rule(source: str, line: str, *, ads_source: bool = False) -> None:
         rule_type, value, action, extras = parse_rule(line)
-
         if action not in SUPPORTED_ACTIONS:
             counts["UNSUPPORTED"] += 1
-            items.append(
-                Item(
-                    source,
-                    line,
-                    "UNSUPPORTED",
-                    None,
-                    "Rule syntax/action has no implemented safe mapping in this generator.",
-                    "Rule is omitted rather than widened.",
-                )
-            )
+            items.append(Item(
+                source, line, "UNSUPPORTED", None,
+                "Rule syntax/action has no implemented safe mapping in this generator.",
+                "Rule is omitted rather than widened.",
+            ))
             return
 
         if ads_source and action != "REJECT":
             counts["UNSUPPORTED"] += 1
-            items.append(
-                Item(
-                    source,
-                    line,
-                    "UNSUPPORTED",
-                    None,
-                    "Ads source is expected to contain REJECT policy only for INCY Block mapping.",
-                    "Rule is omitted.",
-                )
-            )
+            items.append(Item(
+                source, line, "UNSUPPORTED", None,
+                "Ads source is expected to contain REJECT policy only for INCY Block mapping.",
+                "Rule is omitted.",
+            ))
             return
 
         if rule_type in DOMAIN_TYPES and value:
             destination = {
-                "DIRECT": "DirectSites",
-                "PROXY": "ProxySites",
-                "REJECT": "BlockSites",
+                "DIRECT": "DirectSites", "PROXY": "ProxySites", "REJECT": "BlockSites"
             }[action]
             mapped = map_domain(rule_type, value)
             if add_unique(profile[destination], seen[destination], mapped):
                 counts["ADAPTED"] += 1
-                items.append(
-                    Item(
-                        source,
-                        line,
-                        "ADAPTED / E2E REQUIRED",
-                        f"{destination}: {mapped}",
-                        "DOMAIN is represented as full: and DOMAIN-SUFFIX as domain: to preserve Xray-style exact/suffix scope. INCY documents specific domains/categories but its routing page does not explicitly document these prefixes.",
-                        "Intended scope is preserved statically; INCY client E2E must confirm matcher-prefix handling before production activation.",
-                    )
-                )
+                items.append(Item(
+                    source, line, "ADAPTED / E2E REQUIRED", f"{destination}: {mapped}",
+                    "DOMAIN uses full: and DOMAIN-SUFFIX uses domain: to preserve Xray-style exact/suffix scope. INCY documents specific domains/categories but not these prefixes explicitly on its routing page.",
+                    "Static intent is preserved; INCY client E2E must confirm matcher-prefix handling before activation.",
+                ))
             else:
                 counts["SKIPPED AS DUPLICATE"] += 1
-                items.append(
-                    Item(
-                        source,
-                        line,
-                        "SKIPPED AS DUPLICATE",
-                        f"{destination}: {mapped}",
-                        "Identical emitted matcher already exists in the same INCY bucket.",
-                        "No policy loss within the generated representation.",
-                    )
-                )
+                items.append(Item(
+                    source, line, "SKIPPED AS DUPLICATE", f"{destination}: {mapped}",
+                    "Identical emitted matcher already exists in the same INCY bucket.",
+                    "No policy loss within the generated representation.",
+                ))
             return
 
         if rule_type in IP_TYPES and value:
             destination = {
-                "DIRECT": "DirectIp",
-                "PROXY": "ProxyIp",
-                "REJECT": "BlockIp",
+                "DIRECT": "DirectIp", "PROXY": "ProxyIp", "REJECT": "BlockIp"
             }[action]
             try:
                 network = ipaddress.ip_network(value, strict=True)
@@ -336,28 +284,18 @@ def convert() -> tuple[dict, list[Item], dict[str, int]]:
                 else:
                     counts["PORTED"] += 1
                     status = "PORTED"
-                items.append(
-                    Item(
-                        source,
-                        line,
-                        status,
-                        f"{destination}: {canonical}",
-                        "CIDR maps directly to the documented INCY IP bucket. Shadowrocket no-resolve has no separate field in the standard INCY routing profile.",
-                        "Routing target is preserved; DNS-trigger semantics may differ under IPIfNonMatch and require E2E.",
-                    )
-                )
+                items.append(Item(
+                    source, line, status, f"{destination}: {canonical}",
+                    "CIDR maps directly to the documented INCY IP bucket. Shadowrocket no-resolve has no separate standard INCY routing field.",
+                    "Routing target is preserved; DNS-trigger semantics may differ under IPIfNonMatch and require E2E.",
+                ))
             else:
                 counts["SKIPPED AS DUPLICATE"] += 1
-                items.append(
-                    Item(
-                        source,
-                        line,
-                        "SKIPPED AS DUPLICATE",
-                        f"{destination}: {canonical}",
-                        "Identical CIDR already exists in the same INCY bucket.",
-                        "No policy loss within the generated representation.",
-                    )
-                )
+                items.append(Item(
+                    source, line, "SKIPPED AS DUPLICATE", f"{destination}: {canonical}",
+                    "Identical CIDR already exists in the same INCY bucket.",
+                    "No policy loss within the generated representation.",
+                ))
             return
 
         if rule_type == "DOMAIN-KEYWORD":
@@ -370,87 +308,106 @@ def convert() -> tuple[dict, list[Item], dict[str, int]]:
             reason = f"No safe implemented mapping for {rule_type}."
 
         counts["UNSUPPORTED"] += 1
-        items.append(
-            Item(
-                source,
-                line,
-                "UNSUPPORTED",
-                None,
-                reason,
-                "Rule is omitted rather than approximated.",
-            )
-        )
+        items.append(Item(source, line, "UNSUPPORTED", None, reason, "Rule is omitted rather than approximated."))
 
     for line in section_lines(unified_text, "Rule"):
         consume_rule("modules/Unified-Routing-System-DNS.sgmodule", line)
-
     for line in section_lines(ads_text, "Rule"):
         consume_rule("modules/Ads-Privacy-Block.sgmodule", line, ads_source=True)
 
-    # Never misuse DnsHosts for Shadowrocket server:system.
     for line in section_lines(unified_text, "Host"):
         counts["INTENTIONALLY NOT PORTED"] += 1
-        items.append(
-            Item(
-                "modules/Unified-Routing-System-DNS.sgmodule [Host]",
-                line,
-                "INTENTIONALLY NOT PORTED",
-                None,
-                "INCY DnsHosts is static domain→IP and is not an equivalent of Shadowrocket server:system. INCY Domestic DNS is global for direct resources, not selective per host.",
-                "Selective System DNS parity is not claimed; DnsHosts remains empty.",
-            )
-        )
+        items.append(Item(
+            "modules/Unified-Routing-System-DNS.sgmodule [Host]", line,
+            "INTENTIONALLY NOT PORTED", None,
+            "INCY DnsHosts is static domain→IP and is not equivalent to Shadowrocket server:system. INCY Domestic DNS is global for direct resources, not selective per host.",
+            "Selective System DNS parity is not claimed; DnsHosts remains empty.",
+        ))
 
     fallback = general.get("fallback-dns-server", "")
     counts["INTENTIONALLY NOT PORTED"] += 1
-    items.append(
-        Item(
-            "config/remote.conf",
-            f"fallback-dns-server = {fallback}",
-            "INTENTIONALLY NOT PORTED",
-            None,
-            "Standard INCY routing JSON documents one Remote DNS and one Domestic DNS, not a Remote-DNS fallback chain equivalent to Shadowrocket fallback-dns-server.",
-            "Cloudflare is configured as Remote DNS; ControlD fallback parity is not claimed.",
-        )
-    )
+    items.append(Item(
+        "config/remote.conf", f"fallback-dns-server = {fallback}",
+        "INTENTIONALLY NOT PORTED", None,
+        "Standard INCY routing JSON documents one Remote DNS and one Domestic DNS, not a Remote-DNS fallback chain equivalent to Shadowrocket fallback-dns-server.",
+        "Cloudflare is configured as Remote DNS; ControlD fallback parity is not claimed.",
+    ))
 
     counts["INTENTIONALLY NOT PORTED"] += 1
-    items.append(
-        Item(
-            "config/remote.conf + Unified [Host]",
-            "selective server:system",
-            "INTENTIONALLY NOT PORTED",
-            None,
-            "No documented per-domain System DNS selector exists in the standard INCY routing profile. No arbitrary Domestic DNS provider is introduced.",
-            "DomesticDNS* fields are intentionally omitted; INCY documented defaults/runtime must be evaluated before production activation.",
-        )
-    )
+    items.append(Item(
+        "config/remote.conf + Unified [Host]", "selective server:system",
+        "INTENTIONALLY NOT PORTED", None,
+        "No documented per-domain System DNS selector exists in the standard INCY routing profile. No arbitrary Domestic DNS provider is introduced.",
+        "DomesticDNS* fields are intentionally omitted; INCY defaults/runtime must be evaluated before production activation.",
+    ))
 
     counts["ADAPTED"] += 1
-    items.append(
-        Item(
-            "config/remote.conf",
-            f"dns-server = {dns_server}",
-            "ADAPTED / E2E REQUIRED",
-            "RemoteDNSType=DoH; RemoteDNSDomain=Cloudflare URL",
-            "INCY Remote DNS is documented for proxy resources. Shadowrocket #proxy syntax is removed from the URL because the proxy path is represented by INCY's Remote DNS role.",
-            "Closest documented mapping; runtime DNS parity remains unverified.",
-        )
-    )
+    items.append(Item(
+        "config/remote.conf", f"dns-server = {dns_server}",
+        "ADAPTED / E2E REQUIRED",
+        "RemoteDNSType=DoH; RemoteDNSDomain=Cloudflare URL",
+        "INCY Remote DNS is documented for proxy resources. Shadowrocket #proxy syntax is removed because the proxy path is represented by INCY's Remote DNS role.",
+        "Closest documented mapping; runtime DNS parity remains unverified.",
+    ))
 
     return profile, items, dict(counts)
 
 
+def _matcher(value: str) -> tuple[str, str]:
+    prefix, separator, body = value.partition(":")
+    if separator and prefix in {"full", "domain"}:
+        return prefix, body
+    return "raw", value
+
+
+def _domain_overlap(left: str, right: str) -> bool:
+    left_type, left_value = _matcher(left)
+    right_type, right_value = _matcher(right)
+    if left_type == "raw" or right_type == "raw":
+        return left == right
+    if left_type == "full" and right_type == "full":
+        return left_value == right_value
+    if left_type == "domain" and right_type == "full":
+        return right_value == left_value or right_value.endswith("." + left_value)
+    if left_type == "full" and right_type == "domain":
+        return left_value == right_value or left_value.endswith("." + right_value)
+    return (
+        left_value == right_value
+        or left_value.endswith("." + right_value)
+        or right_value.endswith("." + left_value)
+    )
+
+
+def _overlaps(profile: dict, left_key: str, right_key: str) -> list[tuple[str, str]]:
+    result: list[tuple[str, str]] = []
+    for left in profile[left_key]:
+        for right in profile[right_key]:
+            if _domain_overlap(left, right):
+                result.append((left, right))
+    return result
+
+
 def render_report(profile: dict, items: list[Item], counts: dict[str, int]) -> str:
-    source_hashes = {
-        str(path.relative_to(ROOT)): sha256(path) for path in CANONICAL_SOURCES
-    }
+    source_hashes = {str(path.relative_to(ROOT)): sha256(path) for path in CANONICAL_SOURCES}
     output_counts = {key: len(profile[key]) for key in ARRAY_KEYS}
+    unsupported = [item for item in items if item.status == "UNSUPPORTED"]
+    no_resolve_gaps = [item for item in items if item.status == "PORTED WITH SEMANTIC GAP"]
+    non_host_intentional = [
+        item for item in items
+        if item.status == "INTENTIONALLY NOT PORTED" and "[Host]" not in item.source
+    ]
+    host_items = [item for item in items if item.source.endswith("[Host]")]
+    duplicate_items = [item for item in items if item.status == "SKIPPED AS DUPLICATE"]
+    overlaps = {
+        "BlockSites ↔ DirectSites": _overlaps(profile, "BlockSites", "DirectSites"),
+        "BlockSites ↔ ProxySites": _overlaps(profile, "BlockSites", "ProxySites"),
+        "DirectSites ↔ ProxySites": _overlaps(profile, "DirectSites", "ProxySites"),
+    }
 
     lines = [
         "# INCY conversion report",
         "",
-        "Generated from the current canonical Shadowrocket production policy. This is a static conversion audit, not INCY device/runtime proof.",
+        "Generated from the current canonical Shadowrocket production policy. Static conversion audit only; not INCY device/runtime proof.",
         "",
         "## Sources",
         "",
@@ -461,18 +418,17 @@ def render_report(profile: dict, items: list[Item], counts: dict[str, int]) -> s
         f"- Official INCY docs baseline commit: `{OFFICIAL_INCY_DOCS_COMMIT}`",
         f"- Routing docs: {OFFICIAL_INCY_ROUTING_DOC}",
         f"- Autorouting docs: {OFFICIAL_INCY_AUTOROUTING_DOC}",
-        "- `modules/Youtube-Config.sgmodule` and `modules/youtube.response.js`: **not used as sources**.",
+        "- YouTube module/script: **not used as sources**.",
         "",
         "## Generated profile",
         "",
-        f"- Public profile URL intended for stage-2 delivery: `{PUBLIC_PROFILE_URL}`",
-        "- `GlobalProxy = true`: unmatched traffic is PROXY, matching `FINAL,PROXY` intent.",
-        "- `DomainStrategy = IPIfNonMatch`: domain rules are checked first; domain misses can then be resolved/evaluated against IP/GeoIP rules such as `geoip:ru`.",
-        "- Remote DNS: Cloudflare DoH from `remote.conf`; INCY documents Remote DNS as the DNS path for proxy resources.",
-        "- `DnsHosts = {}`: Shadowrocket `server:system` is deliberately not converted into static hosts entries.",
-        "- `DomesticDNS*` omitted: choosing Google/Yandex/another resolver without project evidence would invent policy. INCY documented defaults/runtime must be evaluated in stage 2.",
-        "- `RemoteDNSIP` omitted: canonical `remote.conf` defines the DoH URL, not a bootstrap IP; the generator does not invent one.",
-        "- `Geoipurl`/`Geositeurl` omitted: INCY documents bundled geo files; dataset parity with Shadowrocket is not assumed.",
+        f"- Stage-2 public URL: `{PUBLIC_PROFILE_URL}`",
+        "- `GlobalProxy = true`: unmatched traffic stays PROXY (`FINAL,PROXY`).",
+        "- `DomainStrategy = IPIfNonMatch`: domain rules first, then IP/GeoIP evaluation on misses.",
+        "- Remote DNS: Cloudflare DoH from `remote.conf`.",
+        "- `DnsHosts = {}`: `server:system` is not faked as static hosts.",
+        "- `DomesticDNS*` omitted: no arbitrary Google/Yandex/other resolver is invented. Omitted fields may use INCY defaults and require device validation.",
+        "- `RemoteDNSIP`, `Geoipurl`, `Geositeurl` omitted: canonical policy does not provide values that can be copied without inventing behavior; INCY bundled geo data is used implicitly.",
         "- `FakeDNS = false`.",
         "",
         "### Output counts",
@@ -480,48 +436,85 @@ def render_report(profile: dict, items: list[Item], counts: dict[str, int]) -> s
     ]
     for key, value in output_counts.items():
         lines.append(f"- `{key}`: {value}")
-
     lines += ["", "### Conversion status counts", ""]
     for key in sorted(counts):
         lines.append(f"- `{key}`: {counts[key]}")
 
     lines += [
         "",
-        "## Important semantic gaps",
+        "## Semantic gaps / not claimed as parity",
         "",
-        "1. **Selective System DNS:** Shadowrocket `[Host] ... = server:system` has no documented 1:1 standard INCY routing-profile field. `DnsHosts` is static domain→IP and is not used as a substitute.",
-        "2. **DNS fallback:** Shadowrocket runtime observed `server:system → retry System DNS → ControlD #proxy`; ordinary domains use `Cloudflare #proxy → ControlD #proxy`. Standard INCY routing JSON does not document an equivalent Remote-DNS fallback chain, so DNS parity is not claimed.",
-        "3. **Domestic DNS:** INCY applies Domestic DNS to direct resources globally. Shadowrocket uses System DNS only for selected `[Host]` entries. No arbitrary Domestic resolver is introduced here; omitted fields may use INCY defaults and therefore require device validation.",
-        "4. **Rule selectors:** `USER-AGENT`, `PROCESS-NAME`, logical `AND`/`PROTOCOL`, and `DOMAIN-KEYWORD` are not flattened into broader rules.",
-        "5. **no-resolve:** IP/CIDR destinations are ported, but standard INCY routing JSON has no separate `no-resolve` modifier. `IPIfNonMatch` can therefore differ in when DNS is triggered.",
-        "6. **First-match/priority:** Shadowrocket module priority places Ads REJECT above Unified. INCY precedence for overlapping block/direct/proxy entries must be confirmed in E2E before calling behavior equivalent.",
-        "7. **Domain matcher representation:** exact `DOMAIN` becomes `full:...`; `DOMAIN-SUFFIX` becomes `domain:...` to preserve Xray-style scope. INCY docs state that specific domains/categories are accepted but do not explicitly document these prefixes on the routing-profile page; client E2E must confirm them before production activation.",
-        "8. **Geo data:** `geoip:ru` uses INCY's bundled geo data because no third-party geo source is introduced. Geo dataset parity with Shadowrocket is unverified.",
+        f"- Selective `[Host] server:system`: **{len(host_items)} entries not ported 1:1**. INCY `DnsHosts` is static domain→IP, not a System-DNS selector.",
+        "- Shadowrocket DNS fallback (`System DNS → retry → ControlD #proxy`, or `Cloudflare #proxy → ControlD #proxy`) has no documented equivalent Remote-DNS fallback chain in standard INCY routing JSON.",
+        "- Domestic DNS in INCY is global for direct resources; Shadowrocket System DNS is selective. DNS parity is **not** claimed.",
+        "- `USER-AGENT`, `PROCESS-NAME`, `DOMAIN-KEYWORD`, logical `AND`/`PROTOCOL` are not widened into approximate domain rules.",
+        "- `no-resolve` has no separate standard INCY field. CIDRs are ported, but DNS-trigger semantics under `IPIfNonMatch` require E2E.",
+        "- Exact `DOMAIN` is adapted to `full:...`; `DOMAIN-SUFFIX` to `domain:...` to preserve Xray-style scope. INCY docs say specific domains/categories are accepted but do not explicitly document these prefixes on the routing-profile page, so client E2E is required.",
+        "- `geoip:ru` uses INCY bundled geo data; GeoIP dataset parity with Shadowrocket is unverified.",
+        "- Shadowrocket first-match/module priority is not automatically equivalent to INCY bucket priority.",
         "",
-        "## Rule-by-rule migration ledger",
+        "## Unsupported Shadowrocket rules",
+        "",
+        "Every unsupported active `[Rule]` is listed; none is broadened.",
         "",
         "| Source rule | INCY equivalent | Status | Reason | Possible effect |",
         "|---|---|---|---|---|",
     ]
-
-    for item in items:
-        source_rule = f"{item.source}: {item.raw}".replace("|", "\\|")
-        destination = (item.destination or "NONE").replace("|", "\\|")
+    for item in unsupported:
+        raw = item.raw.replace("|", "\\|")
         reason = item.reason.replace("|", "\\|")
         effect = item.effect.replace("|", "\\|")
-        lines.append(
-            f"| `{source_rule}` | `{destination}` | **{item.status}** | {reason} | {effect} |"
-        )
+        lines.append(f"| `{raw}` | `NONE` | **UNSUPPORTED** | {reason} | {effect} |")
 
     lines += [
         "",
+        "## Ported CIDRs with `no-resolve` semantic gap",
+        "",
+        f"Count: **{len(no_resolve_gaps)}**. Routing destination is carried over; the Shadowrocket `no-resolve` modifier itself is not.",
+        "",
+    ]
+    for item in no_resolve_gaps:
+        lines.append(f"- `{item.raw}` → `{item.destination}`")
+
+    lines += [
+        "",
+        "## Other intentionally-not-ported items",
+        "",
+    ]
+    for item in non_host_intentional:
+        lines.append(f"- `{item.raw}` — {item.reason}")
+    lines += [
+        f"- Unified `[Host] server:system`: {len(host_items)} entries are uniformly NOT PORTED because no documented per-domain System-DNS equivalent exists.",
+        "",
+        "## Duplicate suppression",
+        "",
+        f"Count: **{len(duplicate_items)}**.",
+    ]
+    for item in duplicate_items:
+        lines.append(f"- `{item.raw}` → `{item.destination}`")
+
+    lines += [
+        "",
+        "## Potential cross-bucket overlaps requiring INCY E2E priority check",
+        "",
+        "These are not declared errors: Shadowrocket resolves them by first-match/module order. INCY bucket precedence must be verified on-device before calling behavior equivalent.",
+        "",
+    ]
+    for name, pairs in overlaps.items():
+        lines.append(f"### {name}: {len(pairs)}")
+        lines.append("")
+        for left, right in pairs:
+            lines.append(f"- `{left}` ↔ `{right}`")
+        lines.append("")
+
+    lines += [
         "## Validation scope",
         "",
-        "This generator/report can prove deterministic static conversion and JSON validity. It does **not** prove INCY import, domain-matcher interpretation, DNS behavior, routing priority, autorouting delivery, subscription headers, or device E2E. Those belong to the later Sub-Store/INCY delivery stage.",
+        "Generator/tests can prove deterministic static conversion, source coverage and JSON validity. They do **not** prove INCY import, matcher interpretation, DNS behavior, bucket priority, autorouting delivery, subscription headers, or device E2E. Those belong to the later Sub-Store/INCY stage.",
         "",
         "## Rollback",
         "",
-        "This stage does not alter the canonical Shadowrocket policy or subscription delivery. Rollback is simply reverting/removing the INCY-only generator, generated `incy/` files, tests and INCY validation workflow commit; existing Shadowrocket release assets and URLs remain untouched.",
+        "This stage does not alter canonical Shadowrocket policy or subscription delivery. Rollback is reverting/removing the INCY-only generator, generated `incy/` files, tests and INCY validation workflow. Existing Shadowrocket assets/URLs remain untouched.",
         "",
     ]
     return "\n".join(lines)
@@ -540,11 +533,6 @@ def main() -> int:
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--report", type=Path, default=DEFAULT_REPORT)
     parser.add_argument("--check", action="store_true")
-    parser.add_argument(
-        "--stdout-base64",
-        action="store_true",
-        help="Print generated artifacts as base64 markers (bootstrap/CI only).",
-    )
     args = parser.parse_args()
 
     profile, items, counts = convert()
@@ -564,14 +552,6 @@ def main() -> int:
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json_text, encoding="utf-8")
     args.report.write_text(report_text, encoding="utf-8")
-
-    if args.stdout_base64:
-        print("INCY_JSON_BASE64_BEGIN")
-        print(base64.b64encode(json_text.encode("utf-8")).decode("ascii"))
-        print("INCY_JSON_BASE64_END")
-        print("INCY_REPORT_BASE64_BEGIN")
-        print(base64.b64encode(report_text.encode("utf-8")).decode("ascii"))
-        print("INCY_REPORT_BASE64_END")
 
     print("INCY routing generation PASS")
     for key in ARRAY_KEYS:
