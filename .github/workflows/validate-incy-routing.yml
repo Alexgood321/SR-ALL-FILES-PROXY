@@ -1,0 +1,54 @@
+name: Validate INCY routing conversion
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "config/remote.conf"
+      - "modules/Unified-Routing-System-DNS.sgmodule"
+      - "modules/Ads-Privacy-Block.sgmodule"
+      - "scripts/generate_incy_routing.py"
+      - "tests/test_incy_routing.py"
+      - "incy/**"
+      - ".github/workflows/validate-incy-routing.yml"
+  pull_request:
+    paths:
+      - "config/remote.conf"
+      - "modules/Unified-Routing-System-DNS.sgmodule"
+      - "modules/Ads-Privacy-Block.sgmodule"
+      - "scripts/generate_incy_routing.py"
+      - "tests/test_incy_routing.py"
+      - "incy/**"
+      - ".github/workflows/validate-incy-routing.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate canonical Shadowrocket policy
+        run: python3 scripts/validate_shadowrocket.py
+
+      - name: Generate or verify INCY artifacts
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          if [ -f incy/incy-routing.json ] && [ -f incy/conversion-report.md ]; then
+            python3 scripts/generate_incy_routing.py --check
+          else
+            mkdir -p /tmp/incy-bootstrap
+            python3 scripts/generate_incy_routing.py \
+              --output /tmp/incy-bootstrap/incy-routing.json \
+              --report /tmp/incy-bootstrap/conversion-report.md \
+              --stdout-base64
+          fi
+
+      - name: Run INCY conversion tests
+        run: python3 -m unittest discover -s tests -p 'test_incy_routing.py' -v
