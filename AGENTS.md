@@ -199,7 +199,7 @@ YouTube Rewrite/Script/MITM files are not INCY routing sources and must not be p
 
 ### Generators
 
-`script/generate_incy_routing.py` and `scripts/generate_incy_xray_policy.py` are the source of truth for derived INCY files. If the path is `scripts/generate_incy_routing.py` in the repository, preserve that exact repository path; do not invent a parallel generator location.
+`scripts/generate_incy_routing.py` and `scripts/generate_incy_xray_policy.py` are the source of truth for derived INCY files.
 
 Generated artifacts must not be edited manually. Change the generator and tests, regenerate, then verify the resulting diff.
 
