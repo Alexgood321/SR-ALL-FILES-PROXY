@@ -1,411 +1,423 @@
-# INCY Full Xray conversion report
+# Отчёт конвертации INCY Full Xray
 
-Static repository conversion only. It does not prove Sub-Store delivery or INCY device E2E.
+Только статическая конвертация внутри репозитория. Она не подтверждает delivery Sub-Store или INCY device E2E.
 
 ## Source of truth
 
 - `config/remote.conf` — SHA256 `78b60dd2c6a1c63ba863d07f56ee0035f747f5309a188d941e1ecf72059098d4`
 - `modules/Unified-Routing-System-DNS.sgmodule` — SHA256 `dd6d66b2c222a1b8a53a3b8be26c6aac8908aa8b2228bfc8df9eaa04cea1d695`
 - `modules/Ads-Privacy-Block.sgmodule` — SHA256 `2512e9115f9ec81fc52b8507e155c3aa8ddb501c74f511bd7a2676ad0fca8727`
-- YouTube/MITM files: **not used**.
+- YouTube/MITM файлы: **не используются**.
 
-## Generated native policy
+## Сгенерированная нативная policy
 
 - `https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/main/incy/xray-policy.json`
 - Routing rules: **471**
 - Selective System DNS matchers: **292**
-- Intended use: Sub-Store embeds this `dns` + `routing` into every INCY Full Xray server config.
-- No `autorouting`, routing header or separate routing profile is produced by this artifact.
-- Legacy `incy/incy-routing.json` remains compatibility/diagnostic only until Full Xray E2E.
+- Назначение: Sub-Store встраивает эти `dns` + `routing` в каждый INCY Full Xray server config.
+- Артефакт не создаёт `autorouting`, routing header или отдельный routing profile (No `autorouting`).
+- Legacy `incy/incy-routing.json` остаётся compatibility/diagnostic до Full Xray E2E.
 
-## Native mapping
+## Нативное отображение
 
 - DOMAIN → `full:`; DOMAIN-SUFFIX → `domain:`; DOMAIN-KEYWORD → `keyword:`.
-- IP-CIDR/IP-CIDR6/GEOIP use native Xray `ip` matchers.
-- AND(selector + PROTOCOL TCP/UDP) stays one rule with both conditions.
-- PROCESS-NAME → native `process`, status **PLATFORM_DEPENDENT**.
-- USER-AGENT → **NOT PORTED / REQUIRES E2E**; `attrs` is not treated as 1:1.
-- Order: Ads BLOCK → DNS infrastructure guard → Unified source order → local/private DIRECT → GEOIP RU DIRECT → explicit FINAL PROXY.
+- IP-CIDR/IP-CIDR6/GEOIP используют нативные Xray `ip` matchers.
+- AND(selector + PROTOCOL TCP/UDP) остаётся одним rule с обоими условиями.
+- PROCESS-NAME → нативный `process`, статус **PLATFORM_DEPENDENT**.
+- USER-AGENT → **NOT PORTED / REQUIRES E2E**; `attrs` не считается 1:1 заменой.
+- Порядок: Ads BLOCK → DNS infrastructure guard → исходный порядок Unified → local/private DIRECT → GEOIP RU DIRECT → явный FINAL PROXY.
+- `tun-excluded-routes` → DIRECT/freedom только как **SEMANTIC ADAPTATION**: Xray routing не воспроизводит исключение сети из TUN 1:1.
 
-## DNS architecture
+## Архитектура DNS
 
-Generated serial resolver topology:
-1. selective domains: `localhost` System DNS → ControlD DoH; Cloudflare is excluded from that matched list;
-2. ordinary domains: Cloudflare DoH → ControlD DoH;
-3. non-local DoH is tagged `dns-internal` and routed to proxy; localhost remains local.
-`queryStrategy=UseIPv4` is a DNS-level adaptation only, not a claim of full parity with Shadowrocket `ipv6=false` for every platform/outbound.
-Shadowrocket's observed extra retry of the same System DNS is **not claimed as reproduced**.
+Сгенерированная последовательная topology resolver:
+1. selective domains: `localhost` System DNS → ControlD DoH; Cloudflare исключён из matched-list;
+2. обычные домены: Cloudflare DoH → ControlD DoH;
+3. non-local DoH получает tag `dns-internal` и маршрутизируется через proxy; localhost остаётся локальным.
+`queryStrategy=UseIPv4` — только DNS-level adaptation, а не заявление полного parity с Shadowrocket `ipv6=false` для каждой платформы/outbound.
+Наблюдавшийся в Shadowrocket дополнительный retry того же System DNS **не заявляется воспроизведённым**.
 DNS ARCHITECTURE: IMPLEMENTED STATICALLY. DNS PARITY: NOT TESTED.
 
-## Status counts
+## Количество по статусам
 
-- `CONFIRMED STATIC MAPPING`: 428
+- `CONFIRMED STATIC MAPPING`: 417
 - `NOT PORTED / COVERAGE CHECK`: 6
 - `NOT PORTED / REQUIRES E2E`: 2
 - `PLATFORM_DEPENDENT`: 1
-- `SEMANTIC ADAPTATION`: 334
+- `SEMANTIC ADAPTATION`: 345
 - `SKIPPED AS DUPLICATE`: 3
 
 ## PLATFORM_DEPENDENT
 
-- `PROCESS-NAME,WhatsApp,PROXY` — Xray process matching is native on Windows/Linux; INCY Android/iOS behavior requires platform E2E.
+- `PROCESS-NAME,WhatsApp,PROXY` — Process matching нативно поддерживается Xray на Windows/Linux; поведение INCY Android/iOS требует platform E2E.
 
 ## NOT PORTED / REQUIRES E2E
 
-- `USER-AGENT,TikTok*,PROXY` — **NOT PORTED / REQUIRES E2E** — Xray attrs is not a safe 1:1 USER-AGENT substitute for general HTTPS/app traffic.
-- `USER-AGENT,WhatsApp*,PROXY` — **NOT PORTED / REQUIRES E2E** — Xray attrs is not a safe 1:1 USER-AGENT substitute for general HTTPS/app traffic.
-- `skip-proxy: localhost` — **NOT PORTED / COVERAGE CHECK** — Non-CIDR skip-proxy scope is not widened here; canonical domain policy comes from Unified.
-- `skip-proxy: *.local` — **NOT PORTED / COVERAGE CHECK** — Non-CIDR skip-proxy scope is not widened here; canonical domain policy comes from Unified.
-- `skip-proxy: captive.apple.com` — **NOT PORTED / COVERAGE CHECK** — Non-CIDR skip-proxy scope is not widened here; canonical domain policy comes from Unified.
-- `skip-proxy: *.ru` — **NOT PORTED / COVERAGE CHECK** — Non-CIDR skip-proxy scope is not widened here; canonical domain policy comes from Unified.
-- `skip-proxy: *.su` — **NOT PORTED / COVERAGE CHECK** — Non-CIDR skip-proxy scope is not widened here; canonical domain policy comes from Unified.
-- `skip-proxy: *.рф` — **NOT PORTED / COVERAGE CHECK** — Non-CIDR skip-proxy scope is not widened here; canonical domain policy comes from Unified.
+- `USER-AGENT,TikTok*,PROXY` — **NOT PORTED / REQUIRES E2E** — Xray attrs нельзя считать безопасным 1:1 эквивалентом USER-AGENT для общего HTTPS/app traffic.
+- `USER-AGENT,WhatsApp*,PROXY` — **NOT PORTED / REQUIRES E2E** — Xray attrs нельзя считать безопасным 1:1 эквивалентом USER-AGENT для общего HTTPS/app traffic.
+- `skip-proxy: localhost` — **NOT PORTED / COVERAGE CHECK** — Токен не является CIDR; область hostname/wildcard здесь не расширяется, каноническая доменная политика берётся из Unified.
+- `skip-proxy: *.local` — **NOT PORTED / COVERAGE CHECK** — Токен не является CIDR; область hostname/wildcard здесь не расширяется, каноническая доменная политика берётся из Unified.
+- `skip-proxy: captive.apple.com` — **NOT PORTED / COVERAGE CHECK** — Токен не является CIDR; область hostname/wildcard здесь не расширяется, каноническая доменная политика берётся из Unified.
+- `skip-proxy: *.ru` — **NOT PORTED / COVERAGE CHECK** — Токен не является CIDR; область hostname/wildcard здесь не расширяется, каноническая доменная политика берётся из Unified.
+- `skip-proxy: *.su` — **NOT PORTED / COVERAGE CHECK** — Токен не является CIDR; область hostname/wildcard здесь не расширяется, каноническая доменная политика берётся из Unified.
+- `skip-proxy: *.рф` — **NOT PORTED / COVERAGE CHECK** — Токен не является CIDR; область hostname/wildcard здесь не расширяется, каноническая доменная политика берётся из Unified.
 
 ## SEMANTIC ADAPTATION
 
-- `amp-api-search-edge.apps.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `amp-api-edge.apps.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `amp-api.apps.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `api-edge.apps.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `api.apps.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `bag.itunes.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `sf-api-token-service.itunes.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `silverbullet-external-ats.itunes.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `silverbullet-external-ats.v.aaplimg.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `apps.mzstatic.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `apps.mzstatic.com.g.aaplimg.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `is1-ssl.mzstatic.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `tr.iadsdk.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `icloud.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.icloud.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `me.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.me.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `mac.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.mac.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `apple.news = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.apple.news = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `appleusercontent.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.appleusercontent.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `apps.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.apps.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `itunes.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.itunes.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `itunes.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.itunes.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `itunes-apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.itunes-apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `itunes-nocookie.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.itunes-nocookie.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `mzstatic.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.mzstatic.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `aaplimg.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.aaplimg.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `g.aaplimg.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.g.aaplimg.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `appsto.re = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.appsto.re = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `appstoreconnect.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.appstoreconnect.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `testflight.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.testflight.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `iadsdk.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.iadsdk.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `icloud-content.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.icloud-content.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `cdn-apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.cdn-apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `apple-dns.net = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.apple-dns.net = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `apple-mapkit.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.apple-mapkit.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `push.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.push.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `push-apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.push-apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `courier.push.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `apple-cloudkit.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.apple-cloudkit.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `ess.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.ess.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `identity.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.identity.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `ids-apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.ids-apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `guzzoni.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.guzzoni.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `gc.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.gc.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `ls.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.ls.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `gs-loc.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.gs-loc.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `captive.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.captive.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `gdmf.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.gdmf.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `deviceenrollment.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.deviceenrollment.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `deviceservices-external.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.deviceservices-external.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `albert.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.albert.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `time.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.time.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `time-ios.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.time-ios.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `init.itunes.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.init.itunes.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `iphone-ld.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.iphone-ld.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `xp.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.xp.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `mesu.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.mesu.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `swcdn.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.swcdn.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `swdist.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.swdist.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `swdownload.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.swdownload.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `swquery.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.swquery.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `swscan.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.swscan.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `updates-http.cdn-apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.updates-http.cdn-apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `updates.cdn-apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `app-site-association.cdn-apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `app-site-association.networking.apple = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `appldnld.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.appldnld.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `appldnld.apple.com.edgesuite.net = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `ocsp.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.ocsp.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `ocsp2.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.ocsp2.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `valid.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.valid.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `certs.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `crl.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `appattest.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.appattest.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `apps-marketplace.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.apps-marketplace.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `token.safebrowsing.apple = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `apple-relay.cloudflare.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `apple-relay.fastly-edge.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `apple-relay.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `doh.dns.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `gateway.icloud.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `mask.icloud.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `mask-h2.icloud.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `mask-api.icloud.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `probe.icloud.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `pong.icloud.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `metrics.icloud.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `apple-native-relay.apple.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `vk.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.vk.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.vk.ru = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.vkuserphoto.ru = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.userapi.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.mycdn.me = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.vkuseraudio.net = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `vk.link = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.vk.link = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `vk.me = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.vk.me = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `vkuseraudio.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.vkuseraudio.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `vkuserlive.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.vkuserlive.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `vkuserlive.net = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.vkuserlive.net = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `vkuservideo.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.vkuservideo.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `vkuservideo.net = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.vkuservideo.net = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `tamtam.chat = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.tamtam.chat = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.mail.ru = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.my.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.cloud.mail.ru = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `ru = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.ru = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `su = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.su = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `xn--p1ai = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.xn--p1ai = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `my.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `yandex.net = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.yandex.net = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `yastatic.net = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.yastatic.net = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `yandex.st = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.yandex.st = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `2gis.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.2gis.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `dgis.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.dgis.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `wbstatic.net = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.wbstatic.net = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `x5static.net = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.x5static.net = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `emias.info = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.emias.info = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `avito.st = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.avito.st = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `sberbank.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.sberbank.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `vtb.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.vtb.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `alfabank.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.alfabank.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `sovcombank.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.sovcombank.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `tochka.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.tochka.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `okko.tv = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.okko.tv = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `premier.one = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.premier.one = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `pobeda.aero = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.pobeda.aero = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `lenta.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.lenta.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `alfabank.st = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.alfabank.st = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `yandex.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.yandex.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `shedevrum.ai = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.shedevrum.ai = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `shedevrum.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.shedevrum.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `sourcecraft.dev = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.sourcecraft.dev = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `tochka-tech.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.tochka-tech.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `edadeal.io = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.edadeal.io = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `taxsee.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.taxsee.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `bronevik.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.bronevik.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `moex.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.moex.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `okko.sport = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.okko.sport = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `fix-price.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.fix-price.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `korona.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.korona.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `bank131.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.bank131.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `chizhik.club = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.chizhik.club = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `okolo.app = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.okolo.app = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `yandex.cloud = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.yandex.cloud = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `yandexcloud.net = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.yandexcloud.net = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `clstorage.net = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.clstorage.net = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `static-storage.net = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.static-storage.net = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `tilda.cc = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.tilda.cc = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `kinescopecdn.net = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.kinescopecdn.net = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `apple-livephotoskit.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.apple-livephotoskit.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `apzones.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.apzones.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `icloud.com.cn = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.icloud.com.cn = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `cp4.cloudflare.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `crl3.digicert.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `crl4.digicert.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `ocsp.digicert.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `ocsp.digicert.cn = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `vkuser.net = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.vkuser.net = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `userapi.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `mycdn.me = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `mvk.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.mvk.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `vk-cdn.me = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.vk-cdn.me = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `vk-portal.net = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.vk-portal.net = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `vk.cc = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.vk.cc = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `vk-cdn.net = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.vk-cdn.net = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `vk-cdn.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.vk-cdn.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `vkvd.net = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.vkvd.net = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `vk.team = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.vk.team = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `vkuseraudio.net = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `ozonusercontent.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.ozonusercontent.com = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `postmypost.io = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `*.postmypost.io = server:system` — Mapped to native Xray priority DNS domains with localhost System DNS.
-- `dns.tag=dns-internal` — Forces Cloudflare/ControlD internal DNS traffic through proxy without routing localhost System DNS into a loop.
-- `IP-CIDR,62.60.230.167/32,PROXY,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR,31.77.158.107/32,PROXY,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR,91.108.4.0/22,PROXY,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR,91.108.8.0/22,PROXY,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR,91.108.12.0/22,PROXY,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR,91.108.16.0/22,PROXY,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR,91.108.20.0/22,PROXY,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR,91.108.56.0/22,PROXY,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR,91.105.192.0/23,PROXY,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR,95.161.64.0/20,PROXY,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR,149.154.160.0/20,PROXY,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR,185.76.151.0/24,PROXY,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR6,2001:67c:4e8::/48,PROXY,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR6,2001:b28:f23d::/48,PROXY,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR6,2001:b28:f23f::/48,PROXY,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR6,2001:b28:f23c::/48,PROXY,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR6,2a0a:f280::/32,PROXY,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `AND,((IP-CIDR6,2a03:2880::/32,no-resolve),(PROTOCOL,UDP)),PROXY` — Native Xray combines selector and network conditions in one field rule.
-- `IP-CIDR,31.13.64.0/18,PROXY,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR,102.132.96.0/20,PROXY,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR,185.60.216.0/22,PROXY,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR,179.60.192.0/22,PROXY,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR,31.13.24.0/21,PROXY,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR,66.220.144.0/20,PROXY,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR,69.63.176.0/20,PROXY,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR,69.171.224.0/19,PROXY,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR,74.119.76.0/22,PROXY,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR,129.134.0.0/16,PROXY,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR,157.240.0.0/16,PROXY,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR,173.252.64.0/18,PROXY,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR,93.186.225.194/32,DIRECT,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR,17.0.0.0/8,DIRECT,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR6,2403:300::/32,DIRECT,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR6,2620:149::/32,DIRECT,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR6,2a01:b740::/32,DIRECT,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR,176.235.29.0/24,DIRECT,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR,176.235.227.0/24,DIRECT,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR,188.225.31.197/32,DIRECT,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR,5.61.89.166/32,DIRECT,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `IP-CIDR,46.174.49.29/32,DIRECT,no-resolve` — CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch.
-- `FINAL,PROXY` — Explicit universal IP fallback preserves IPIfNonMatch/geoip evaluation; unresolved no-match still falls to first proxy outbound in Full Xray config.
+- `amp-api-search-edge.apps.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `amp-api-edge.apps.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `amp-api.apps.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `api-edge.apps.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `api.apps.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `bag.itunes.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `sf-api-token-service.itunes.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `silverbullet-external-ats.itunes.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `silverbullet-external-ats.v.aaplimg.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `apps.mzstatic.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `apps.mzstatic.com.g.aaplimg.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `is1-ssl.mzstatic.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `tr.iadsdk.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `icloud.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.icloud.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `me.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.me.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `mac.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.mac.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `apple.news = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.apple.news = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `appleusercontent.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.appleusercontent.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `apps.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.apps.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `itunes.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.itunes.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `itunes.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.itunes.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `itunes-apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.itunes-apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `itunes-nocookie.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.itunes-nocookie.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `mzstatic.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.mzstatic.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `aaplimg.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.aaplimg.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `g.aaplimg.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.g.aaplimg.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `appsto.re = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.appsto.re = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `appstoreconnect.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.appstoreconnect.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `testflight.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.testflight.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `iadsdk.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.iadsdk.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `icloud-content.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.icloud-content.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `cdn-apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.cdn-apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `apple-dns.net = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.apple-dns.net = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `apple-mapkit.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.apple-mapkit.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `push.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.push.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `push-apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.push-apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `courier.push.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `apple-cloudkit.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.apple-cloudkit.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `ess.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.ess.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `identity.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.identity.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `ids-apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.ids-apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `guzzoni.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.guzzoni.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `gc.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.gc.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `ls.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.ls.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `gs-loc.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.gs-loc.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `captive.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.captive.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `gdmf.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.gdmf.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `deviceenrollment.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.deviceenrollment.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `deviceservices-external.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.deviceservices-external.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `albert.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.albert.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `time.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.time.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `time-ios.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.time-ios.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `init.itunes.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.init.itunes.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `iphone-ld.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.iphone-ld.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `xp.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.xp.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `mesu.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.mesu.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `swcdn.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.swcdn.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `swdist.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.swdist.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `swdownload.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.swdownload.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `swquery.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.swquery.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `swscan.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.swscan.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `updates-http.cdn-apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.updates-http.cdn-apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `updates.cdn-apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `app-site-association.cdn-apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `app-site-association.networking.apple = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `appldnld.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.appldnld.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `appldnld.apple.com.edgesuite.net = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `ocsp.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.ocsp.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `ocsp2.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.ocsp2.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `valid.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.valid.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `certs.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `crl.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `appattest.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.appattest.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `apps-marketplace.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.apps-marketplace.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `token.safebrowsing.apple = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `apple-relay.cloudflare.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `apple-relay.fastly-edge.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `apple-relay.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `doh.dns.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `gateway.icloud.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `mask.icloud.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `mask-h2.icloud.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `mask-api.icloud.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `probe.icloud.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `pong.icloud.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `metrics.icloud.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `apple-native-relay.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `vk.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.vk.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.vk.ru = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.vkuserphoto.ru = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.userapi.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.mycdn.me = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.vkuseraudio.net = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `vk.link = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.vk.link = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `vk.me = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.vk.me = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `vkuseraudio.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.vkuseraudio.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `vkuserlive.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.vkuserlive.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `vkuserlive.net = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.vkuserlive.net = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `vkuservideo.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.vkuservideo.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `vkuservideo.net = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.vkuservideo.net = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `tamtam.chat = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.tamtam.chat = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.mail.ru = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.my.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.cloud.mail.ru = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `ru = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.ru = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `su = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.su = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `xn--p1ai = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.xn--p1ai = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `my.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `yandex.net = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.yandex.net = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `yastatic.net = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.yastatic.net = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `yandex.st = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.yandex.st = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `2gis.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.2gis.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `dgis.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.dgis.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `wbstatic.net = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.wbstatic.net = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `x5static.net = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.x5static.net = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `emias.info = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.emias.info = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `avito.st = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.avito.st = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `sberbank.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.sberbank.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `vtb.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.vtb.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `alfabank.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.alfabank.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `sovcombank.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.sovcombank.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `tochka.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.tochka.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `okko.tv = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.okko.tv = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `premier.one = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.premier.one = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `pobeda.aero = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.pobeda.aero = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `lenta.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.lenta.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `alfabank.st = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.alfabank.st = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `yandex.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.yandex.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `shedevrum.ai = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.shedevrum.ai = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `shedevrum.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.shedevrum.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `sourcecraft.dev = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.sourcecraft.dev = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `tochka-tech.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.tochka-tech.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `edadeal.io = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.edadeal.io = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `taxsee.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.taxsee.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `bronevik.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.bronevik.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `moex.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.moex.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `okko.sport = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.okko.sport = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `fix-price.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.fix-price.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `korona.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.korona.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `bank131.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.bank131.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `chizhik.club = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.chizhik.club = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `okolo.app = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.okolo.app = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `yandex.cloud = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.yandex.cloud = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `yandexcloud.net = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.yandexcloud.net = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `clstorage.net = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.clstorage.net = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `static-storage.net = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.static-storage.net = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `tilda.cc = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.tilda.cc = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `kinescopecdn.net = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.kinescopecdn.net = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `apple-livephotoskit.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.apple-livephotoskit.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `apzones.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.apzones.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `icloud.com.cn = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.icloud.com.cn = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `cp4.cloudflare.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `crl3.digicert.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `crl4.digicert.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `ocsp.digicert.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `ocsp.digicert.cn = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `vkuser.net = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.vkuser.net = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `userapi.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `mycdn.me = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `mvk.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.mvk.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `vk-cdn.me = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.vk-cdn.me = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `vk-portal.net = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.vk-portal.net = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `vk.cc = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.vk.cc = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `vk-cdn.net = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.vk-cdn.net = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `vk-cdn.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.vk-cdn.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `vkvd.net = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.vkvd.net = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `vk.team = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.vk.team = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `vkuseraudio.net = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `ozonusercontent.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.ozonusercontent.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `postmypost.io = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.postmypost.io = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `dns.tag=dns-internal` — Внутренний DNS-трафик Cloudflare/ControlD принудительно идёт через proxy, при этом localhost System DNS не заводится в routing loop.
+- `IP-CIDR,62.60.230.167/32,PROXY,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR,31.77.158.107/32,PROXY,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR,91.108.4.0/22,PROXY,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR,91.108.8.0/22,PROXY,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR,91.108.12.0/22,PROXY,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR,91.108.16.0/22,PROXY,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR,91.108.20.0/22,PROXY,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR,91.108.56.0/22,PROXY,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR,91.105.192.0/23,PROXY,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR,95.161.64.0/20,PROXY,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR,149.154.160.0/20,PROXY,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR,185.76.151.0/24,PROXY,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR6,2001:67c:4e8::/48,PROXY,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR6,2001:b28:f23d::/48,PROXY,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR6,2001:b28:f23f::/48,PROXY,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR6,2001:b28:f23c::/48,PROXY,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR6,2a0a:f280::/32,PROXY,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `AND,((IP-CIDR6,2a03:2880::/32,no-resolve),(PROTOCOL,UDP)),PROXY` — Нативный Xray объединяет selector и network в одном field rule.
+- `IP-CIDR,31.13.64.0/18,PROXY,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR,102.132.96.0/20,PROXY,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR,185.60.216.0/22,PROXY,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR,179.60.192.0/22,PROXY,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR,31.13.24.0/21,PROXY,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR,66.220.144.0/20,PROXY,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR,69.63.176.0/20,PROXY,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR,69.171.224.0/19,PROXY,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR,74.119.76.0/22,PROXY,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR,129.134.0.0/16,PROXY,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR,157.240.0.0/16,PROXY,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR,173.252.64.0/18,PROXY,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR,93.186.225.194/32,DIRECT,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR,17.0.0.0/8,DIRECT,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR6,2403:300::/32,DIRECT,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR6,2620:149::/32,DIRECT,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR6,2a01:b740::/32,DIRECT,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR,176.235.29.0/24,DIRECT,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR,176.235.227.0/24,DIRECT,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR,188.225.31.197/32,DIRECT,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR,5.61.89.166/32,DIRECT,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `IP-CIDR,46.174.49.29/32,DIRECT,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
+- `tun-excluded-routes: 100.64.0.0/10` — Shadowrocket исключает сеть из TUN; Xray direct/freedom только отправляет её напрямую внутри Xray и не является 1:1 TUN exclusion. Runtime parity не заявляется.
+- `tun-excluded-routes: 127.0.0.0/8` — Shadowrocket исключает сеть из TUN; Xray direct/freedom только отправляет её напрямую внутри Xray и не является 1:1 TUN exclusion. Runtime parity не заявляется.
+- `tun-excluded-routes: 169.254.0.0/16` — Shadowrocket исключает сеть из TUN; Xray direct/freedom только отправляет её напрямую внутри Xray и не является 1:1 TUN exclusion. Runtime parity не заявляется.
+- `tun-excluded-routes: 192.0.0.0/24` — Shadowrocket исключает сеть из TUN; Xray direct/freedom только отправляет её напрямую внутри Xray и не является 1:1 TUN exclusion. Runtime parity не заявляется.
+- `tun-excluded-routes: 192.0.2.0/24` — Shadowrocket исключает сеть из TUN; Xray direct/freedom только отправляет её напрямую внутри Xray и не является 1:1 TUN exclusion. Runtime parity не заявляется.
+- `tun-excluded-routes: 192.88.99.0/24` — Shadowrocket исключает сеть из TUN; Xray direct/freedom только отправляет её напрямую внутри Xray и не является 1:1 TUN exclusion. Runtime parity не заявляется.
+- `tun-excluded-routes: 198.51.100.0/24` — Shadowrocket исключает сеть из TUN; Xray direct/freedom только отправляет её напрямую внутри Xray и не является 1:1 TUN exclusion. Runtime parity не заявляется.
+- `tun-excluded-routes: 203.0.113.0/24` — Shadowrocket исключает сеть из TUN; Xray direct/freedom только отправляет её напрямую внутри Xray и не является 1:1 TUN exclusion. Runtime parity не заявляется.
+- `tun-excluded-routes: 224.0.0.0/4` — Shadowrocket исключает сеть из TUN; Xray direct/freedom только отправляет её напрямую внутри Xray и не является 1:1 TUN exclusion. Runtime parity не заявляется.
+- `tun-excluded-routes: 255.255.255.255/32` — Shadowrocket исключает сеть из TUN; Xray direct/freedom только отправляет её напрямую внутри Xray и не является 1:1 TUN exclusion. Runtime parity не заявляется.
+- `tun-excluded-routes: 239.255.255.250/32` — Shadowrocket исключает сеть из TUN; Xray direct/freedom только отправляет её напрямую внутри Xray и не является 1:1 TUN exclusion. Runtime parity не заявляется.
+- `FINAL,PROXY` — Явный универсальный IP fallback сохраняет проверку IPIfNonMatch/geoip; unresolved no-match всё равно попадает в первый proxy outbound Full Xray config.
 
-## Not proved by this stage
+## Что не подтверждено этим этапом
 
-- VLESS/Trojan/VMess server-link → proxy outbound conversion and credential preservation;
+- Преобразование VLESS/Trojan/VMess server-link → proxy outbound и сохранение credentials;
 - Sub-Store fetch/cache/LKG/fail-safe; INCY headers/client detection;
-- no separate Routing Profile in INCY UI; iOS/Android/Desktop routing/DNS runtime;
-- HAPP and Shadowrocket regression.
-These remain Alpha/Sub-Store E2E work and must not inherit PASS from repository CI.
+- отсутствие отдельного Routing Profile в UI INCY; runtime routing/DNS на iOS/Android/Desktop;
+- regression HAPP и Shadowrocket (HAPP and Shadowrocket regression).
+Эти пункты остаются работой Alpha/Sub-Store E2E и не наследуют PASS от repository CI.
 
-## Rollback
+## Откат
 
-Revert the native generator/tests/workflow/generated Xray artifacts. Canonical Shadowrocket files and existing client delivery remain untouched.
+Откатить native generator/tests/workflow/generated Xray artifacts. Canonical Shadowrocket-файлы и существующий client delivery остаются нетронутыми.
