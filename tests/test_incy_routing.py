@@ -147,12 +147,12 @@ class IncyRoutingGenerationTests(unittest.TestCase):
 
     def test_report_explicitly_records_dns_and_runtime_gaps(self) -> None:
         required = (
-            "Selective System DNS",
+            "Selective `[Host] server:system`",
             "DNS fallback",
             "Domestic DNS",
             "no-resolve",
             "Domain matcher representation",
-            "does **not** prove INCY import",
+            "do **not** prove INCY import",
             "Rollback",
         )
         for marker in required:
