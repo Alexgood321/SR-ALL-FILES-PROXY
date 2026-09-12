@@ -5,13 +5,11 @@ on:
     branches:
       - main
     paths:
-      - "config/remote.conf"
-      - "modules/Unified-Routing-System-DNS.sgmodule"
-      - "modules/Ads-Privacy-Block.sgmodule"
       - "scripts/generate_incy_routing.py"
       - "tests/test_incy_routing.py"
       - "incy/**"
       - ".github/workflows/validate-incy-routing.yml"
+      - ".github/workflows/sync-incy-routing.yml"
   pull_request:
     paths:
       - "config/remote.conf"
@@ -21,6 +19,7 @@ on:
       - "tests/test_incy_routing.py"
       - "incy/**"
       - ".github/workflows/validate-incy-routing.yml"
+      - ".github/workflows/sync-incy-routing.yml"
 
 permissions:
   contents: read
@@ -32,24 +31,63 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Validate canonical Shadowrocket policy
         run: python3 scripts/validate_shadowrocket.py
+
+      - name: Detect canonical source changes in pull request
+        id: source_changes
+        if: ${{ github.event_name == 'pull_request' }}
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -Eeuo pipefail
+          if git diff --name-only "$BASE_SHA...$HEAD_SHA" -- \
+            config/remote.conf \
+            modules/Unified-Routing-System-DNS.sgmodule \
+            modules/Ads-Privacy-Block.sgmodule \
+            | grep -q .; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Generate or verify INCY artifacts
         shell: bash
         run: |
           set -Eeuo pipefail
-          if [ -f incy/incy-routing.json ] && [ -f incy/conversion-report.md ]; then
+          if [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ steps.source_changes.outputs.changed }}" = "true" ]; then
+            python3 scripts/generate_incy_routing.py
+
+            mapfile -t changed_files < <(
+              {
+                git diff --name-only
+                git ls-files --others --exclude-standard
+              } | LC_ALL=C sort -u
+            )
+            for path in "${changed_files[@]}"; do
+              case "$path" in
+                incy/incy-routing.json|incy/conversion-report.md) ;;
+                *)
+                  echo "Generator modified unexpected path: $path" >&2
+                  exit 1
+                  ;;
+              esac
+            done
+
             python3 scripts/generate_incy_routing.py --check
           else
-            python3 scripts/generate_incy_routing.py
+            python3 scripts/generate_incy_routing.py --check
           fi
 
       - name: Run INCY conversion tests
         run: python3 -m unittest discover -s tests -p 'test_incy_routing.py' -v
 
-      - name: Upload bootstrap INCY artifacts
+      - name: Upload INCY artifacts
         if: ${{ always() && hashFiles('incy/incy-routing.json') != '' }}
         uses: actions/upload-artifact@v4
         with:

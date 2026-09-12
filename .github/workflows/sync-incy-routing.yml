@@ -1,0 +1,97 @@
+name: Sync generated INCY routing
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "config/remote.conf"
+      - "modules/Unified-Routing-System-DNS.sgmodule"
+      - "modules/Ads-Privacy-Block.sgmodule"
+      - ".github/workflows/sync-incy-routing.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: incy-routing-sync-main
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Regenerate, validate and publish derived INCY artifacts
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+
+          allowed_path() {
+            case "$1" in
+              incy/incy-routing.json|incy/conversion-report.md) return 0 ;;
+              *) return 1 ;;
+            esac
+          }
+
+          for attempt in 1 2 3; do
+            echo "INCY sync attempt $attempt/3"
+
+            git fetch --no-tags origin main
+            git checkout -B incy-autosync origin/main
+
+            python3 scripts/validate_shadowrocket.py
+            python3 scripts/generate_incy_routing.py
+            python3 scripts/generate_incy_routing.py --check
+            python3 -m unittest discover -s tests -p 'test_incy_routing.py' -v
+
+            mapfile -t changed_files < <(
+              {
+                git diff --name-only
+                git ls-files --others --exclude-standard
+              } | LC_ALL=C sort -u
+            )
+
+            if [ "${#changed_files[@]}" -eq 0 ]; then
+              echo "INCY generated artifacts are already current."
+              exit 0
+            fi
+
+            for path in "${changed_files[@]}"; do
+              if ! allowed_path "$path"; then
+                echo "Refusing repository mutation outside generated INCY artifacts: $path" >&2
+                exit 1
+              fi
+            done
+
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -- incy/incy-routing.json incy/conversion-report.md
+
+            if git diff --cached --quiet; then
+              echo "No generated INCY changes to commit."
+              exit 0
+            fi
+
+            git commit -m "Sync generated INCY routing"
+
+            set +e
+            git push origin HEAD:main
+            push_rc=$?
+            set -e
+
+            if [ "$push_rc" -eq 0 ]; then
+              echo "INCY generated artifacts committed to main."
+              exit 0
+            fi
+
+            echo "main advanced before push; retrying from latest origin/main without force push."
+          done
+
+          echo "INCY sync failed after 3 safe non-force retries." >&2
+          exit 1
