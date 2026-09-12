@@ -80,6 +80,17 @@ class IncyXrayPolicyTests(unittest.TestCase):
         self.assertIsNone(rule)
         self.assertEqual(record.status, "NOT PORTED / REQUIRES E2E")
 
+    def test_tun_excluded_routes_are_semantic_adaptation(self):
+        emitted, ledger = gen.direct_networks({
+            "skip-proxy": "10.0.0.0/8",
+            "tun-excluded-routes": "100.64.0.0/10",
+        })
+        records = {net: record for net, record in emitted}
+        self.assertEqual(records["10.0.0.0/8"].status, "CONFIRMED STATIC MAPPING")
+        self.assertEqual(records["100.64.0.0/10"].status, "SEMANTIC ADAPTATION")
+        self.assertIn("TUN", records["100.64.0.0/10"].reason)
+        self.assertEqual(ledger, [])
+
     def test_selective_system_dns_extraction(self):
         selective = self.policy["dns"]["servers"][0]["domains"]
         self.assertTrue(selective)
@@ -144,6 +155,7 @@ class IncyXrayPolicyTests(unittest.TestCase):
             "PLATFORM_DEPENDENT",
             "NOT PORTED / REQUIRES E2E",
             "HAPP and Shadowrocket regression",
+            "`tun-excluded-routes`",
         ):
             self.assertIn(marker, self.report)
 
