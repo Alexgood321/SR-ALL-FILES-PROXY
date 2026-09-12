@@ -85,19 +85,19 @@ def selective_system_dns(unified: str) -> tuple[list[str], list[Record]]:
     records: list[Record] = []
     for line in legacy.section_lines(unified, "Host"):
         if "=" not in line:
-            records.append(Record("Unified [Host]", line, "NOT PORTED", "Malformed Host entry."))
+            records.append(Record("Unified [Host]", line, "NOT PORTED", "Некорректная запись Host."))
             continue
         left, right = (x.strip() for x in line.split("=", 1))
         if right != "server:system":
-            records.append(Record("Unified [Host]", line, "NOT PORTED", f"Only server:system is mapped, got {right!r}."))
+            records.append(Record("Unified [Host]", line, "NOT PORTED", f"Переносится только server:system, получено {right!r}."))
             continue
         matcher = host_matcher(left)
         if matcher in seen:
-            records.append(Record("Unified [Host]", line, "SKIPPED AS DUPLICATE", "Duplicate DNS matcher."))
+            records.append(Record("Unified [Host]", line, "SKIPPED AS DUPLICATE", "Дублирующий DNS matcher."))
             continue
         seen.add(matcher)
         result.append(matcher)
-        records.append(Record("Unified [Host]", line, "SEMANTIC ADAPTATION", "Mapped to native Xray priority DNS domains with localhost System DNS."))
+        records.append(Record("Unified [Host]", line, "SEMANTIC ADAPTATION", "Преобразовано в priority domains нативного Xray DNS с localhost System DNS."))
     return result, records
 
 
@@ -115,53 +115,53 @@ def selector(kind: str, value: str, extras: list[str]) -> tuple[dict[str, Any], 
 def parse_and(line: str) -> tuple[dict[str, Any] | None, str, str]:
     match = AND_RE.fullmatch(line)
     if not match:
-        return None, "NOT PORTED", "Only two-clause AND with one PROTOCOL TCP/UDP clause is implemented."
+        return None, "NOT PORTED", "Реализован только AND из двух условий, одно из которых PROTOCOL TCP/UDP."
     clauses = [[x.strip() for x in match.group(name).split(",")] for name in ("a", "b")]
     proto = next((c for c in clauses if c and c[0] == "PROTOCOL"), None)
     sel = next((c for c in clauses if c and c[0] != "PROTOCOL"), None)
     if proto is None or sel is None or len(proto) != 2:
-        return None, "NOT PORTED", "AND must contain exactly one selector and one PROTOCOL clause."
+        return None, "NOT PORTED", "AND должен содержать ровно один selector и одно условие PROTOCOL."
     network = proto[1].lower()
     if network not in {"tcp", "udp"}:
-        return None, "NOT PORTED", f"Unsupported PROTOCOL value {network!r}."
+        return None, "NOT PORTED", f"Неподдерживаемое значение PROTOCOL {network!r}."
     if len(sel) < 2 or sel[0] not in legacy.DOMAIN_TYPES | legacy.IP_TYPES | {"DOMAIN-KEYWORD", "PROCESS-NAME"}:
-        return None, "NOT PORTED", "Unsupported AND selector."
+        return None, "NOT PORTED", "Неподдерживаемый selector внутри AND."
     body, status = selector(sel[0], sel[1], sel[2:])
     body.update({"type": "field", "network": network, "outboundTag": ACTION_TAG[match.group("action")]})
     if sel[0] == "PROCESS-NAME":
         status = "PLATFORM_DEPENDENT"
-    return body, status, "Native Xray combines selector and network conditions in one field rule."
+    return body, status, "Нативный Xray объединяет selector и network в одном field rule."
 
 
 def rule_from_line(line: str, source: str, *, ads: bool = False) -> tuple[dict[str, Any] | None, Record]:
     kind, value, action, extras = legacy.parse_rule(line)
     if action not in SUPPORTED_ACTIONS:
-        return None, Record(source, line, "NOT PORTED", "Unsupported action/syntax; omitted rather than approximated.")
+        return None, Record(source, line, "NOT PORTED", "Неподдерживаемый action/синтаксис; правило пропущено вместо приблизительной замены.")
     if ads and action != "REJECT":
-        return None, Record(source, line, "NOT PORTED", "Ads source is allowed to map only REJECT to block.")
+        return None, Record(source, line, "NOT PORTED", "Из Ads-источника разрешено переносить в block только REJECT.")
     if kind == "USER-AGENT":
-        return None, Record(source, line, "NOT PORTED / REQUIRES E2E", "Xray attrs is not a safe 1:1 USER-AGENT substitute for general HTTPS/app traffic.")
+        return None, Record(source, line, "NOT PORTED / REQUIRES E2E", "Xray attrs нельзя считать безопасным 1:1 эквивалентом USER-AGENT для общего HTTPS/app traffic.")
     if kind == "AND":
         rule, status, reason = parse_and(line)
         return rule, Record(source, line, status, reason)
     if kind in {"OR", "NOT"}:
-        return None, Record(source, line, "NOT PORTED", "No safe native converter implemented for this logical expression.")
+        return None, Record(source, line, "NOT PORTED", "Для этого логического выражения не реализован безопасный нативный converter.")
     if value is None or kind not in legacy.DOMAIN_TYPES | legacy.IP_TYPES | {"DOMAIN-KEYWORD", "PROCESS-NAME"}:
-        return None, Record(source, line, "NOT PORTED", f"No safe native mapping implemented for {kind}.")
+        return None, Record(source, line, "NOT PORTED", f"Безопасное нативное отображение для {kind} не реализовано.")
     body, status = selector(kind, value, extras)
     body.update({"type": "field", "outboundTag": ACTION_TAG[action]})
-    reason = "Native Xray matcher."
+    reason = "Нативный matcher Xray."
     if status == "PLATFORM_DEPENDENT":
-        reason = "Xray process matching is native on Windows/Linux; INCY Android/iOS behavior requires platform E2E."
+        reason = "Process matching нативно поддерживается Xray на Windows/Linux; поведение INCY Android/iOS требует platform E2E."
     elif status == "SEMANTIC ADAPTATION":
-        reason = "CIDR target is preserved; Shadowrocket no-resolve has no 1:1 Xray modifier under IPIfNonMatch."
+        reason = "Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch."
     return body, Record(source, line, status, reason)
 
 
-def direct_networks(general: dict[str, str]) -> tuple[list[str], list[Record]]:
-    networks: list[str] = []
+def direct_networks(general: dict[str, str]) -> tuple[list[tuple[str, Record]], list[Record]]:
+    emitted: list[tuple[str, Record]] = []
+    ledger: list[Record] = []
     seen: set[str] = set()
-    records: list[Record] = []
     for key in ("skip-proxy", "tun-excluded-routes"):
         for token in general.get(key, "").split(","):
             token = token.strip()
@@ -170,15 +170,38 @@ def direct_networks(general: dict[str, str]) -> tuple[list[str], list[Record]]:
             try:
                 net = str(ipaddress.ip_network(token, strict=False))
             except ValueError:
-                records.append(Record("config/remote.conf", f"{key}: {token}", "NOT PORTED / COVERAGE CHECK", "Non-CIDR skip-proxy scope is not widened here; canonical domain policy comes from Unified."))
+                ledger.append(Record(
+                    "config/remote.conf",
+                    f"{key}: {token}",
+                    "NOT PORTED / COVERAGE CHECK",
+                    "Токен не является CIDR; область hostname/wildcard здесь не расширяется, каноническая доменная политика берётся из Unified.",
+                ))
                 continue
             if net in seen:
-                records.append(Record("config/remote.conf", f"{key}: {token}", "SKIPPED AS DUPLICATE", "Duplicate local/private CIDR."))
+                ledger.append(Record(
+                    "config/remote.conf",
+                    f"{key}: {token}",
+                    "SKIPPED AS DUPLICATE",
+                    "Дублирующий local/private CIDR.",
+                ))
                 continue
             seen.add(net)
-            networks.append(net)
-            records.append(Record("config/remote.conf", f"{key}: {token}", "CONFIRMED STATIC MAPPING", "Mapped to native Xray direct IP rule."))
-    return networks, records
+            if key == "tun-excluded-routes":
+                record = Record(
+                    "config/remote.conf",
+                    f"{key}: {token}",
+                    "SEMANTIC ADAPTATION",
+                    "Shadowrocket исключает сеть из TUN; Xray direct/freedom только отправляет её напрямую внутри Xray и не является 1:1 TUN exclusion. Runtime parity не заявляется.",
+                )
+            else:
+                record = Record(
+                    "config/remote.conf",
+                    f"{key}: {token}",
+                    "CONFIRMED STATIC MAPPING",
+                    "CIDR из skip-proxy преобразован в нативное Xray direct IP rule.",
+                )
+            emitted.append((net, record))
+    return emitted, ledger
 
 
 def dns_config(general: dict[str, str], selective: list[str]) -> dict[str, Any]:
@@ -213,7 +236,7 @@ def convert_xray() -> tuple[dict[str, Any], list[Record], dict[str, int]]:
             return
         key = json.dumps(rule, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
         if key in seen:
-            duplicate = Record(record.source, record.raw, "SKIPPED AS DUPLICATE", "Identical native Xray rule already emitted; first occurrence retained.")
+            duplicate = Record(record.source, record.raw, "SKIPPED AS DUPLICATE", "Идентичное нативное Xray rule уже было создано; сохранено первое вхождение.")
             records.append(duplicate)
             counts[duplicate.status] += 1
             return
@@ -227,31 +250,30 @@ def convert_xray() -> tuple[dict[str, Any], list[Record], dict[str, int]]:
 
     append(
         {"type": "field", "inboundTag": ["dns-internal"], "outboundTag": "proxy"},
-        Record("generated infrastructure", "dns.tag=dns-internal", "SEMANTIC ADAPTATION", "Forces Cloudflare/ControlD internal DNS traffic through proxy without routing localhost System DNS into a loop."),
+        Record("generated infrastructure", "dns.tag=dns-internal", "SEMANTIC ADAPTATION", "Внутренний DNS-трафик Cloudflare/ControlD принудительно идёт через proxy, при этом localhost System DNS не заводится в routing loop."),
     )
 
     for line in legacy.section_lines(unified, "Rule"):
         append(*rule_from_line(line, "modules/Unified-Routing-System-DNS.sgmodule"))
 
-    networks, net_records = direct_networks(general)
+    network_rules, net_records = direct_networks(general)
     for record in net_records:
-        if record.status != "CONFIRMED STATIC MAPPING":
-            records.append(record)
-            counts[record.status] += 1
-    for net in networks:
+        records.append(record)
+        counts[record.status] += 1
+    for net, record in network_rules:
         append(
             {"type": "field", "ip": [net], "outboundTag": "direct"},
-            Record("config/remote.conf", f"local/private {net}", "CONFIRMED STATIC MAPPING", "Local/private CIDR remains direct."),
+            record,
         )
 
     append(
         {"type": "field", "ip": ["geoip:ru"], "outboundTag": "direct"},
-        Record("config/remote.conf", "GEOIP,RU,DIRECT", "CONFIRMED STATIC MAPPING", "Native Xray GeoIP matcher; geodata dataset parity still requires runtime verification."),
+        Record("config/remote.conf", "GEOIP,RU,DIRECT", "CONFIRMED STATIC MAPPING", "Нативный GeoIP matcher Xray; паритет набора geodata всё ещё требует runtime verification."),
     )
 
     append(
         {"type": "field", "ip": ["0.0.0.0/0", "::/0"], "outboundTag": "proxy"},
-        Record("config/remote.conf", "FINAL,PROXY", "SEMANTIC ADAPTATION", "Explicit universal IP fallback preserves IPIfNonMatch/geoip evaluation; unresolved no-match still falls to first proxy outbound in Full Xray config."),
+        Record("config/remote.conf", "FINAL,PROXY", "SEMANTIC ADAPTATION", "Явный универсальный IP fallback сохраняет проверку IPIfNonMatch/geoip; unresolved no-match всё равно попадает в первый proxy outbound Full Xray config."),
     )
 
     policy = {
@@ -300,53 +322,54 @@ def render_report(policy: dict[str, Any], records: list[Record], counts: dict[st
     platform = [r for r in records if r.status == "PLATFORM_DEPENDENT"]
     adaptations = [r for r in records if r.status == "SEMANTIC ADAPTATION"]
     lines = [
-        "# INCY Full Xray conversion report", "",
-        "Static repository conversion only. It does not prove Sub-Store delivery or INCY device E2E.", "",
+        "# Отчёт конвертации INCY Full Xray", "",
+        "Только статическая конвертация внутри репозитория. Она не подтверждает delivery Sub-Store или INCY device E2E.", "",
         "## Source of truth", "",
     ]
     for path in CANONICAL_SOURCES:
         lines.append(f"- `{path.relative_to(ROOT)}` — SHA256 `{legacy.sha256(path)}`")
     lines += [
-        "- YouTube/MITM files: **not used**.", "",
-        "## Generated native policy", "",
+        "- YouTube/MITM файлы: **не используются**.", "",
+        "## Сгенерированная нативная policy", "",
         f"- `{PUBLIC_URL}`", f"- Routing rules: **{len(policy['routing']['rules'])}**", f"- Selective System DNS matchers: **{len(selective)}**",
-        "- Intended use: Sub-Store embeds this `dns` + `routing` into every INCY Full Xray server config.",
-        "- No `autorouting`, routing header or separate routing profile is produced by this artifact.",
-        "- Legacy `incy/incy-routing.json` remains compatibility/diagnostic only until Full Xray E2E.", "",
-        "## Native mapping", "",
+        "- Назначение: Sub-Store встраивает эти `dns` + `routing` в каждый INCY Full Xray server config.",
+        "- Артефакт не создаёт `autorouting`, routing header или отдельный routing profile (No `autorouting`).",
+        "- Legacy `incy/incy-routing.json` остаётся compatibility/diagnostic до Full Xray E2E.", "",
+        "## Нативное отображение", "",
         "- DOMAIN → `full:`; DOMAIN-SUFFIX → `domain:`; DOMAIN-KEYWORD → `keyword:`.",
-        "- IP-CIDR/IP-CIDR6/GEOIP use native Xray `ip` matchers.",
-        "- AND(selector + PROTOCOL TCP/UDP) stays one rule with both conditions.",
-        "- PROCESS-NAME → native `process`, status **PLATFORM_DEPENDENT**.",
-        "- USER-AGENT → **NOT PORTED / REQUIRES E2E**; `attrs` is not treated as 1:1.",
-        "- Order: Ads BLOCK → DNS infrastructure guard → Unified source order → local/private DIRECT → GEOIP RU DIRECT → explicit FINAL PROXY.", "",
-        "## DNS architecture", "",
-        "Generated serial resolver topology:",
-        "1. selective domains: `localhost` System DNS → ControlD DoH; Cloudflare is excluded from that matched list;",
-        "2. ordinary domains: Cloudflare DoH → ControlD DoH;",
-        "3. non-local DoH is tagged `dns-internal` and routed to proxy; localhost remains local.",
-        "`queryStrategy=UseIPv4` is a DNS-level adaptation only, not a claim of full parity with Shadowrocket `ipv6=false` for every platform/outbound.",
-        "Shadowrocket's observed extra retry of the same System DNS is **not claimed as reproduced**.",
+        "- IP-CIDR/IP-CIDR6/GEOIP используют нативные Xray `ip` matchers.",
+        "- AND(selector + PROTOCOL TCP/UDP) остаётся одним rule с обоими условиями.",
+        "- PROCESS-NAME → нативный `process`, статус **PLATFORM_DEPENDENT**.",
+        "- USER-AGENT → **NOT PORTED / REQUIRES E2E**; `attrs` не считается 1:1 заменой.",
+        "- Порядок: Ads BLOCK → DNS infrastructure guard → исходный порядок Unified → local/private DIRECT → GEOIP RU DIRECT → явный FINAL PROXY.",
+        "- `tun-excluded-routes` → DIRECT/freedom только как **SEMANTIC ADAPTATION**: Xray routing не воспроизводит исключение сети из TUN 1:1.", "",
+        "## Архитектура DNS", "",
+        "Сгенерированная последовательная topology resolver:",
+        "1. selective domains: `localhost` System DNS → ControlD DoH; Cloudflare исключён из matched-list;",
+        "2. обычные домены: Cloudflare DoH → ControlD DoH;",
+        "3. non-local DoH получает tag `dns-internal` и маршрутизируется через proxy; localhost остаётся локальным.",
+        "`queryStrategy=UseIPv4` — только DNS-level adaptation, а не заявление полного parity с Shadowrocket `ipv6=false` для каждой платформы/outbound.",
+        "Наблюдавшийся в Shadowrocket дополнительный retry того же System DNS **не заявляется воспроизведённым**.",
         "DNS ARCHITECTURE: IMPLEMENTED STATICALLY. DNS PARITY: NOT TESTED.", "",
-        "## Status counts", "",
+        "## Количество по статусам", "",
     ]
     for key in sorted(counts):
         lines.append(f"- `{key}`: {counts[key]}")
     lines += ["", "## PLATFORM_DEPENDENT", ""]
-    lines += [f"- `{r.raw}` — {r.reason}" for r in platform] or ["- None."]
+    lines += [f"- `{r.raw}` — {r.reason}" for r in platform] or ["- Нет."]
     lines += ["", "## NOT PORTED / REQUIRES E2E", ""]
-    lines += [f"- `{r.raw}` — **{r.status}** — {r.reason}" for r in unsupported] or ["- None."]
+    lines += [f"- `{r.raw}` — **{r.status}** — {r.reason}" for r in unsupported] or ["- Нет."]
     lines += ["", "## SEMANTIC ADAPTATION", ""]
-    lines += [f"- `{r.raw}` — {r.reason}" for r in adaptations] or ["- None."]
+    lines += [f"- `{r.raw}` — {r.reason}" for r in adaptations] or ["- Нет."]
     lines += [
-        "", "## Not proved by this stage", "",
-        "- VLESS/Trojan/VMess server-link → proxy outbound conversion and credential preservation;",
+        "", "## Что не подтверждено этим этапом", "",
+        "- Преобразование VLESS/Trojan/VMess server-link → proxy outbound и сохранение credentials;",
         "- Sub-Store fetch/cache/LKG/fail-safe; INCY headers/client detection;",
-        "- no separate Routing Profile in INCY UI; iOS/Android/Desktop routing/DNS runtime;",
-        "- HAPP and Shadowrocket regression.",
-        "These remain Alpha/Sub-Store E2E work and must not inherit PASS from repository CI.", "",
-        "## Rollback", "",
-        "Revert the native generator/tests/workflow/generated Xray artifacts. Canonical Shadowrocket files and existing client delivery remain untouched.", "",
+        "- отсутствие отдельного Routing Profile в UI INCY; runtime routing/DNS на iOS/Android/Desktop;",
+        "- regression HAPP и Shadowrocket (HAPP and Shadowrocket regression).",
+        "Эти пункты остаются работой Alpha/Sub-Store E2E и не наследуют PASS от repository CI.", "",
+        "## Откат", "",
+        "Откатить native generator/tests/workflow/generated Xray artifacts. Canonical Shadowrocket-файлы и существующий client delivery остаются нетронутыми.", "",
     ]
     return "\n".join(lines)
 
