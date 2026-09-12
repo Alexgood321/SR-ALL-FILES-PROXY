@@ -8,6 +8,8 @@ This repository is an actively maintained Shadowrocket production configuration,
 
 The project continuously studies and maintains real-world routing, DNS, filtering, and service reachability behavior across different networks and devices. Work normally includes discovering service infrastructure, validating ownership and relevance, comparing it with current production policy, making narrowly scoped changes when justified, publishing them through stable delivery URLs, and then checking actual device/runtime behavior from PacketTunnel logs.
 
+The repository also contains derived INCY routing artifacts generated from the canonical Shadowrocket policy. Those artifacts are a separate compatibility/native-policy layer. Their repository-level static validation must never be confused with Sub-Store delivery or INCY device/runtime E2E validation.
+
 Core operating model:
 
 1. Observe real behavior and monitor infrastructure changes.
@@ -58,6 +60,8 @@ Stable production assets include:
 Existing devices may already reference these stable URLs. Prefer changing release contents while keeping stable asset names and URLs unchanged.
 
 The GitHub Actions publication workflow is read-only with respect to repository contents. It must never commit, push, rewrite repository files, or manufacture timestamp commits. Release publication and delivery verification are separate from repository mutation.
+
+The dedicated INCY generated-artifact sync workflow is the narrow exception to that read-only rule: it may regenerate and commit only the derived INCY artifacts that its generator owns. It must not mutate canonical Shadowrocket sources, generators, tests, documentation, or unrelated repository files.
 
 ## 3. Current architecture boundaries
 
@@ -134,11 +138,12 @@ Examples:
 - validator PASS = static/syntax/implemented semantic checks only;
 - release reconciliation PASS = published assets match the selected stable `main` delivery files;
 - successful download = delivery path works and bytes match;
-- none of the above = Shadowrocket runtime/device E2E PASS.
+- INCY generator/tests/Xray validation PASS = repository-level native policy generation is internally valid only;
+- none of the above = Shadowrocket or INCY runtime/device E2E PASS.
 
 Runtime/device behavior must be stated as unverified until it is actually tested on the relevant device/client path.
 
-When a change can affect DNS, first-match routing, module priority, deep links, or application behavior, explicitly separate:
+When a change can affect DNS, first-match routing, module priority, deep links, generated INCY policy, or application behavior, explicitly separate:
 
 - confirmed facts;
 - inference;
@@ -151,9 +156,12 @@ When architecture changes, update the relevant documentation in the same work wh
 
 - `README.md` for user-facing repository architecture and stable import links;
 - module header/description and internal comments when module responsibility changes;
-- `AGENTS.md` when an architectural invariant for future automation changes.
+- `AGENTS.md` when an architectural invariant for future automation changes;
+- INCY conversion reports through their generators, never by hand.
 
 Do not leave README or agent instructions claiming that Unified contains REJECT/ad blocking after those rules have been moved to the optional Ads module.
+
+Human-readable generated INCY reports under `incy/` should be written in Russian. Keep exact technical identifiers, protocol names, JSON field names, Xray/INCY terms, and machine-readable status codes unchanged when translation would break precision or tooling.
 
 ## 8. GitHub Pages / Shadowrocket deep links
 
@@ -174,3 +182,84 @@ The redirect must remain closed, not generic:
 - do not add analytics, third-party scripts, or unrelated network dependencies without an explicit decision.
 
 Changes to `docs/redirect.html`, its allowed asset list, GitHub Pages source, or README deep-link URLs are user-facing delivery changes. Verify the Pages URL and at least one representative deep link separately from release-asset validation. A working GitHub Pages redirect does not by itself prove that Shadowrocket accepted/imported the target on a device.
+
+## 9. INCY derived routing architecture
+
+INCY support is currently split into a repository/static-policy layer and a later Sub-Store delivery/runtime layer. Do not collapse those layers into one PASS state.
+
+### Canonical inputs
+
+The canonical routing inputs for INCY generation are:
+
+- `config/remote.conf`
+- `modules/Unified-Routing-System-DNS.sgmodule`
+- `modules/Ads-Privacy-Block.sgmodule`
+
+YouTube Rewrite/Script/MITM files are not INCY routing sources and must not be pulled into the INCY generators unless the architecture is explicitly changed.
+
+### Generators
+
+`script/generate_incy_routing.py` and `scripts/generate_incy_xray_policy.py` are the source of truth for derived INCY files. If the path is `scripts/generate_incy_routing.py` in the repository, preserve that exact repository path; do not invent a parallel generator location.
+
+Generated artifacts must not be edited manually. Change the generator and tests, regenerate, then verify the resulting diff.
+
+The current generated files are:
+
+- `incy/incy-routing.json` — legacy/compatibility/diagnostic routing-profile representation;
+- `incy/conversion-report.md` — human-readable report for the legacy/compatibility conversion;
+- `incy/xray-policy.json` — credential-free native Xray `dns` + `routing` policy intended for later embedding into INCY Full Xray server configs;
+- `incy/xray-conversion-report.md` — human-readable report for the native Xray conversion.
+
+`incy/xray-policy.json` must remain credential-free. UUIDs, passwords, private/public keys, short IDs, server credentials, or other subscription secrets must never be written into this repository artifact.
+
+### Full Xray policy boundaries
+
+The native Xray artifact contains routing/DNS policy only. It does not by itself provide:
+
+- VLESS/Trojan/VMess server credential conversion into proxy outbounds;
+- Sub-Store fetch/cache/LKG/fail-safe behavior;
+- INCY client detection or HTTP subscription headers;
+- autorouting delivery headers;
+- proof that no separate Routing Profile appears in the INCY UI;
+- iOS/Android/Desktop runtime parity;
+- HAPP or Shadowrocket regression proof.
+
+Those belong to the later Sub-Store/Alpha delivery stage and require their own E2E evidence.
+
+### Semantic mapping rules
+
+Do not claim 1:1 parity where the clients expose different semantics.
+
+In particular:
+
+- Shadowrocket `tun-excluded-routes` excludes a network from TUN; INCY `DirectIp` or Xray `direct/freedom` only routes traffic DIRECT inside the client. This must be classified as `SEMANTIC ADAPTATION` / semantic gap, never `CONFIRMED STATIC MAPPING` or full TUN parity.
+- Shadowrocket `no-resolve` has no identical native Xray/standard INCY routing modifier under the current conversion. Preserve the CIDR routing target but keep the semantic gap explicit.
+- selective `[Host] ... = server:system` is not equivalent to static `DnsHosts`. The native Xray policy may adapt selective System DNS through Xray DNS domain routing, but runtime DNS parity remains unverified until INCY E2E.
+- `USER-AGENT` must not be approximated as a safe 1:1 Xray rule for general HTTPS/application traffic; keep it `NOT PORTED / REQUIRES E2E` unless independently solved.
+- `PROCESS-NAME` may be native in Xray on some desktop platforms but remains `PLATFORM_DEPENDENT` for INCY Android/iOS until tested.
+- logical or protocol-qualified Shadowrocket rules may be ported only when the generator preserves their actual selector semantics. Never flatten them merely to increase conversion coverage.
+
+### CI and generated sync
+
+`.github/workflows/validate-incy-routing.yml` validates the repository/static conversion layer. Relevant checks include generator consistency, tests, write-scope protection, and native Xray config validation with Xray-core.
+
+`.github/workflows/sync-incy-routing.yml` regenerates and publishes derived INCY artifacts after relevant `main` changes. Its repository write scope must remain limited to generated `incy/` outputs.
+
+If a generator changes in a pull request, PR validation must regenerate the derived artifacts before comparing/validating them; otherwise the CI can incorrectly fail simply because checked-in generated files still reflect the previous generator.
+
+A successful sync commit only proves that the generated repository artifacts were refreshed successfully. It does not prove Sub-Store delivery, HTTP headers, INCY import, INCY runtime DNS/routing behavior, or client E2E.
+
+## 10. INCY change workflow
+
+For changes affecting INCY conversion:
+
+1. Identify whether the change belongs to canonical Shadowrocket policy, conversion logic, or later Sub-Store delivery.
+2. Do not modify canonical Shadowrocket behavior merely to make INCY conversion easier.
+3. Update the relevant generator instead of hand-editing generated `incy/` files.
+4. Add or update focused regression tests for the semantic behavior being changed.
+5. Regenerate both affected JSON/report artifacts.
+6. Verify that generator write scope touches only expected generated files.
+7. Run the INCY conversion tests and Xray-core config validation.
+8. Review the generated reports for unsupported rules, semantic gaps, duplicates, and coverage changes.
+9. Keep repository-static PASS separate from future Sub-Store/INCY E2E status.
+10. After merge, verify that the generated sync workflow refreshed `main` and that the resulting generated files match the new generator behavior.
