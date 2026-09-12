@@ -43,12 +43,19 @@ jobs:
           if [ -f incy/incy-routing.json ] && [ -f incy/conversion-report.md ]; then
             python3 scripts/generate_incy_routing.py --check
           else
-            mkdir -p /tmp/incy-bootstrap
-            python3 scripts/generate_incy_routing.py \
-              --output /tmp/incy-bootstrap/incy-routing.json \
-              --report /tmp/incy-bootstrap/conversion-report.md \
-              --stdout-base64
+            python3 scripts/generate_incy_routing.py
           fi
 
       - name: Run INCY conversion tests
         run: python3 -m unittest discover -s tests -p 'test_incy_routing.py' -v
+
+      - name: Upload bootstrap INCY artifacts
+        if: ${{ always() && hashFiles('incy/incy-routing.json') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: incy-routing-generated
+          path: |
+            incy/incy-routing.json
+            incy/conversion-report.md
+          if-no-files-found: error
+          retention-days: 1
