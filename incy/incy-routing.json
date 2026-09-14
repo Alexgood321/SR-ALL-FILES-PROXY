@@ -3,6 +3,8 @@
   "GlobalProxy": "true",
   "RemoteDNSType": "DoH",
   "RemoteDNSDomain": "https://cloudflare-dns.com/dns-query",
+  "DomesticDNSType": "DoH",
+  "DomesticDNSDomain": "https://freedns.controld.com/p0",
   "DnsHosts": {},
   "DirectSites": [
     "full:sun1-14.userapi.com",
