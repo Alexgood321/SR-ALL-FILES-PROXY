@@ -140,6 +140,13 @@
 # Основание: PacketTunnel 2026-09-15 full-PROXY + current Unified tunneling capture.
 # Post-change runtime камеры ещё не проверен.
 #
+# Runtime follow-up 2026-09-15 (тот же v1.14): после обновления Unified на iPhone
+# камера Xiaomi/Mijia открывается и видеопоток работает. PacketTunnel подтвердил,
+# что ru.api.io.mi.com, ru.core.api.io.mi.com, ru.app.business.smartcamera.api.io.mi.com,
+# home.mi.com / ru.home.mi.com, api2.mina.mi.com и ru.stream.api.mijia.tech идут PROXY.
+# Наблюдаемые P2P/UDP IP-соединения при этом остаются DIRECT по GeoIP и передают трафик.
+# Статус scoped: runtime PASS для этого iPhone/сети; Android/Desktop не проверялись.
+#
 # 2026-09-10 — DNS runtime documentation / версия 1.13.
 # Добавлена памятка о фактически наблюдаемой DNS-цепочке current remote.conf +
 # Unified: server:system -> повтор System DNS -> ControlD fallback #proxy; для
@@ -190,7 +197,7 @@
 # Repcz/Tool Shadowrocket TikTok.list (2026-08-29), дополнительная сверка v2fly
 # data/tiktok и data/bytedance. Post-change runtime на устройствах ещё не проверен.
 #
-# 2026-09-05 — MAX Messenger IP-check consistency / версия 1.9.
+# 2026-09-05 — MAX Messenger external-IP consistency / версия 1.9.
 # Добавлены точечные DOMAIN,api.ipify.org,DIRECT и
 # DOMAIN,checkip.amazonaws.com,DIRECT.
 # Причина: reverse engineering MAX подтвердил, что приложение использует эти два
