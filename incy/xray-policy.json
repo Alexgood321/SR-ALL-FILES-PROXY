@@ -1102,6 +1102,27 @@
       },
       {
         "domain": [
+          "domain:mi.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:xiaomi.net"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
+          "domain:mijia.tech"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "domain": [
           "full:p16-tiktokcdn-com.akamaized.net"
         ],
         "type": "field",
