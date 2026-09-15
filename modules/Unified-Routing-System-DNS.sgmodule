@@ -1,7 +1,7 @@
-#!name=Unified Routing + System DNS v1.13
+#!name=Unified Routing + System DNS v1.14
 #!desc=Единый модуль DIRECT/PROXY + выборочный System DNS. Использовать вместе с remote.conf.
 #!author=OpenAI + user
-#!version=1.13
+#!version=1.14
 
 # =============================================================================
 # ПАМЯТКА / НАЗНАЧЕНИЕ
@@ -34,6 +34,7 @@
 #   - WhatsApp: домены + IPv4/IPv6 + UDP/VoIP
 #   - Meta / Facebook / Messenger / Instagram
 #   - TikTok: жёсткий PROXY + встроенный snapshot внешних rule-set
+#   - Xiaomi / Mi Home / Mijia camera cloud: PROXY
 #   - VK / Mail / OK / MY: DIRECT
 #   - Apple: DIRECT + выборочный System DNS
 #   - BiP
@@ -123,6 +124,22 @@
 # =============================================================================
 # ЖУРНАЛ АКТУАЛИЗАЦИИ / ИСТОЧНИКИ
 # =============================================================================
+# 2026-09-15 — Xiaomi / Mi Home / Mijia camera PROXY consistency / версия 1.14.
+# PacketTunnel A/B на iPhone показал split-routing внутри одной Xiaomi camera-сессии:
+# ru.api.io.mi.com, ru.core.api.io.mi.com и ru.app.business.smartcamera.api.io.mi.com
+# резолвились в IP, классифицированные GeoIP как RU, и уходили по GEOIP,RU,DIRECT,
+# тогда как home.mi.com, api2.mina.mi.com, ru.stream.api.mijia.tech и связанный
+# fr.app.chat.global.xiaomi.net шли через PROXY/FINAL. В полном PROXY capture те же
+# camera API endpoints шли через VLESS/PROXY. Для диагностического A/B добавлены
+# широкие, но ограниченные Xiaomi/Mijia root-suffix: mi.com, xiaomi.net, mijia.tech.
+# Цель: не делить control/auth/stream/XMPP части camera session между DIRECT и PROXY.
+# miui.com намеренно не добавлен: наблюдавшийся tracking.rus.miui.com уже шёл PROXY,
+# а необходимость всего MIUI root для камеры не подтверждена.
+# DNS не менялся: Xiaomi/Mijia не добавляются в [Host], поэтому остаются на глобальной
+# схеме remote.conf Cloudflare DoH #proxy -> ControlD fallback #proxy.
+# Основание: PacketTunnel 2026-09-15 full-PROXY + current Unified tunneling capture.
+# Post-change runtime камеры ещё не проверен.
+#
 # 2026-09-10 — DNS runtime documentation / версия 1.13.
 # Добавлена памятка о фактически наблюдаемой DNS-цепочке current remote.conf +
 # Unified: server:system -> повтор System DNS -> ControlD fallback #proxy; для
@@ -315,6 +332,11 @@ IP-CIDR,31.77.158.107/32,PROXY,no-resolve
 # ==================================================
 # 02) PROXY SERVICES
 # ==================================================
+
+# --- Xiaomi / Mi Home / Mijia Camera PROXY ---
+DOMAIN-SUFFIX,mi.com,PROXY
+DOMAIN-SUFFIX,xiaomi.net,PROXY
+DOMAIN-SUFFIX,mijia.tech,PROXY
 
 # --- TikTok HARD PROXY ---
 USER-AGENT,TikTok*,PROXY
