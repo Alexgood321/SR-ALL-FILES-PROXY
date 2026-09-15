@@ -5,7 +5,7 @@
 ## Источники
 
 - `config/remote.conf` — SHA256 `78b60dd2c6a1c63ba863d07f56ee0035f747f5309a188d941e1ecf72059098d4`
-- `modules/Unified-Routing-System-DNS.sgmodule` — SHA256 `f3d8766954ec16784077d8b8fa99431bca4c937e0e1ae379d62f2242cb5e936d`
+- `modules/Unified-Routing-System-DNS.sgmodule` — SHA256 `04402bc473ed8a09d9c94de598bb6c18f2474c597ae65dd5e0a9c2b5661041dc`
 - `modules/Ads-Privacy-Block.sgmodule` — SHA256 `2512e9115f9ec81fc52b8507e155c3aa8ddb501c74f511bd7a2676ad0fca8727`
 - Базовый commit официальной документации INCY: `ad467b959cd7c6157fd041416c260ab849a29a4f`
 - Документация routing: https://docs.incy.cc/routing/
