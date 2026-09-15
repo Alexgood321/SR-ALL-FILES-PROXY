@@ -197,7 +197,7 @@
 # Repcz/Tool Shadowrocket TikTok.list (2026-08-29), дополнительная сверка v2fly
 # data/tiktok и data/bytedance. Post-change runtime на устройствах ещё не проверен.
 #
-# 2026-09-05 — MAX Messenger external-IP consistency / версия 1.9.
+# 2026-09-05 — MAX Messenger IP-check consistency / версия 1.9.
 # Добавлены точечные DOMAIN,api.ipify.org,DIRECT и
 # DOMAIN,checkip.amazonaws.com,DIRECT.
 # Причина: reverse engineering MAX подтвердил, что приложение использует эти два
