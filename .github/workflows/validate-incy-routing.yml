@@ -1,16 +1,20 @@
-name: Validate INCY routing conversion
+name: Validate INCY Xray policy
 
 on:
   push:
     branches: [main]
     paths:
+      - "config/remote.conf"
+      - "modules/Unified-Routing-System-DNS.sgmodule"
+      - "modules/Ads-Privacy-Block.sgmodule"
       - "scripts/generate_incy_routing.py"
       - "scripts/generate_incy_xray_policy.py"
-      - "tests/test_incy_routing.py"
       - "tests/test_incy_xray_policy.py"
-      - "incy/**"
+      - "incy/xray-policy.json"
+      - "incy/xray-conversion-report.md"
       - ".github/workflows/validate-incy-routing.yml"
       - ".github/workflows/sync-incy-routing.yml"
+
   pull_request:
     paths:
       - "config/remote.conf"
@@ -18,9 +22,9 @@ on:
       - "modules/Ads-Privacy-Block.sgmodule"
       - "scripts/generate_incy_routing.py"
       - "scripts/generate_incy_xray_policy.py"
-      - "tests/test_incy_routing.py"
       - "tests/test_incy_xray_policy.py"
-      - "incy/**"
+      - "incy/xray-policy.json"
+      - "incy/xray-conversion-report.md"
       - ".github/workflows/validate-incy-routing.yml"
       - ".github/workflows/sync-incy-routing.yml"
 
@@ -34,6 +38,7 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -52,33 +57,36 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           set -Eeuo pipefail
+
           if git diff --name-only "$BASE_SHA...$HEAD_SHA" -- \
             config/remote.conf \
             modules/Unified-Routing-System-DNS.sgmodule \
             modules/Ads-Privacy-Block.sgmodule \
             scripts/generate_incy_routing.py \
             scripts/generate_incy_xray_policy.py | grep -q .; then
+
             echo "changed=true" >> "$GITHUB_OUTPUT"
           else
             echo "changed=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Generate or verify INCY artifacts
+      - name: Generate or verify INCY Xray artifacts
         shell: bash
         run: |
           set -Eeuo pipefail
-          if [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ steps.generated_inputs.outputs.changed }}" = "true" ]; then
-            python3 scripts/generate_incy_routing.py
+
+          if [ "${{ github.event_name }}" = "pull_request" ] && \
+             [ "${{ steps.generated_inputs.outputs.changed }}" = "true" ]; then
             python3 scripts/generate_incy_xray_policy.py
           else
-            python3 scripts/generate_incy_routing.py --check
-            if [ -f incy/xray-policy.json ] && [ -f incy/xray-conversion-report.md ]; then
+            if [ -f incy/xray-policy.json ] && \
+               [ -f incy/xray-conversion-report.md ]; then
               python3 scripts/generate_incy_xray_policy.py --check
             else
               python3 scripts/generate_incy_xray_policy.py
             fi
           fi
-          python3 scripts/generate_incy_routing.py --check
+
           python3 scripts/generate_incy_xray_policy.py --check
 
       - name: Guard generator write scope
@@ -86,37 +94,59 @@ jobs:
         shell: bash
         run: |
           set -Eeuo pipefail
-          mapfile -t changed < <({ git diff --name-only; git ls-files --others --exclude-standard; } | sort -u)
+
+          mapfile -t changed < <(
+            {
+              git diff --name-only
+              git ls-files --others --exclude-standard
+            } | sort -u
+          )
+
           for path in "${changed[@]}"; do
             case "$path" in
-              incy/incy-routing.json|incy/conversion-report.md|incy/xray-policy.json|incy/xray-conversion-report.md) ;;
-              *) echo "Generator modified unexpected path: $path" >&2; exit 1 ;;
+              incy/xray-policy.json|incy/xray-conversion-report.md) ;;
+              *)
+                echo "Generator modified unexpected path: $path" >&2
+                exit 1
+                ;;
             esac
           done
 
-      - name: Run INCY conversion tests
+      - name: Run INCY Xray policy tests
         run: |
-          python3 -m unittest discover -s tests -p 'test_incy_routing.py' -v
-          python3 -m unittest discover -s tests -p 'test_incy_xray_policy.py' -v
+          python3 -m unittest discover \
+            -s tests \
+            -p 'test_incy_xray_policy.py' \
+            -v
 
       - name: Validate native policy with Xray-core
         shell: bash
         run: |
           set -Eeuo pipefail
-          mkdir -p /tmp/xray
-          curl -fsSL -o /tmp/xray.zip "https://github.com/XTLS/Xray-core/releases/download/${XRAY_VERSION}/Xray-linux-64.zip"
-          unzip -q /tmp/xray.zip -d /tmp/xray
-          python3 scripts/generate_incy_xray_policy.py --write-validation-config /tmp/incy-xray-validation.json --check
-          XRAY_LOCATION_ASSET=/tmp/xray /tmp/xray/xray run -test -c /tmp/incy-xray-validation.json
 
-      - name: Upload INCY artifacts
+          mkdir -p /tmp/xray
+
+          curl -fsSL \
+            -o /tmp/xray.zip \
+            "https://github.com/XTLS/Xray-core/releases/download/${XRAY_VERSION}/Xray-linux-64.zip"
+
+          unzip -q /tmp/xray.zip -d /tmp/xray
+
+          python3 scripts/generate_incy_xray_policy.py \
+            --write-validation-config /tmp/incy-xray-validation.json \
+            --check
+
+          XRAY_LOCATION_ASSET=/tmp/xray \
+            /tmp/xray/xray run \
+            -test \
+            -c /tmp/incy-xray-validation.json
+
+      - name: Upload INCY Xray artifacts
         if: ${{ always() && hashFiles('incy/xray-policy.json') != '' }}
         uses: actions/upload-artifact@v4
         with:
-          name: incy-routing-generated
+          name: incy-xray-policy-generated
           path: |
-            incy/incy-routing.json
-            incy/conversion-report.md
             incy/xray-policy.json
             incy/xray-conversion-report.md
           if-no-files-found: error
