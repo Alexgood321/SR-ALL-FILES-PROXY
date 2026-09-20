@@ -52,18 +52,7 @@ jobs:
             local target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
             local payload
 
-            payload="$(python3 - "$target_url" <<'PY'
-import json
-import sys
-
-print(json.dumps({
-    "state": "success",
-    "target_url": sys.argv[1],
-    "description": "Validated generated INCY Xray policy",
-    "context": "incy/xray-policy-ready",
-}))
-PY
-)"
+            payload="$(python3 -c 'import json,sys; print(json.dumps({"state":"success","target_url":sys.argv[1],"description":"Validated generated INCY Xray policy","context":"incy/xray-policy-ready"}))' "$target_url")"
 
             echo "Marking INCY Xray policy READY at ${artifact_sha}"
             curl -fsS --retry 3 \
