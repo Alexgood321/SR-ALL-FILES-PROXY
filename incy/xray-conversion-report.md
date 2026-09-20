@@ -12,7 +12,7 @@
 ## Сгенерированная нативная policy
 
 - `https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/main/incy/xray-policy.json`
-- Routing rules: **474**
+- Routing rules: **473**
 - Selective System DNS matchers: **292**
 - Назначение: Sub-Store встраивает эти `dns` + `routing` в каждый INCY Full Xray server config.
 - Артефакт не создаёт `autorouting`, routing header или отдельный routing profile (No `autorouting`).
@@ -23,7 +23,7 @@
 - DOMAIN → `full:`; DOMAIN-SUFFIX → `domain:`; DOMAIN-KEYWORD → `keyword:`.
 - IP-CIDR/IP-CIDR6/GEOIP используют нативные Xray `ip` matchers.
 - AND(selector + PROTOCOL TCP/UDP) остаётся одним rule с обоими условиями.
-- PROCESS-NAME → нативный `process`, статус **PLATFORM_DEPENDENT**.
+- PROCESS-NAME → **NOT PORTED / UNSUPPORTED ON INCY iOS**; runtime Xray на INCY iOS не поддерживает process lookup.
 - USER-AGENT → **NOT PORTED / REQUIRES E2E**; `attrs` не считается 1:1 заменой.
 - Порядок: Ads BLOCK → DNS infrastructure guard → исходный порядок Unified → local/private DIRECT → GEOIP RU DIRECT → явный FINAL PROXY.
 - `tun-excluded-routes` → DIRECT/freedom только как **SEMANTIC ADAPTATION**: Xray routing не воспроизводит исключение сети из TUN 1:1.
@@ -43,17 +43,18 @@ DNS ARCHITECTURE: IMPLEMENTED STATICALLY. DNS PARITY: NOT TESTED.
 - `CONFIRMED STATIC MAPPING`: 420
 - `NOT PORTED / COVERAGE CHECK`: 6
 - `NOT PORTED / REQUIRES E2E`: 2
-- `PLATFORM_DEPENDENT`: 1
+- `NOT PORTED / UNSUPPORTED ON INCY iOS`: 1
 - `SEMANTIC ADAPTATION`: 345
 - `SKIPPED AS DUPLICATE`: 3
 
 ## PLATFORM_DEPENDENT
 
-- `PROCESS-NAME,WhatsApp,PROXY` — Process matching нативно поддерживается Xray на Windows/Linux; поведение INCY Android/iOS требует platform E2E.
+- Нет.
 
 ## NOT PORTED / REQUIRES E2E
 
 - `USER-AGENT,TikTok*,PROXY` — **NOT PORTED / REQUIRES E2E** — Xray attrs нельзя считать безопасным 1:1 эквивалентом USER-AGENT для общего HTTPS/app traffic.
+- `PROCESS-NAME,WhatsApp,PROXY` — **NOT PORTED / UNSUPPORTED ON INCY iOS** — INCY iOS Xray не поддерживает process lookup; PROCESS-NAME намеренно не доставляется.
 - `USER-AGENT,WhatsApp*,PROXY` — **NOT PORTED / REQUIRES E2E** — Xray attrs нельзя считать безопасным 1:1 эквивалентом USER-AGENT для общего HTTPS/app traffic.
 - `skip-proxy: localhost` — **NOT PORTED / COVERAGE CHECK** — Токен не является CIDR; область hostname/wildcard здесь не расширяется, каноническая доменная политика берётся из Unified.
 - `skip-proxy: *.local` — **NOT PORTED / COVERAGE CHECK** — Токен не является CIDR; область hostname/wildcard здесь не расширяется, каноническая доменная политика берётся из Unified.

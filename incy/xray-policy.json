@@ -1668,13 +1668,6 @@
         "outboundTag": "proxy"
       },
       {
-        "process": [
-          "WhatsApp"
-        ],
-        "type": "field",
-        "outboundTag": "proxy"
-      },
-      {
         "domain": [
           "domain:v.whatsapp.net"
         ],
