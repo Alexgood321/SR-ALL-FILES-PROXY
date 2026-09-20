@@ -107,8 +107,6 @@ def selector(kind: str, value: str, extras: list[str]) -> tuple[dict[str, Any], 
     if kind in legacy.IP_TYPES:
         status = "SEMANTIC ADAPTATION" if "no-resolve" in extras else "CONFIRMED STATIC MAPPING"
         return {"ip": [canonical_network(value)]}, status
-    if kind == "PROCESS-NAME":
-        return {"process": [value]}, "PLATFORM_DEPENDENT"
     raise ValueError(kind)
 
 
@@ -126,10 +124,10 @@ def parse_and(line: str) -> tuple[dict[str, Any] | None, str, str]:
         return None, "NOT PORTED", f"Неподдерживаемое значение PROTOCOL {network!r}."
     if len(sel) < 2 or sel[0] not in legacy.DOMAIN_TYPES | legacy.IP_TYPES | {"DOMAIN-KEYWORD", "PROCESS-NAME"}:
         return None, "NOT PORTED", "Неподдерживаемый selector внутри AND."
+    if sel[0] == "PROCESS-NAME":
+        return None, "NOT PORTED / UNSUPPORTED ON INCY iOS", "INCY iOS Xray не поддерживает process lookup; PROCESS-NAME намеренно не доставляется."
     body, status = selector(sel[0], sel[1], sel[2:])
     body.update({"type": "field", "network": network, "outboundTag": ACTION_TAG[match.group("action")]})
-    if sel[0] == "PROCESS-NAME":
-        status = "PLATFORM_DEPENDENT"
     return body, status, "Нативный Xray объединяет selector и network в одном field rule."
 
 
@@ -141,19 +139,19 @@ def rule_from_line(line: str, source: str, *, ads: bool = False) -> tuple[dict[s
         return None, Record(source, line, "NOT PORTED", "Из Ads-источника разрешено переносить в block только REJECT.")
     if kind == "USER-AGENT":
         return None, Record(source, line, "NOT PORTED / REQUIRES E2E", "Xray attrs нельзя считать безопасным 1:1 эквивалентом USER-AGENT для общего HTTPS/app traffic.")
+    if kind == "PROCESS-NAME":
+        return None, Record(source, line, "NOT PORTED / UNSUPPORTED ON INCY iOS", "INCY iOS Xray не поддерживает process lookup; PROCESS-NAME намеренно не доставляется.")
     if kind == "AND":
         rule, status, reason = parse_and(line)
         return rule, Record(source, line, status, reason)
     if kind in {"OR", "NOT"}:
         return None, Record(source, line, "NOT PORTED", "Для этого логического выражения не реализован безопасный нативный converter.")
-    if value is None or kind not in legacy.DOMAIN_TYPES | legacy.IP_TYPES | {"DOMAIN-KEYWORD", "PROCESS-NAME"}:
+    if value is None or kind not in legacy.DOMAIN_TYPES | legacy.IP_TYPES | {"DOMAIN-KEYWORD"}:
         return None, Record(source, line, "NOT PORTED", f"Безопасное нативное отображение для {kind} не реализовано.")
     body, status = selector(kind, value, extras)
     body.update({"type": "field", "outboundTag": ACTION_TAG[action]})
     reason = "Нативный matcher Xray."
-    if status == "PLATFORM_DEPENDENT":
-        reason = "Process matching нативно поддерживается Xray на Windows/Linux; поведение INCY Android/iOS требует platform E2E."
-    elif status == "SEMANTIC ADAPTATION":
+    if status == "SEMANTIC ADAPTATION":
         reason = "Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch."
     return body, Record(source, line, status, reason)
 
@@ -297,6 +295,8 @@ def validate_shape(policy: dict[str, Any]) -> None:
     for idx, rule in enumerate(routing["rules"]):
         if rule.get("type") != "field" or rule.get("outboundTag") not in allowed:
             raise RuntimeError(f"invalid routing rule #{idx}: {rule!r}")
+        if "process" in rule:
+            raise RuntimeError(f"process matcher is unsupported for INCY iOS rule #{idx}: {rule!r}")
     serialized = json.dumps(policy, ensure_ascii=False).lower()
     for secret in ("uuid", "password", "privatekey", "publickey", "shortid"):
         if f'"{secret}"' in serialized:
@@ -339,7 +339,7 @@ def render_report(policy: dict[str, Any], records: list[Record], counts: dict[st
         "- DOMAIN → `full:`; DOMAIN-SUFFIX → `domain:`; DOMAIN-KEYWORD → `keyword:`.",
         "- IP-CIDR/IP-CIDR6/GEOIP используют нативные Xray `ip` matchers.",
         "- AND(selector + PROTOCOL TCP/UDP) остаётся одним rule с обоими условиями.",
-        "- PROCESS-NAME → нативный `process`, статус **PLATFORM_DEPENDENT**.",
+        "- PROCESS-NAME → **NOT PORTED / UNSUPPORTED ON INCY iOS**; runtime Xray на INCY iOS не поддерживает process lookup.",
         "- USER-AGENT → **NOT PORTED / REQUIRES E2E**; `attrs` не считается 1:1 заменой.",
         "- Порядок: Ads BLOCK → DNS infrastructure guard → исходный порядок Unified → local/private DIRECT → GEOIP RU DIRECT → явный FINAL PROXY.",
         "- `tun-excluded-routes` → DIRECT/freedom только как **SEMANTIC ADAPTATION**: Xray routing не воспроизводит исключение сети из TUN 1:1.", "",

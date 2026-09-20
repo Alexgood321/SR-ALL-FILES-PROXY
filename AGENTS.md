@@ -236,7 +236,7 @@ In particular:
 - Shadowrocket `no-resolve` has no identical native Xray/standard INCY routing modifier under the current conversion. Preserve the CIDR routing target but keep the semantic gap explicit.
 - selective `[Host] ... = server:system` is not equivalent to static `DnsHosts`. The native Xray policy may adapt selective System DNS through Xray DNS domain routing, but runtime DNS parity remains unverified until INCY E2E.
 - `USER-AGENT` must not be approximated as a safe 1:1 Xray rule for general HTTPS/application traffic; keep it `NOT PORTED / REQUIRES E2E` unless independently solved.
-- `PROCESS-NAME` may be native in Xray on some desktop platforms but remains `PLATFORM_DEPENDENT` for INCY Android/iOS until tested.
+- `PROCESS-NAME` must remain `NOT PORTED / UNSUPPORTED ON INCY iOS`; the tested INCY iOS Xray runtime reports that process lookup is not supported, so generators must not emit Xray `process` matchers for this delivery path.
 - logical or protocol-qualified Shadowrocket rules may be ported only when the generator preserves their actual selector semantics. Never flatten them merely to increase conversion coverage.
 
 ### CI and generated sync

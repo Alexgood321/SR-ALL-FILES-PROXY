@@ -70,10 +70,30 @@ class IncyXrayPolicyTests(unittest.TestCase):
         self.assertEqual(rule["network"], "udp")
         self.assertEqual(record.status, "SEMANTIC ADAPTATION")
 
-    def test_process_is_platform_dependent(self):
+    def test_process_not_ported_on_incy_ios(self):
         rule, record = gen.rule_from_line("PROCESS-NAME,WhatsApp,PROXY", "fixture")
-        self.assertEqual(rule["process"], ["WhatsApp"])
-        self.assertEqual(record.status, "PLATFORM_DEPENDENT")
+        self.assertIsNone(rule)
+        self.assertEqual(record.status, "NOT PORTED / UNSUPPORTED ON INCY iOS")
+
+    def test_and_process_not_ported_on_incy_ios(self):
+        line = "AND,((PROCESS-NAME,WhatsApp),(PROTOCOL,TCP)),PROXY"
+        rule, record = gen.rule_from_line(line, "fixture")
+        self.assertIsNone(rule)
+        self.assertEqual(record.status, "NOT PORTED / UNSUPPORTED ON INCY iOS")
+
+    def test_policy_has_no_process_matchers(self):
+        self.assertEqual(len(self.rules), 473)
+        self.assertTrue(all("process" not in rule for rule in self.rules))
+
+    def test_validate_shape_rejects_process_matcher(self):
+        policy = json.loads(json.dumps(self.policy))
+        policy["routing"]["rules"].insert(0, {"type": "field", "process": ["WhatsApp"], "outboundTag": "proxy"})
+        with self.assertRaisesRegex(RuntimeError, "process matcher"):
+            gen.validate_shape(policy)
+
+    def test_report_marks_process_not_ported(self):
+        self.assertIn("PROCESS-NAME → **NOT PORTED / UNSUPPORTED ON INCY iOS**", self.report)
+        self.assertIn("PROCESS-NAME,WhatsApp,PROXY", self.report)
 
     def test_user_agent_not_ported(self):
         rule, record = gen.rule_from_line("USER-AGENT,WhatsApp*,PROXY", "fixture")
