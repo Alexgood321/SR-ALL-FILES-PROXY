@@ -118,4 +118,4 @@ Spotify.Response = type=http-response,pattern=^https:\/\/(?:\w+-spclient|spclien
 # Другие домены устройства этим модулем не добавляются в MITM.
 
 [MITM]
-hostname = %APPEND% spclient.wg.spotify.com, *spclient.spotify.com
+hostname = %APPEND% spclient.wg.spotify.com, *-spclient.spotify.com
