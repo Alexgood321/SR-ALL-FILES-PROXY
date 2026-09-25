@@ -3199,6 +3199,13 @@
       },
       {
         "domain": [
+          "domain:netcraze.cloud"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
           "full:new.tv.team"
         ],
         "type": "field",

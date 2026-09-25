@@ -5,14 +5,14 @@
 ## Source of truth
 
 - `config/remote.conf` — SHA256 `78b60dd2c6a1c63ba863d07f56ee0035f747f5309a188d941e1ecf72059098d4`
-- `modules/Unified-Routing-System-DNS.sgmodule` — SHA256 `04402bc473ed8a09d9c94de598bb6c18f2474c597ae65dd5e0a9c2b5661041dc`
+- `modules/Unified-Routing-System-DNS.sgmodule` — SHA256 `2f77b6988a3fc827a7c48405718a83f785f185172e9e639eefd5926c8ab3c965`
 - `modules/Ads-Privacy-Block.sgmodule` — SHA256 `2512e9115f9ec81fc52b8507e155c3aa8ddb501c74f511bd7a2676ad0fca8727`
 - YouTube/MITM файлы: **не используются**.
 
 ## Сгенерированная нативная policy
 
 - `https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/main/incy/xray-policy.json`
-- Routing rules: **473**
+- Routing rules: **474**
 - Selective System DNS matchers: **292**
 - Назначение: Sub-Store встраивает эти `dns` + `routing` в каждый INCY Full Xray server config.
 - Артефакт не создаёт `autorouting`, routing header или отдельный routing profile (No `autorouting`).
@@ -40,7 +40,7 @@ DNS ARCHITECTURE: IMPLEMENTED STATICALLY. DNS PARITY: NOT TESTED.
 
 ## Количество по статусам
 
-- `CONFIRMED STATIC MAPPING`: 420
+- `CONFIRMED STATIC MAPPING`: 421
 - `NOT PORTED / COVERAGE CHECK`: 6
 - `NOT PORTED / REQUIRES E2E`: 2
 - `NOT PORTED / UNSUPPORTED ON INCY iOS`: 1
