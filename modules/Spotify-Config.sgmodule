@@ -1,0 +1,155 @@
+# last_update=2026-09-26_UTC
+#!name=Spotify – SR ALL
+#!icon=https://raw.githubusercontent.com/fmz200/wool_scripts/main/icons/apps/Spotify_01.png
+#!category=Spotify
+#!desc=Spotify для Shadowrocket: блокировка QUIC и рекламных endpoint, частичная разблокировка клиентских Premium-функций, исправление отображения исполнителей и опциональный перевод текстов. Основа сборки: LOWERTOP; основной Spotify-скрипт: 001ProMax; перевод текстов: app2smile; русская адаптация и интеграция: Alexgood321 / SR-ALL-FILES-PROXY.
+#!arguments=Перевод_текста:false,AppID_Baidu:не_задан,Ключ_Baidu:не_задан,Компактная_панель:true,Handoff:true
+#!arguments-desc=Параметры модуля\n\n• Перевод_текста — включает перевод текста песни через Baidu Translate API. По умолчанию выключен.\n\n• AppID_Baidu и Ключ_Baidu — учётные данные Baidu Translate API. Нужны только при включённом переводе текста.\n\n• Компактная_панель — включает вариант интерфейса Spotify с более компактной нижней панелью, поддерживаемый скриптом 001ProMax.\n\n• Handoff — включает обработку функции Continuity/Handoff в скрипте 001ProMax.\n\nBaidu Translate: http://api.fanyi.baidu.com/register
+#!author=LOWERTOP, 001ProMax, app2smile; адаптация: Alexgood321
+#!homepage=https://github.com/Alexgood321/SR-ALL-FILES-PROXY
+#!source=https://github.com/LOWERTOP/Shadowrocket-First
+#!source=https://github.com/001ProMax/Surge
+#!source=https://github.com/app2smile/rules
+
+# =============================================================================
+# НАЗНАЧЕНИЕ
+# =============================================================================
+#
+# Модуль предназначен для Shadowrocket на iOS и работает только для запросов,
+# которые попадают под указанные ниже правила Rewrite / Script / MITM.
+#
+# Что делает модуль:
+#   1. Блокирует QUIC для доменов spotify.com, чтобы нужные запросы проходили
+#      через HTTP(S)-стек и могли обрабатываться MITM/скриптами Shadowrocket.
+#   2. Применяет workaround для Artist View: запрос с platform=iphone
+#      переписывается на platform=ipad.
+#   3. Возвращает пустой HTTP 200 для рекламных endpoint ad-* и pendragon.
+#   4. Передаёт bootstrap и user-customization-service в Spotify.Crack.Dev.js
+#      проекта 001ProMax для изменения поддерживаемых клиентских параметров.
+#   5. Опционально обрабатывает endpoint текстов песен через spotify-lyric.js
+#      проекта app2smile и Baidu Translate API.
+#
+# Ограничения:
+#   • это не серверная подписка Spotify Premium;
+#   • серверные функции Spotify могут оставаться недоступными;
+#   • максимальное качество Very High этим модулем не гарантируется;
+#   • поведение зависит от текущей версии приложения Spotify и API Spotify.
+#
+# Для работы MITM сертификат Shadowrocket должен быть установлен и считаться
+# доверенным в iOS. Одновременное включение нескольких Spotify MITM-модулей,
+# которые обрабатывают те же spclient endpoint, может привести к конфликтам.
+#
+# Исходная компоновка и идея Shadowrocket-модуля:
+#   LOWERTOP / Shadowrocket-First
+#   https://github.com/LOWERTOP/Shadowrocket-First
+#
+# Основная логика обработки Spotify:
+#   001ProMax / Surge
+#   https://github.com/001ProMax/Surge
+#
+# Опциональный перевод текстов:
+#   app2smile / rules
+#   https://github.com/app2smile/rules
+#
+# Русская адаптация, документация и интеграция:
+#   Alexgood321 / SR-ALL-FILES-PROXY
+#   https://github.com/Alexgood321/SR-ALL-FILES-PROXY
+
+
+# =============================================================================
+# RULE: ЗАПРЕТ QUIC ДЛЯ SPOTIFY
+# =============================================================================
+#
+# Spotify может использовать QUIC/HTTP3 поверх UDP. Такой трафик способен
+# обходить обычную HTTP(S)-обработку, на которую рассчитаны Rewrite/Script/MITM.
+# REJECT-NO-DROP запрещает QUIC для spotify.com и заставляет приложение перейти
+# на обычный TCP/TLS-путь, доступный для дальнейшей обработки Shadowrocket.
+
+[Rule]
+AND,((DOMAIN-SUFFIX,spotify.com),(PROTOCOL,QUIC)),REJECT-NO-DROP
+
+
+# =============================================================================
+# URL REWRITE: WORKAROUND ДЛЯ СТРАНИЦЫ ИСПОЛНИТЕЛЯ
+# =============================================================================
+#
+# Источник правила: 001ProMax.
+#
+# Для запросов Artist View меняется параметр platform=iphone на platform=ipad.
+# Это клиентский workaround для получения варианта ответа API, с которым
+# корректнее работает модифицированное отображение страницы исполнителя.
+# Остальная часть URL сохраняется без изменений.
+
+[URL Rewrite]
+^https:\/\/(?:\w+-spclient|spclient\.wg)\.spotify\.com(?::443)?\/artistview\/v1\/artist\/(.*)&platform=iphone https://spclient.wg.spotify.com/artistview/v1/artist/$1&platform=ipad header
+
+
+# =============================================================================
+# MAP LOCAL: ПОДАВЛЕНИЕ РЕКЛАМНЫХ ENDPOINT
+# =============================================================================
+#
+# Источник правила: 001ProMax.
+#
+# Запросы к endpoint, начинающимся с ad- или pendragon, не отправляются дальше.
+# Shadowrocket локально возвращает пустой текстовый ответ с HTTP-кодом 200.
+# Это уменьшает количество рекламных ответов, доходящих до клиента Spotify.
+
+[Map Local]
+^https:\/\/(?:\w+-spclient|spclient\.wg)\.spotify\.com(?::443)?\/(?:ad-|pendragon) data-type=text data="" status-code=200
+
+
+# =============================================================================
+# SCRIPT: ОСНОВНАЯ ОБРАБОТКА SPOTIFY
+# =============================================================================
+#
+# Автор/источник: 001ProMax.
+# Скрипт: Spotify.Crack.Dev.js
+#
+# Обрабатываются HTTP-ответы endpoint:
+#   • bootstrap
+#   • user-customization-service
+#
+# requires-body=true       — скрипту требуется тело HTTP-ответа.
+# binary-body-mode=true    — Spotify использует бинарные структуры/protobuf,
+#                            поэтому тело передаётся скрипту в бинарном режиме.
+#
+# Параметры:
+#   tab          <- {{{Компактная_панель}}}
+#   useractivity <- {{{Handoff}}}
+#
+# Скрипт загружается непосредственно из репозитория автора 001ProMax. Это
+# сохраняет актуальную upstream-логику, но означает, что изменение upstream
+# скрипта может изменить поведение модуля без изменения этого файла.
+
+[Script]
+Spotify.Crack = type=http-response, pattern=^https:\/\/(?:\w+-spclient|spclient\.wg)\.spotify\.com(?::443)?\/(?:bootstrap|user-customization-service), script-path=https://raw.githubusercontent.com/001ProMax/Surge/refs/heads/main/Script/Spotify.Crack.Dev.js, requires-body=true, binary-body-mode=true, argument=tab={{{Компактная_панель}}}&useractivity={{{Handoff}}}
+
+# -----------------------------------------------------------------------------
+# SCRIPT: ОПЦИОНАЛЬНЫЙ ПЕРЕВОД ТЕКСТОВ ПЕСЕН
+# -----------------------------------------------------------------------------
+#
+# Автор/источник: app2smile.
+# Скрипт: spotify-lyric.js
+#
+# По умолчанию отключён: Перевод_текста=false.
+# При включении требуется AppID и ключ Baidu Translate API.
+# Скрипт обрабатывает бинарный ответ color-lyrics/v2/track.
+#
+# max-size=0 снимает ограничение размера ответа для этого обработчика.
+
+Spotify.LyricsTranslate = type=http-response,pattern=^https:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/,requires-body=1,binary-body-mode=1,max-size=0,script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/spotify-lyric.js,enable={{{Перевод_текста}}},argument=appid={{{AppID_Baidu}}}&securityKey={{{Ключ_Baidu}}}
+
+
+# =============================================================================
+# MITM: ДОМЕНЫ, ДЛЯ КОТОРЫХ НУЖНА HTTPS-РАСШИФРОВКА
+# =============================================================================
+#
+# В список MITM добавляются API-хосты Spotify, которые используются правилами
+# выше. %APPEND% не заменяет существующий список hostname в конфигурации, а
+# добавляет эти значения к уже настроенным MITM-хостам Shadowrocket.
+#
+# spclient.wg.spotify.com — основной Spotify Web Gateway API.
+# *spclient.spotify.com   — региональные/вариативные spclient-хосты Spotify.
+
+[MITM]
+hostname = %APPEND% spclient.wg.spotify.com, *spclient.spotify.com
