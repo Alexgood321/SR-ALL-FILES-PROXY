@@ -1,7 +1,7 @@
-#!name=Unified Routing + System DNS v1.14
+#!name=Unified Routing + System DNS v1.15
 #!desc=Единый модуль DIRECT/PROXY + выборочный System DNS. Использовать вместе с remote.conf.
 #!author=OpenAI + user
-#!version=1.14
+#!version=1.15
 
 # =============================================================================
 # ПАМЯТКА / НАЗНАЧЕНИЕ
@@ -124,6 +124,18 @@
 # =============================================================================
 # ЖУРНАЛ АКТУАЛИЗАЦИИ / ИСТОЧНИКИ
 # =============================================================================
+# 2026-09-26 — Netcraze / Keenetic Cloud explicit DIRECT / версия 1.15.
+# Добавлен DOMAIN-SUFFIX,netcraze.cloud,DIRECT. PacketTunnel 2026-09-25 показал,
+# что master.netcraze.cloud и logs.netcraze.cloud уже фактически шли DIRECT через
+# GEOIP,RU после резолва в российские IP, а соединения до cloud endpoints успешно
+# устанавливались. Явное domain-правило фиксирует желаемую политику независимо от
+# будущей смены IP/CDN или ошибки GeoIP-классификации. Это не считается исправлением
+# наблюдавшейся ошибки приложения: в capture удалённая сторона сама закрывала часть
+# master.netcraze.cloud:8082 сессий. DNS намеренно НЕ переводится на server:system;
+# netcraze.cloud остаётся на глобальной DNS-схеме remote.conf Cloudflare DoH #proxy
+# -> ControlD fallback #proxy. Зона влияния ограничена netcraze.cloud и поддоменами.
+# Основание: PacketTunnel runtime iPhone 2026-09-25.
+#
 # 2026-09-15 — Xiaomi / Mi Home / Mijia camera PROXY consistency / версия 1.14.
 # PacketTunnel A/B на iPhone показал split-routing внутри одной Xiaomi camera-сессии:
 # ru.api.io.mi.com, ru.core.api.io.mi.com и ru.app.business.smartcamera.api.io.mi.com
@@ -689,6 +701,12 @@ DOMAIN-SUFFIX,bip.com,DIRECT
 DOMAIN-SUFFIX,bip.ai,DIRECT
 IP-CIDR,176.235.29.0/24,DIRECT,no-resolve
 IP-CIDR,176.235.227.0/24,DIRECT,no-resolve
+
+# --- Netcraze / Keenetic Cloud DIRECT ---
+# PacketTunnel 2026-09-25: master.netcraze.cloud и logs.netcraze.cloud уже шли
+# DIRECT через GEOIP,RU. Фиксируем домен явно, чтобы маршрут не зависел от IP/CDN
+# и актуальности GeoIP. DNS не форсируем: остаётся глобальный Cloudflare -> ControlD.
+DOMAIN-SUFFIX,netcraze.cloud,DIRECT
 
 # --- Manual DIRECT ---
 DOMAIN,new.tv.team,DIRECT
