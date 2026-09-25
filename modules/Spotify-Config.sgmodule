@@ -1,10 +1,10 @@
 # last_update=2026-09-26_UTC
 #!name=Spotify – SR ALL
 #!category=Spotify
-#!desc=Spotify для Shadowrocket: локальная обработка Spotify protobuf, блокировка рекламных endpoint и отключение QUIC для MITM. Идеи и исходные подходы: LOWERTOP/Shadowrocket-First и 001ProMax/Surge. Локальная реализация и интеграция: Alexgood321 / SR-ALL-FILES-PROXY.
+#!desc=Spotify для Shadowrocket: локальная обработка Spotify protobuf, подавление рекламных endpoint и защита от кэшированного 304-ответа Spotify. Исходные подходы: LOWERTOP/Shadowrocket-First, 001ProMax/Surge и app2smile/rules. Локальная реализация и интеграция: Alexgood321 / SR-ALL-FILES-PROXY.
 #!arguments=Компактная_панель:true
-#!arguments-desc=Параметры модуля\n\n• Компактная_панель — скрывает поддерживаемый Spotify пункт Your Plan в боковом интерфейсе.\n\nВсе исполняемые JS-файлы загружаются только из Alexgood321/SR-ALL-FILES-PROXY.
-#!author=LOWERTOP, 001ProMax; локальная реализация: Alexgood321
+#!arguments-desc=Параметры модуля\n\n• Компактная_панель — скрывает поддерживаемый Spotify пункт Your Plan в боковом интерфейсе.\n\nИсполняемый JS хранится только в Alexgood321/SR-ALL-FILES-PROXY и привязан к неизменяемому commit SHA.
+#!author=LOWERTOP, 001ProMax, app2smile; локальная реализация: Alexgood321
 #!homepage=https://github.com/Alexgood321/SR-ALL-FILES-PROXY
 
 # =============================================================================
@@ -14,17 +14,31 @@
 # Модуль автономен относительно сторонних репозиториев:
 #   • основной JS находится в modules/spotify.response.js этого репозитория;
 #   • сторонние raw.githubusercontent.com script-path отсутствуют;
-#   • внешняя иконка отсутствует.
+#   • внешняя иконка отсутствует;
+#   • script-path закреплён на конкретный commit SHA, поэтому изменение main
+#     в будущем само по себе не изменит выполняемый Shadowrocket код.
 #
-# Имена LOWERTOP и 001ProMax сохранены как attribution источникам исходных
-# подходов. Их репозитории НЕ загружаются Shadowrocket при работе модуля.
+# Attribution:
+#   • LOWERTOP / Shadowrocket-First — компоновка Shadowrocket-подхода;
+#   • 001ProMax / Surge — основная Spotify protobuf-логика и правила;
+#   • app2smile / rules — приём удаления If-None-Match для предотвращения 304;
+#   • Alexgood321 / SR-ALL-FILES-PROXY — локальная реализация и документация.
+#
+# Никакие репозитории LOWERTOP, 001ProMax или app2smile Shadowrocket при работе
+# этого модуля не загружает.
 #
 # Что делает модуль:
-#   1. Блокирует QUIC для spotify.com, чтобы нужные запросы шли через TCP/TLS
-#      и могли быть обработаны MITM/Script в Shadowrocket.
+#   1. Удаляет If-None-Match у user-customization-service, чтобы Spotify
+#      возвращал полноценный HTTP 200 body вместо потенциального 304.
 #   2. Для Artist View меняет platform=iphone на platform=ipad.
 #   3. Локально отвечает HTTP 200 на рекламные endpoint ad-* и pendragon.
 #   4. Обрабатывает bootstrap и user-customization-service локальным JS.
+#
+# ВАЖНО:
+#   • отдельное правило блокировки QUIC здесь намеренно отсутствует;
+#   • прежнее PROTOCOL,QUIC удалено как некорректное для Shadowrocket;
+#   • глобально блокировать UDP/443 внутри Spotify-модуля не требуется и
+#     нежелательно, поскольку это могло бы затронуть посторонний трафик.
 #
 # Ограничения:
 #   • это не серверная подписка Spotify Premium;
@@ -37,15 +51,20 @@
 
 
 # =============================================================================
-# RULE: ЗАПРЕТ QUIC ДЛЯ SPOTIFY
+# HEADER REWRITE: ЗАЩИТА ОТ HTTP 304
 # =============================================================================
 #
-# QUIC/HTTP3 работает поверх UDP и может обходить HTTPS-путь, который нужен
-# Shadowrocket для Rewrite/Script/MITM. REJECT-NO-DROP заставляет Spotify
-# перейти на TCP/TLS для доменов spotify.com.
+# Источник подхода: app2smile/rules.
+#
+# Spotify может отправлять If-None-Match для user-customization-service.
+# Сервер тогда способен вернуть 304 Not Modified без нового тела ответа, а
+# response-скрипту нечего будет модифицировать. Удаляем только этот заголовок
+# и только для нужного Spotify endpoint.
+#
+# Никакие другие заголовки, cookies или Authorization здесь не изменяются.
 
-[Rule]
-AND,((DOMAIN-SUFFIX,spotify.com),(PROTOCOL,QUIC)),REJECT-NO-DROP
+[Header Rewrite]
+http-request ^https:\/\/(?:\w+-spclient|spclient\.wg)\.spotify\.com(?::443)?\/user-customization-service\/v1\/customize$ header-del if-none-match
 
 
 # =============================================================================
@@ -82,9 +101,13 @@ AND,((DOMAIN-SUFFIX,spotify.com),(PROTOCOL,QUIC)),REJECT-NO-DROP
 # protobuf обратно. Неизвестные protobuf-поля сохраняются.
 #
 # Компактная_панель передаётся как argument=tab=... .
+#
+# В целях защиты от незаметной подмены script-path привязан к commit:
+#   68921b076e22c2747c87f7c744aadb0b1a5090b2
+# Этот Git commit неизменяем; будущие изменения ветки main не подменят JS.
 
 [Script]
-Spotify.Response = type=http-response,pattern=^https:\/\/(?:\w+-spclient|spclient\.wg)\.spotify\.com(?::443)?\/(?:bootstrap\/v1\/bootstrap|user-customization-service\/v1\/customize)$,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/main/modules/spotify.response.js,requires-body=true,binary-body-mode=true,max-size=0,argument=tab={{{Компактная_панель}}}
+Spotify.Response = type=http-response,pattern=^https:\/\/(?:\w+-spclient|spclient\.wg)\.spotify\.com(?::443)?\/(?:bootstrap\/v1\/bootstrap|user-customization-service\/v1\/customize)$,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/68921b076e22c2747c87f7c744aadb0b1a5090b2/modules/spotify.response.js,requires-body=true,binary-body-mode=true,max-size=0,argument=tab={{{Компактная_панель}}}
 
 
 # =============================================================================
