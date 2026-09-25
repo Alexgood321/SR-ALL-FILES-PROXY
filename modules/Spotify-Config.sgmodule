@@ -1,42 +1,26 @@
 #!name=Spotify Premium (Alexgood321) FIX + Ad Patch
-#!desc=Без рекламы + выбор треков + отключение принудительного shuffle. Локальная копия оригинальной логики app2smile для Shadowrocket.
+#!desc=Без рекламы, выбор треков и отключение принудительного shuffle.
 
 # last_update=2026-09-26_UTC
-# Upstream author: app2smile
-# Upstream repository: https://github.com/app2smile/rules
-# Shadowrocket reference: LOWERTOP/Shadowrocket-First
-# Local mirror/integration: Alexgood321 / SR-ALL-FILES-PROXY
-# Upstream pinned commit: e2c6f341eff294ce863658b95a490143183314b9
-# License: MIT, см. modules/spotify/LICENSE.md
+# Authors / credits:
+#   app2smile — оригинальные Spotify scripts и protobuf-логика
+#   LOWERTOP / Shadowrocket-First — Shadowrocket reference
+#   Alexgood321 / SR-ALL-FILES-PROXY — локальное зеркало и интеграция
 #
-# ВАЖНО:
-#   • protobuf-логику и значения Premium мы больше не переписываем;
-#   • modules/spotify/spotify-proto.js является побайтовой копией upstream app2smile;
-#   • modules/spotify/spotify-json.js является побайтовой копией upstream app2smile;
-#   • исполняемые script-path указывают только на этот репозиторий;
-#   • обе ссылки закреплены на immutable commit 9cb840aaf982a8871fdc231342e9191f30d35a45.
-#
-# Контрольные Git blob SHA:
-#   spotify-proto.js = 1815250ece304e6808bce768573a3e9c6999a295
-#   spotify-json.js  = 61f87453d70e28f83a83a4e00f9780e0a61e2a55
-# Эти SHA совпадают с файлами upstream, то есть код скопирован без изменений.
-#
-# Ниже рабочая схема актуального app2smile Spotify-модуля. Изменены только
-# script-path: вместо чужого репозитория используются закреплённые локальные копии.
+# Source: app2smile/rules @ e2c6f341eff294ce863658b95a490143183314b9
+# Local scripts are exact upstream copies pinned in this repository.
+# License: MIT, modules/spotify/LICENSE.md
 
 [Header Rewrite]
-# if-none-match может вернуть 304 без тела; upstream удаляет этот заголовок.
+# Не даём customize вернуться как 304 без body.
 http-request ^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/user-customization-service\/v1\/customize$ header-del if-none-match
 
 [MITM]
 hostname = %APPEND% spclient.wg.spotify.com, *spclient.spotify.com
 
 [Script]
-# Оригинальный app2smile spotify-json.js: Artist View / Album Entity View.
+# Artist View / Album Entity View.
 spotify-json = type=http-request,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/(artistview\/v1\/artist|album-entity-view\/v2\/album)\/,requires-body=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/9cb840aaf982a8871fdc231342e9191f30d35a45/modules/spotify/spotify-json.js
 
-# Оригинальный app2smile spotify-proto.js: bootstrap / user-customization-service.
-# Внутри остаются именно upstream-значения, включая premium, ads=false,
-# on-demand=true, shuffle=false, unrestricted=true, player-license=premium,
-# financial-product=pr:premium,tc:0 и остальные атрибуты автора.
+# Bootstrap / user customization / Premium account attributes.
 spotify-proto = type=http-response,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/(bootstrap\/v1\/bootstrap|user-customization-service\/v1\/customize)$,requires-body=1,binary-body-mode=1,max-size=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/9cb840aaf982a8871fdc231342e9191f30d35a45/modules/spotify/spotify-proto.js,script-update-interval=0
