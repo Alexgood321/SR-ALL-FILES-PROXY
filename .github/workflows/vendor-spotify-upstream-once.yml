@@ -1,0 +1,90 @@
+name: Vendor Spotify upstream once
+
+on:
+  push:
+    paths:
+      - '.github/workflows/vendor-spotify-upstream-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  vendor:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Vendor pinned app2smile Spotify scripts
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          UPSTREAM_COMMIT='e2c6f341eff294ce863658b95a490143183314b9'
+          BASE="https://raw.githubusercontent.com/app2smile/rules/${UPSTREAM_COMMIT}"
+
+          curl --fail --location --retry 3 "${BASE}/js/spotify-proto.js" -o modules/spotify-proto.js
+          curl --fail --location --retry 3 "${BASE}/js/spotify-json.js" -o modules/spotify-json.js
+          curl --fail --location --retry 3 "${BASE}/LICENSE.md" -o modules/spotify-app2smile.LICENSE.md
+
+          rm -f modules/spotify.response.js
+
+          cat > modules/Spotify-Config.sgmodule <<'EOF'
+          #!name=Spotify Premium (Alexgood321) FIX + Ad Patch
+          #!desc=Без рекламы + выбор треков + отключение принудительного shuffle. Локальные копии исходных Shadowrocket-скриптов app2smile.
+
+          # last_update=2026-09-26_UTC
+          # Upstream: app2smile/rules
+          # Shadowrocket integration reference: LOWERTOP/Shadowrocket-First
+          # Local mirror: Alexgood321 / SR-ALL-FILES-PROXY
+          # Upstream pinned commit: e2c6f341eff294ce863658b95a490143183314b9
+          # License: MIT, see modules/spotify-app2smile.LICENSE.md
+
+          # =============================================================================
+          # ОСНОВА
+          # =============================================================================
+          #
+          # Основная логика не переписана. В репозитории хранятся локальные копии:
+          #   • modules/spotify-proto.js — app2smile js/spotify-proto.js;
+          #   • modules/spotify-json.js  — app2smile js/spotify-json.js.
+          #
+          # spotify-proto.js обрабатывает bootstrap/customize protobuf и выставляет
+          # те же account attributes, что текущий upstream app2smile, включая
+          # premium, ads=false, on-demand=true, shuffle=false, unrestricted=true,
+          # player-license=premium и financial-product=pr:premium,tc:0.
+          #
+          # spotify-json.js обрабатывает Artist View и Album Entity View так же,
+          # как текущий upstream app2smile.
+
+          [Header Rewrite]
+          # Оригинальный приём app2smile: не даём customize вернуться как 304 без body.
+          http-request ^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/user-customization-service\/v1\/customize$ header-del if-none-match
+
+          [Map Local]
+          # Дополнительный рекламный endpoint-патч из актуальных Spotify-сборок.
+          ^https:\/\/(?:\w+-spclient|spclient\.wg)\.spotify\.com(?::443)?\/(?:ad-|pendragon) data-type=text data="" status-code=200
+
+          [Script]
+          spotify-json = type=http-request,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/(artistview\/v1\/artist|album-entity-view\/v2\/album)\/,requires-body=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/main/modules/spotify-json.js
+          spotify-proto = type=http-response,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/(bootstrap\/v1\/bootstrap|user-customization-service\/v1\/customize)$,requires-body=1,binary-body-mode=1,max-size=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/main/modules/spotify-proto.js,script-update-interval=0
+
+          [MITM]
+          hostname = %APPEND% spclient.wg.spotify.com, *spclient.spotify.com
+          EOF
+
+          # Remove indentation introduced by the YAML block.
+          sed -i 's/^          //' modules/Spotify-Config.sgmodule
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add modules/Spotify-Config.sgmodule modules/spotify-proto.js modules/spotify-json.js modules/spotify-app2smile.LICENSE.md modules/spotify.response.js
+
+          if git diff --cached --quiet; then
+            echo 'No changes to commit.'
+            exit 0
+          fi
+
+          git commit -m 'Vendor pinned app2smile Spotify Shadowrocket scripts'
+          git push origin HEAD:main
