@@ -82,7 +82,7 @@ class IncyXrayPolicyTests(unittest.TestCase):
         self.assertEqual(record.status, "NOT PORTED / UNSUPPORTED ON INCY iOS")
 
     def test_policy_has_no_process_matchers(self):
-        self.assertEqual(len(self.rules), 473)
+        self.assertEqual(len(self.rules), 474)
         self.assertTrue(all("process" not in rule for rule in self.rules))
 
     def test_validate_shape_rejects_process_matcher(self):
