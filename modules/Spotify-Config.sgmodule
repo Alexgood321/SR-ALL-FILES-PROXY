@@ -1,10 +1,10 @@
 # last_update=2026-09-26_UTC
 #!name=Spotify – SR ALL
 #!category=Spotify
-#!desc=Spotify для Shadowrocket: локальная обработка Spotify protobuf, блокировка рекламных endpoint, отключение QUIC для MITM и опциональный перевод текстов. Идеи и исходные подходы: LOWERTOP/Shadowrocket-First, 001ProMax/Surge, app2smile/rules. Локальная реализация и интеграция: Alexgood321 / SR-ALL-FILES-PROXY.
-#!arguments=Перевод_текста:false,AppID_Baidu:не_задан,Ключ_Baidu:не_задан,Компактная_панель:true
-#!arguments-desc=Параметры модуля\n\n• Перевод_текста — включает перевод текста песни через Baidu Translate API. По умолчанию выключен.\n\n• AppID_Baidu и Ключ_Baidu — нужны только для перевода текста.\n\n• Компактная_панель — скрывает поддерживаемый Spotify пункт Your Plan в боковом интерфейсе.\n\nВсе исполняемые JS-файлы загружаются только из Alexgood321/SR-ALL-FILES-PROXY.
-#!author=LOWERTOP, 001ProMax, app2smile; локальная реализация: Alexgood321
+#!desc=Spotify для Shadowrocket: локальная обработка Spotify protobuf, блокировка рекламных endpoint и отключение QUIC для MITM. Идеи и исходные подходы: LOWERTOP/Shadowrocket-First и 001ProMax/Surge. Локальная реализация и интеграция: Alexgood321 / SR-ALL-FILES-PROXY.
+#!arguments=Компактная_панель:true
+#!arguments-desc=Параметры модуля\n\n• Компактная_панель — скрывает поддерживаемый Spotify пункт Your Plan в боковом интерфейсе.\n\nВсе исполняемые JS-файлы загружаются только из Alexgood321/SR-ALL-FILES-PROXY.
+#!author=LOWERTOP, 001ProMax; локальная реализация: Alexgood321
 #!homepage=https://github.com/Alexgood321/SR-ALL-FILES-PROXY
 
 # =============================================================================
@@ -13,16 +13,11 @@
 #
 # Модуль автономен относительно сторонних репозиториев:
 #   • основной JS находится в modules/spotify.response.js этого репозитория;
-#   • перевод текстов находится в modules/spotify.lyrics.js этого репозитория;
 #   • сторонние raw.githubusercontent.com script-path отсутствуют;
-#   • внешняя иконка удалена.
+#   • внешняя иконка отсутствует.
 #
-# Имена LOWERTOP, 001ProMax и app2smile сохранены как attribution источникам
-# исходных подходов. Их репозитории НЕ загружаются Shadowrocket при работе модуля.
-#
-# Единственный намеренный внешний сервис помимо Spotify:
-#   Baidu Translate API — только когда Перевод_текста=true.
-#   При выключенном переводе запросов к Baidu нет.
+# Имена LOWERTOP и 001ProMax сохранены как attribution источникам исходных
+# подходов. Их репозитории НЕ загружаются Shadowrocket при работе модуля.
 #
 # Что делает модуль:
 #   1. Блокирует QUIC для spotify.com, чтобы нужные запросы шли через TCP/TLS
@@ -30,7 +25,6 @@
 #   2. Для Artist View меняет platform=iphone на platform=ipad.
 #   3. Локально отвечает HTTP 200 на рекламные endpoint ad-* и pendragon.
 #   4. Обрабатывает bootstrap и user-customization-service локальным JS.
-#   5. Опционально переводит lyrics через Baidu Translate локальным JS.
 #
 # Ограничения:
 #   • это не серверная подписка Spotify Premium;
@@ -91,19 +85,6 @@ AND,((DOMAIN-SUFFIX,spotify.com),(PROTOCOL,QUIC)),REJECT-NO-DROP
 
 [Script]
 Spotify.Response = type=http-response,pattern=^https:\/\/(?:\w+-spclient|spclient\.wg)\.spotify\.com(?::443)?\/(?:bootstrap\/v1\/bootstrap|user-customization-service\/v1\/customize)$,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/main/modules/spotify.response.js,requires-body=true,binary-body-mode=true,max-size=0,argument=tab={{{Компактная_панель}}}
-
-# -----------------------------------------------------------------------------
-# SCRIPT: ОПЦИОНАЛЬНЫЙ ПЕРЕВОД ТЕКСТОВ
-# -----------------------------------------------------------------------------
-#
-# Файл находится в этом же репозитории:
-#   modules/spotify.lyrics.js
-#
-# По умолчанию выключен. При включении текст песни отправляется в официальный
-# Baidu Translate API. AppID передаётся API; Ключ_Baidu используется локально
-# для MD5-подписи и напрямую в тело запроса не помещается.
-
-Spotify.Lyrics = type=http-response,pattern=^https:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/,requires-body=true,binary-body-mode=true,max-size=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/main/modules/spotify.lyrics.js,enable={{{Перевод_текста}}},argument=appid={{{AppID_Baidu}}}&securityKey={{{Ключ_Baidu}}}
 
 
 # =============================================================================
