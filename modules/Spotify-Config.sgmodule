@@ -1,11 +1,10 @@
-# last_update=2026-09-26_UTC
-#!name=Spotify – SR ALL
-#!category=Spotify
-#!desc=Spotify для Shadowrocket: локальная обработка Spotify protobuf, подавление рекламных endpoint и защита от кэшированного 304-ответа Spotify. Исходные подходы: LOWERTOP/Shadowrocket-First, 001ProMax/Surge и app2smile/rules. Локальная реализация и интеграция: Alexgood321 / SR-ALL-FILES-PROXY.
+#!name=Spotify Premium (Alexgood321) FIX + Ad Patch
+#!desc=Без рекламы + on-demand + отключение shuffle. Частичная клиентская разблокировка Premium.
 #!arguments=Компактная_панель:true
-#!arguments-desc=Параметры модуля\n\n• Компактная_панель — скрывает поддерживаемый Spotify пункт Your Plan в боковом интерфейсе.\n\nИсполняемый JS хранится только в Alexgood321/SR-ALL-FILES-PROXY и привязан к неизменяемому commit SHA.
-#!author=LOWERTOP, 001ProMax, app2smile; локальная реализация: Alexgood321
-#!homepage=https://github.com/Alexgood321/SR-ALL-FILES-PROXY
+
+# last_update=2026-09-26_UTC
+# Authors / upstream: LOWERTOP, 001ProMax, app2smile
+# Local implementation and integration: Alexgood321 / SR-ALL-FILES-PROXY
 
 # =============================================================================
 # НАЗНАЧЕНИЕ И МОДЕЛЬ ДОВЕРИЯ
