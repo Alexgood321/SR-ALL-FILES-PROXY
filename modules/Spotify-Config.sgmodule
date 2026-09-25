@@ -1,103 +1,40 @@
 #!name=Spotify Premium (Alexgood321) FIX + Ad Patch
-#!desc=Без рекламы + on-demand + отключение shuffle. Локальная копия проверенной upstream-логики Spotify.
+#!desc=Без рекламы + выбор треков + отключение принудительного shuffle. Локальные копии исходных Shadowrocket-скриптов app2smile.
 
 # last_update=2026-09-26_UTC
-# Authors / upstream: LOWERTOP, 001ProMax, app2smile
-# Integration and local mirror: Alexgood321 / SR-ALL-FILES-PROXY
+# Upstream: app2smile/rules
+# Shadowrocket integration reference: LOWERTOP/Shadowrocket-First
+# Local mirror: Alexgood321 / SR-ALL-FILES-PROXY
+# Upstream pinned commit: e2c6f341eff294ce863658b95a490143183314b9
+# License: MIT, see modules/spotify-app2smile.LICENSE.md
 
 # =============================================================================
-# НАЗНАЧЕНИЕ И МОДЕЛЬ ДОВЕРИЯ
+# ОСНОВА
 # =============================================================================
 #
-# Модуль автономен относительно сторонних репозиториев во время работы:
-#   • исполняемый JS находится в modules/spotify.response.js этого репозитория;
-#   • script-path не обращается к LOWERTOP / 001ProMax / app2smile;
-#   • внешняя иконка отсутствует;
-#   • script-path закреплён на конкретный commit SHA этого репозитория.
+# Основная логика не переписана. В репозитории хранятся локальные копии:
+#   • modules/spotify-proto.js — app2smile js/spotify-proto.js;
+#   • modules/spotify-json.js  — app2smile js/spotify-json.js.
 #
-# ВАЖНО О JS:
-#   • предыдущая собственная реализация protobuf удалена;
-#   • spotify.response.js теперь повторяет рабочую логику текущего
-#     Spotify.Crack.Dev.js проекта 001ProMax без функционального переписывания;
-#   • upstream blob на момент зеркалирования:
-#     0e3e6b78e32b470ded55c0fc7689eff1bf7db7a5
-#   • будущие изменения upstream сами по себе не изменят этот локальный файл.
+# spotify-proto.js обрабатывает bootstrap/customize protobuf и выставляет
+# те же account attributes, что текущий upstream app2smile, включая
+# premium, ads=false, on-demand=true, shuffle=false, unrestricted=true,
+# player-license=premium и financial-product=pr:premium,tc:0.
 #
-# Attribution:
-#   • LOWERTOP / Shadowrocket-First — компоновка Shadowrocket-подхода;
-#   • 001ProMax / Surge — Spotify protobuf-патч и основная логика;
-#   • app2smile / rules — удаление If-None-Match для предотвращения 304;
-#   • Alexgood321 / SR-ALL-FILES-PROXY — локальное зеркало и интеграция.
-#
-# Что делает модуль:
-#   1. Удаляет If-None-Match у user-customization-service, чтобы Spotify
-#      возвращал HTTP 200 с телом вместо потенциального 304.
-#   2. Для Artist View меняет platform=iphone на platform=ipad.
-#   3. Локально отвечает HTTP 200 на рекламные endpoint ad-* и pendragon.
-#   4. Передаёт bootstrap и user-customization-service локальной копии
-#      upstream Spotify protobuf-патча.
-#
-# Ограничения:
-#   • это не серверная подписка Spotify Premium;
-#   • серверные функции Spotify могут оставаться недоступными;
-#   • Very High и офлайн-функции не гарантируются;
-#   • совместимость зависит от версии Spotify и его API.
-#
-# MITM ограничен Spotify API-хостами ниже. Сертификат Shadowrocket должен быть
-# установлен и считаться доверенным в iOS.
-
-
-# =============================================================================
-# HEADER REWRITE: ЗАЩИТА ОТ HTTP 304
-# =============================================================================
-#
-# Источник подхода: app2smile/rules.
-# Удаляется только If-None-Match и только у нужного Spotify endpoint.
-# Cookies, Authorization и остальные заголовки не изменяются.
+# spotify-json.js обрабатывает Artist View и Album Entity View так же,
+# как текущий upstream app2smile.
 
 [Header Rewrite]
-http-request ^https:\/\/(?:\w+-spclient|spclient\.wg)\.spotify\.com(?::443)?\/user-customization-service\/v1\/customize$ header-del if-none-match
-
-
-# =============================================================================
-# URL REWRITE: ARTIST VIEW
-# =============================================================================
-#
-# Подход используется в сборках 001ProMax/LOWERTOP.
-
-[URL Rewrite]
-^https:\/\/(?:\w+-spclient|spclient\.wg)\.spotify\.com(?::443)?\/artistview\/v1\/artist\/(.*)&platform=iphone https://spclient.wg.spotify.com/artistview/v1/artist/$1&platform=ipad header
-
-
-# =============================================================================
-# MAP LOCAL: РЕКЛАМНЫЕ ENDPOINT
-# =============================================================================
+# Оригинальный приём app2smile: не даём customize вернуться как 304 без body.
+http-request ^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/user-customization-service\/v1\/customize$ header-del if-none-match
 
 [Map Local]
+# Дополнительный рекламный endpoint-патч из актуальных Spotify-сборок.
 ^https:\/\/(?:\w+-spclient|spclient\.wg)\.spotify\.com(?::443)?\/(?:ad-|pendragon) data-type=text data="" status-code=200
 
-
-# =============================================================================
-# SCRIPT: ЛОКАЛЬНОЕ ЗЕРКАЛО UPSTREAM SPOTIFY PATCH
-# =============================================================================
-#
-# Файл:
-#   modules/spotify.response.js
-#
-# Логика взята из текущего Spotify.Crack.Dev.js проекта 001ProMax и сохранена
-# локально без собственного protobuf-парсера/переписывания поведения.
-# Скрипт не выполняет внешних HTTP-запросов и не загружает другой JS.
-#
-# Зафиксированная версия локального файла:
-#   commit 72ecaa56ac5dfad0da862cdbbf07e3ea88782711
-
 [Script]
-Spotify.Response = type=http-response,pattern=^https:\/\/(?:\w+-spclient|spclient\.wg)\.spotify\.com(?::443)?\/(?:bootstrap\/v1\/bootstrap|user-customization-service\/v1\/customize)$,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/72ecaa56ac5dfad0da862cdbbf07e3ea88782711/modules/spotify.response.js,requires-body=true,binary-body-mode=true,max-size=0
-
-
-# =============================================================================
-# MITM
-# =============================================================================
+spotify-json = type=http-request,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/(artistview\/v1\/artist|album-entity-view\/v2\/album)\/,requires-body=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/main/modules/spotify-json.js
+spotify-proto = type=http-response,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/(bootstrap\/v1\/bootstrap|user-customization-service\/v1\/customize)$,requires-body=1,binary-body-mode=1,max-size=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/main/modules/spotify-proto.js,script-update-interval=0
 
 [MITM]
-hostname = %APPEND% spclient.wg.spotify.com, *-spclient.spotify.com
+hostname = %APPEND% spclient.wg.spotify.com, *spclient.spotify.com
