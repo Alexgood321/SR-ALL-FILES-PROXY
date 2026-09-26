@@ -4,8 +4,8 @@
 # last_update=2026-09-27_UTC
 # Authors / credits:
 #   app2smile — оригинальные Spotify scripts и protobuf-логика
-#   daozen — предыдущий playback/trials protobuf experiment
-#   Amlabort / MY_clash — EV3 protobuf implementation для текущего playback/seek A/B теста
+#   daozen — предыдущий playback/trials protobuf experiment (сейчас не активен)
+#   Amlabort / MY_clash — предыдущий EV3 protobuf experiment (сейчас не активен)
 #   LOWERTOP / Shadowrocket-First — Shadowrocket reference
 #   Alexgood321 / SR-ALL-FILES-PROXY — локальное зеркало и интеграция
 #
@@ -22,40 +22,37 @@ http-request ^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:4
 hostname = %APPEND% spclient.wg.spotify.com, *spclient.spotify.com
 
 [Script]
+# LOCAL PATCH — clean seek diagnostic cycle (2026-09-27).
+# В Shadowrocket для одного request фактически срабатывает одно matching script rule,
+# поэтому узкие Connect diagnostics стоят ВЫШЕ общего spotify-timezone и сами
+# повторяют только timezone-подмену Europe/Moscow -> Europe/Helsinki.
+
+# LOCAL PATCH — player command request diagnostic.
+# Главная точка диагностики: логирует реальный endpoint команды (seek_to/skip_next/play),
+# position/relative/context/track и from/to device. Тело команды НЕ меняет.
+spotify-connect-command-diagnostic = type=http-request,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/connect-state\/v1\/player\/command\/,requires-body=1,binary-body-mode=1,max-size=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/8e410d9af06ad03f62bf34524c44fd8183ccb176/modules/spotify/spotify-connect-command-diagnostic.js,script-update-interval=0
+
+# LOCAL PATCH — player command response diagnostic.
+# Логирует HTTP status для той же команды. Ответ Spotify не меняет.
+spotify-connect-command-response = type=http-response,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/connect-state\/v1\/player\/command\/,requires-body=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/4cc2edf032bccf7839413677b66874778b68849d/modules/spotify/spotify-connect-command-response-diagnostic.js,script-update-interval=0
+
+# LOCAL PATCH — Connect-State PlayerState diagnostic v2.
+# Логирует текущий context/track/position/duration и ограничения seek/skip из
+# PUT /connect-state/v1/devices/*. Protobuf body НЕ меняется.
+spotify-connect-state-diagnostic = type=http-request,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/connect-state\/v1\/devices\/,requires-body=1,binary-body-mode=1,max-size=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/61673d731113dcbc95512af99b3f05c5e778fd97/modules/spotify/spotify-connect-state-diagnostic-v2.js,script-update-interval=0
+
 # LOCAL PATCH — Spotify timezone alignment.
+# Общий fallback для остальных Spotify requests. Специфичные Connect rules выше
+# уже выполняют эту же узкую подмену, потому до этого правила они не доходят.
 # Подменяет только Europe/Moscow -> Europe/Helsinki в Time-Zone/X-Client-Timezone
 # и параметрах timezone/client-timezone. Остальные данные запроса не меняет.
 spotify-timezone = type=http-request,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com)(:443)?\/,requires-body=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/81f6d1e8f55072c19e00232ab4fed51a2b402b02/modules/spotify/spotify-timezone.js,script-update-interval=0
-
-# LOCAL PATCH — Spotify OnDemand Selector A/B patch (2026-09-27).
-# Диагностика показала, что проблемный playlist URI отсутствует в server-provided
-# OndemandResponse. Для чистого теста добавляем ТОЛЬКО один URI в repeated field 1.
-# Исходный protobuf сохраняется byte-for-byte; существующие URI, expiry и unknown fields
-# не меняются. При любой ошибке скрипт делает passthrough оригинального ответа.
-# TARGET: spotify:playlist:37i9dQZF1E4o26widVLGBM
-# ROLLBACK: удалить только правило spotify-ondemand-patch ниже.
-spotify-ondemand-patch = type=http-response,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/ondemand-selector\/v2\/select-ondemand-set(\?.*)?$,requires-body=1,binary-body-mode=1,max-size=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/2bade4edf0a67e652a86f7c11ca3383f19cd17c8/modules/spotify/spotify-ondemand-patch.js,script-update-interval=0
-
-# LOCAL PATCH — Spotify Connect-State seek diagnostic (2026-09-27).
-# Только читает PUT /connect-state/v1/devices/* и логирует PlayerState restrictions:
-# context/player/track disallow_seeking_reasons, skip restrictions, current track,
-# position/duration и DeviceInfo license. Запрос НЕ изменяется: $done({}).
-# X-Transfer-Encoding:gzip читается через $utils.ungzip только если тело реально gzip.
-# Текущий OnDemand A/B patch оставлен без изменений для сравнения поведения.
-# ROLLBACK: удалить только правило spotify-connect-state-diagnostic ниже.
-spotify-connect-state-diagnostic = type=http-request,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/connect-state\/v1\/devices\/,requires-body=1,binary-body-mode=1,max-size=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/3008b057d64ffc7c9d7434d61078d017963b2f4f/modules/spotify/spotify-connect-state-diagnostic.js,script-update-interval=0
 
 # Artist View / Album Entity View.
 spotify-json = type=http-request,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/(artistview\/v1\/artist|album-entity-view\/v2\/album)\/,requires-body=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/9cb840aaf982a8871fdc231342e9191f30d35a45/modules/spotify/spotify-json.js
 
 # Bootstrap / user customization / Premium account attributes.
-# LOCAL PATCH — Amlabort EV3 playback/seek A/B test (2026-09-27).
-# Проверяем альтернативную EV3 protobuf-логику для новых iOS playback-флагов,
-# включая player-license-v2 и assignedValues, связанные с современной конфигурацией плеера.
-# Gabo A/B тест удалён отдельно как отрицательный результат; QUIC этим тестом не меняем.
-# EV3 закреплён на конкретном commit для воспроизводимости.
-# ROLLBACK TO DAOZEN:
-# https://raw.githubusercontent.com/daozen/rules/35cb77af8e8b028e131a7bdf06918c46479f3740/js/spotify-proto.js
-# FULL ROLLBACK TO ORIGINAL LOCAL PROTO:
-# https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/9cb840aaf982a8871fdc231342e9191f30d35a45/modules/spotify/spotify-proto.js
-spotify-proto = type=http-response,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/(bootstrap\/v1\/bootstrap|user-customization-service\/v1\/customize)$,requires-body=1,binary-body-mode=1,max-size=0,script-path=https://raw.githubusercontent.com/Amlabort/MY_clash/ace980176335227337e8c4a5eeb8bae070cf5dae/files/lpx/js/spot-proto-ev3.js,script-update-interval=0
+# LOCAL PATCH — clean baseline for seek diagnostics (2026-09-27).
+# OnDemand 15->16 A/B и Amlabort EV3 отключены, чтобы не смешивать причины.
+# Возвращён исходный локальный protobuf patch, закреплённый на проверенном commit.
+spotify-proto = type=http-response,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/(bootstrap\/v1\/bootstrap|user-customization-service\/v1\/customize)$,requires-body=1,binary-body-mode=1,max-size=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/9cb840aaf982a8871fdc231342e9191f30d35a45/modules/spotify/spotify-proto.js,script-update-interval=0
