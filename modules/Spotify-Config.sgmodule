@@ -36,6 +36,15 @@ spotify-timezone = type=http-request,pattern=^https:\/\/(spclient\.wg\.spotify\.
 # ROLLBACK: удалить только правило spotify-ondemand-patch ниже.
 spotify-ondemand-patch = type=http-response,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/ondemand-selector\/v2\/select-ondemand-set(\?.*)?$,requires-body=1,binary-body-mode=1,max-size=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/2bade4edf0a67e652a86f7c11ca3383f19cd17c8/modules/spotify/spotify-ondemand-patch.js,script-update-interval=0
 
+# LOCAL PATCH — Spotify Connect-State seek diagnostic (2026-09-27).
+# Только читает PUT /connect-state/v1/devices/* и логирует PlayerState restrictions:
+# context/player/track disallow_seeking_reasons, skip restrictions, current track,
+# position/duration и DeviceInfo license. Запрос НЕ изменяется: $done({}).
+# X-Transfer-Encoding:gzip читается через $utils.ungzip только если тело реально gzip.
+# Текущий OnDemand A/B patch оставлен без изменений для сравнения поведения.
+# ROLLBACK: удалить только правило spotify-connect-state-diagnostic ниже.
+spotify-connect-state-diagnostic = type=http-request,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/connect-state\/v1\/devices\/,requires-body=1,binary-body-mode=1,max-size=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/3008b057d64ffc7c9d7434d61078d017963b2f4f/modules/spotify/spotify-connect-state-diagnostic.js,script-update-interval=0
+
 # Artist View / Album Entity View.
 spotify-json = type=http-request,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/(artistview\/v1\/artist|album-entity-view\/v2\/album)\/,requires-body=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/9cb840aaf982a8871fdc231342e9191f30d35a45/modules/spotify/spotify-json.js
 
