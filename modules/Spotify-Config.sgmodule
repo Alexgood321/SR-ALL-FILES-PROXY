@@ -27,13 +27,14 @@ hostname = %APPEND% spclient.wg.spotify.com, *spclient.spotify.com
 # и параметрах timezone/client-timezone. Остальные данные запроса не меняет.
 spotify-timezone = type=http-request,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com)(:443)?\/,requires-body=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/81f6d1e8f55072c19e00232ab4fed51a2b402b02/modules/spotify/spotify-timezone.js,script-update-interval=0
 
-# LOCAL PATCH — Spotify OnDemand Selector diagnostic (2026-09-27).
-# Только читает protobuf-ответ /ondemand-selector/v2/select-ondemand-set и пишет
-# uris/expireTimestampMillis в лог. Ответ Spotify НЕ изменяется: $done({}).
-# Нужен для проверки, выдаёт ли Free-tier/on-demand ветка ограниченный набор URI
-# в момент, когда seek ошибочно превращается в переход к следующему треку.
-# ROLLBACK: удалить только правило spotify-ondemand-diagnostic ниже.
-spotify-ondemand-diagnostic = type=http-response,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/ondemand-selector\/v2\/select-ondemand-set(\?.*)?$,requires-body=1,binary-body-mode=1,max-size=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/eb420767c87233a613883661e4d6fd4525c8a93f/modules/spotify/spotify-ondemand-diagnostic.js,script-update-interval=0
+# LOCAL PATCH — Spotify OnDemand Selector A/B patch (2026-09-27).
+# Диагностика показала, что проблемный playlist URI отсутствует в server-provided
+# OndemandResponse. Для чистого теста добавляем ТОЛЬКО один URI в repeated field 1.
+# Исходный protobuf сохраняется byte-for-byte; существующие URI, expiry и unknown fields
+# не меняются. При любой ошибке скрипт делает passthrough оригинального ответа.
+# TARGET: spotify:playlist:37i9dQZF1E4o26widVLGBM
+# ROLLBACK: удалить только правило spotify-ondemand-patch ниже.
+spotify-ondemand-patch = type=http-response,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/ondemand-selector\/v2\/select-ondemand-set(\?.*)?$,requires-body=1,binary-body-mode=1,max-size=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/2bade4edf0a67e652a86f7c11ca3383f19cd17c8/modules/spotify/spotify-ondemand-patch.js,script-update-interval=0
 
 # Artist View / Album Entity View.
 spotify-json = type=http-request,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/(artistview\/v1\/artist|album-entity-view\/v2\/album)\/,requires-body=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/9cb840aaf982a8871fdc231342e9191f30d35a45/modules/spotify/spotify-json.js
