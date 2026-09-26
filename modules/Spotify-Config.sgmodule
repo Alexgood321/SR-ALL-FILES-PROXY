@@ -8,7 +8,8 @@
 #   Alexgood321 / SR-ALL-FILES-PROXY — локальное зеркало и интеграция
 #
 # Source: app2smile/rules @ e2c6f341eff294ce863658b95a490143183314b9
-# Local scripts are exact upstream copies pinned in this repository.
+# Upstream Spotify scripts are exact copies pinned in this repository.
+# Repository-specific patches are explicitly marked as LOCAL PATCH below.
 # License: MIT, modules/spotify/LICENSE.md
 
 [Header Rewrite]
@@ -19,6 +20,11 @@ http-request ^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:4
 hostname = %APPEND% spclient.wg.spotify.com, *spclient.spotify.com
 
 [Script]
+# LOCAL PATCH — Spotify timezone alignment.
+# Подменяет только Europe/Moscow -> Europe/Helsinki в Time-Zone/X-Client-Timezone
+# и параметрах timezone/client-timezone. Остальные данные запроса не меняет.
+spotify-timezone = type=http-request,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com)(:443)?\/,requires-body=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/81f6d1e8f55072c19e00232ab4fed51a2b402b02/modules/spotify/spotify-timezone.js,script-update-interval=0
+
 # Artist View / Album Entity View.
 spotify-json = type=http-request,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/(artistview\/v1\/artist|album-entity-view\/v2\/album)\/,requires-body=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/9cb840aaf982a8871fdc231342e9191f30d35a45/modules/spotify/spotify-json.js
 
