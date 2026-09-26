@@ -5,6 +5,7 @@
 # Authors / credits:
 #   app2smile — оригинальные Spotify scripts и protobuf-логика
 #   daozen — playback/trials protobuf patch для новых ограничений Spotify
+#   Amlabort / MY_clash — reference для перехвата Spotify Gabo telemetry
 #   LOWERTOP / Shadowrocket-First — Shadowrocket reference
 #   Alexgood321 / SR-ALL-FILES-PROXY — локальное зеркало и интеграция
 #
@@ -21,6 +22,12 @@ http-request ^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:4
 hostname = %APPEND% spclient.wg.spotify.com, *spclient.spotify.com
 
 [Script]
+# LOCAL PATCH — Spotify Gabo playback A/B test.
+# Только для /gabo-receiver-service/: вместо отправки playback/event telemetry
+# возвращаем локальный пустой HTTP 200. Account/playback API, CDN, Connect и timezone не меняются.
+# ROLLBACK: удалить только правило spotify-gabo ниже.
+spotify-gabo = type=http-request,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/gabo-receiver-service\/,requires-body=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/1a649a528f76a4fa308b4fc43ee46ae74187b49b/modules/spotify/spotify-gabo.js,script-update-interval=0
+
 # LOCAL PATCH — Spotify timezone alignment.
 # Подменяет только Europe/Moscow -> Europe/Helsinki в Time-Zone/X-Client-Timezone
 # и параметрах timezone/client-timezone. Остальные данные запроса не меняет.
