@@ -4,6 +4,7 @@
 # last_update=2026-09-26_UTC
 # Authors / credits:
 #   app2smile — оригинальные Spotify scripts и protobuf-логика
+#   daozen — playback/trials protobuf patch для новых ограничений Spotify
 #   LOWERTOP / Shadowrocket-First — Shadowrocket reference
 #   Alexgood321 / SR-ALL-FILES-PROXY — локальное зеркало и интеграция
 #
@@ -29,4 +30,10 @@ spotify-timezone = type=http-request,pattern=^https:\/\/(spclient\.wg\.spotify\.
 spotify-json = type=http-request,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/(artistview\/v1\/artist|album-entity-view\/v2\/album)\/,requires-body=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/9cb840aaf982a8871fdc231342e9191f30d35a45/modules/spotify/spotify-json.js
 
 # Bootstrap / user customization / Premium account attributes.
-spotify-proto = type=http-response,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/(bootstrap\/v1\/bootstrap|user-customization-service\/v1\/customize)$,requires-body=1,binary-body-mode=1,max-size=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/9cb840aaf982a8871fdc231342e9191f30d35a45/modules/spotify/spotify-proto.js,script-update-interval=0
+# LOCAL PATCH — playback/trials experiment (2026-09-26).
+# Временно используем proto-патч daozen/rules: подавление trialsFacadeResponseV1,
+# фильтрация Free/capping assignedValues и дополнительные Premium playback-флаги.
+# Патч закреплён на конкретном commit для воспроизводимого теста.
+# ROLLBACK: вернуть script-path на
+# https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/9cb840aaf982a8871fdc231342e9191f30d35a45/modules/spotify/spotify-proto.js
+spotify-proto = type=http-response,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/(bootstrap\/v1\/bootstrap|user-customization-service\/v1\/customize)$,requires-body=1,binary-body-mode=1,max-size=0,script-path=https://raw.githubusercontent.com/daozen/rules/35cb77af8e8b028e131a7bdf06918c46479f3740/js/spotify-proto.js,script-update-interval=0
