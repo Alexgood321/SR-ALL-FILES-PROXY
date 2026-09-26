@@ -1,5 +1,5 @@
-#!name=Spotify Premium (Alexgood321) FIX + Ad Patch
-#!desc=Без рекламы, выбор треков и отключение принудительного shuffle.
+#!name=Spotify Premium (Alexgood321) FIX + Ad Patch [TEMP UCS DIAG]
+#!desc=Временный диагностический цикл UCS/MFT. Premium protobuf patch отключён только на время теста.
 
 # last_update=2026-09-27_UTC
 # Authors / credits:
@@ -22,7 +22,11 @@ http-request ^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:4
 hostname = %APPEND% spclient.wg.spotify.com, *spclient.spotify.com
 
 [Script]
-# LOCAL PATCH — clean seek diagnostic cycle (2026-09-27).
+# LOCAL PATCH — TEMP UCS/MFT diagnostic cycle (2026-09-27).
+# На время одного диагностического прогона активный spotify-proto response patch
+# отключён, чтобы увидеть СЫРЫЕ server-provided UCS assignedValues до Premium spoof.
+# После получения лога этот блок нужно вернуть к обычному spotify-proto.
+#
 # В Shadowrocket для одного request фактически срабатывает одно matching script rule,
 # поэтому узкие Connect diagnostics стоят ВЫШЕ общего spotify-timezone и сами
 # повторяют только timezone-подмену Europe/Moscow -> Europe/Helsinki.
@@ -51,8 +55,7 @@ spotify-timezone = type=http-request,pattern=^https:\/\/(spclient\.wg\.spotify\.
 # Artist View / Album Entity View.
 spotify-json = type=http-request,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/(artistview\/v1\/artist|album-entity-view\/v2\/album)\/,requires-body=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/9cb840aaf982a8871fdc231342e9191f30d35a45/modules/spotify/spotify-json.js
 
-# Bootstrap / user customization / Premium account attributes.
-# LOCAL PATCH — clean baseline for seek diagnostics (2026-09-27).
-# OnDemand 15->16 A/B и Amlabort EV3 отключены, чтобы не смешивать причины.
-# Возвращён исходный локальный protobuf patch, закреплённый на проверенном commit.
-spotify-proto = type=http-response,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/(bootstrap\/v1\/bootstrap|user-customization-service\/v1\/customize)$,requires-body=1,binary-body-mode=1,max-size=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/9cb840aaf982a8871fdc231342e9191f30d35a45/modules/spotify/spotify-proto.js,script-update-interval=0
+# LOCAL PATCH — READ-ONLY UCS assignedValues diagnostic.
+# Логирует только интересующие MFT/free-on-demand/capping/pick-and-shuffle/
+# playback-timeout параметры из bootstrap/customize. Ответ Spotify НЕ изменяет.
+spotify-ucs-assigned-diagnostic = type=http-response,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/(bootstrap\/v1\/bootstrap|user-customization-service\/v1\/customize)$,requires-body=1,binary-body-mode=1,max-size=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/b57861c98b55b87306a5e1bc29facdbb7def9220/modules/spotify/spotify-ucs-assigned-diagnostic.js,script-update-interval=0
