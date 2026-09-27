@@ -1,0 +1,30 @@
+#!name=UHF – MITM Diagnostic
+#!desc=Диагностический MITM для UHF IPTV Player. Только Firebase App Check/Auth/Firestore; ответы не изменяются.
+
+# last_update=2026-09-27_UTC
+# Status: TEST / diagnostic
+# Repository: Alexgood321 / SR-ALL-FILES-PROXY
+#
+# Источник правил: PacketTunnel runtime-лог UHF от 2026-09-27.
+# Подтверждённые обращения приложения:
+#   • firebaseappcheck.googleapis.com — Firebase App Check
+#   • securetoken.googleapis.com — Firebase Auth / token refresh
+#   • firestore.googleapis.com — Firestore backend
+#
+# Намеренно НЕ включены на первом этапе:
+#   • mzstorekit.itunes.apple.com
+#   • inappcheck.itunes.apple.com
+#     Это системный StoreKit / проверка покупок Apple. Перехват может сам по себе
+#     ломать проверку покупки и исказить результат диагностики.
+#   • firebase-settings.crashlytics.com
+#   • firebaselogging-pa.googleapis.com
+#     Телеметрия/Crashlytics, для проверки entitlement/backend сейчас не нужны.
+#   • play.googleapis.com
+#     По текущему логу принадлежность конкретно UHF не подтверждена.
+#
+# Модуль ничего не блокирует, не переписывает и не подменяет.
+# Его задача на первом тесте — проверить, принимает ли UHF HTTPS MITM на своём
+# Firebase/Firestore контуре и не использует ли там certificate pinning.
+
+[MITM]
+hostname = %APPEND% firestore.googleapis.com, firebaseappcheck.googleapis.com, securetoken.googleapis.com
