@@ -4,8 +4,6 @@
 # last_update=2026-09-27_UTC
 # Authors / credits:
 #   app2smile — оригинальные Spotify scripts и protobuf-логика
-#   daozen — предыдущий playback/trials protobuf experiment (сейчас не активен)
-#   Amlabort / MY_clash — предыдущий EV3 protobuf experiment (сейчас не активен)
 #   LOWERTOP / Shadowrocket-First — Shadowrocket reference
 #   Alexgood321 / SR-ALL-FILES-PROXY — локальное зеркало и интеграция
 #
@@ -15,56 +13,20 @@
 # License: MIT, modules/spotify/LICENSE.md
 
 [Header Rewrite]
-# Не даём customize вернуться как 304 без body.
+# Нужен body customize вместо 304, чтобы protobuf patch мог обработать ответ.
 http-request ^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/user-customization-service\/v1\/customize$ header-del if-none-match
 
 [MITM]
 hostname = %APPEND% spclient.wg.spotify.com, *spclient.spotify.com
 
 [Script]
-# LOCAL PATCH — full seek/playback diagnostic cycle (2026-09-27).
-# В Shadowrocket для одного request фактически срабатывает одно matching script rule,
-# поэтому узкие request diagnostics стоят ВЫШЕ общего spotify-timezone и сами
-# повторяют только timezone-подмену Europe/Moscow -> Europe/Helsinki.
-
-# LOCAL PATCH — player command request diagnostic.
-# Главная точка диагностики: логирует реальный endpoint команды (seek_to/skip_next/play),
-# position/relative/context/track и from/to device. Тело команды НЕ меняет.
-spotify-connect-command-diagnostic = type=http-request,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/connect-state\/v1\/player\/command\/,requires-body=1,binary-body-mode=1,max-size=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/8e410d9af06ad03f62bf34524c44fd8183ccb176/modules/spotify/spotify-connect-command-diagnostic.js,script-update-interval=0
-
-# LOCAL PATCH — player command response diagnostic.
-# Логирует HTTP status для той же команды. Ответ Spotify не меняет.
-spotify-connect-command-response = type=http-response,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/connect-state\/v1\/player\/command\/,requires-body=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/4cc2edf032bccf7839413677b66874778b68849d/modules/spotify/spotify-connect-command-response-diagnostic.js,script-update-interval=0
-
-# LOCAL PATCH — Connect-State full playback diagnostic v4.
-# Read-only: одним проходом логирует current/prev/next queue, ContextIndex,
-# player options, suppressions, signals, play-origin, track/context/page metadata,
-# systemInitiated, sessionCommandId, queue revision, quality и PutState command markers.
-# Protobuf body НЕ меняется.
-spotify-connect-state-diagnostic = type=http-request,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/connect-state\/v1\/devices\/,requires-body=1,binary-body-mode=1,max-size=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/adb1bf5b76e53224008429b84535b397ddebe862/modules/spotify/spotify-connect-state-full-diagnostic-v4.js,script-update-interval=0
-
-# LOCAL PATCH — playback path request diagnostic.
-# Логирует scrollsita / free-tier recommendations / on-demand selector, а для этих
-# запросов повторяет только уже существующую timezone-подмену. Остальное не меняет.
-spotify-playback-path-request = type=http-request,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/(scrollsita\/v1\/scroll\/|vanilla\/v1\/views\/hub2\/nft\/recommendations-in-free-tier-playlist|ondemand-selector\/v2\/select-ondemand-set),requires-body=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/7aa59b371f2dd1e1ba44b863ec9c5bc494612c6c/modules/spotify/spotify-playback-path-request-diagnostic.js,script-update-interval=0
-
-# LOCAL PATCH — playback path response diagnostic.
-# Read-only: логирует status/body size и видимые spotify:track/playlist/album URI
-# из тех же ответов. Ответы Spotify НЕ переписывает.
-spotify-playback-path-response = type=http-response,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/(scrollsita\/v1\/scroll\/|vanilla\/v1\/views\/hub2\/nft\/recommendations-in-free-tier-playlist|ondemand-selector\/v2\/select-ondemand-set),requires-body=1,binary-body-mode=1,max-size=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/7aa59b371f2dd1e1ba44b863ec9c5bc494612c6c/modules/spotify/spotify-playback-path-response-diagnostic.js,script-update-interval=0
-
 # LOCAL PATCH — Spotify timezone alignment.
-# Общий fallback для остальных Spotify requests. Специфичные request rules выше
-# уже выполняют эту же узкую подмену, потому до этого правила они не доходят.
-# Подменяет только Europe/Moscow -> Europe/Helsinki в Time-Zone/X-Client-Timezone
-# и параметрах timezone/client-timezone. Остальные данные запроса не меняет.
+# Узко подменяет только Europe/Moscow -> Europe/Helsinki в явных timezone
+# headers/query. Locale, account country, GPS и остальные данные не меняются.
 spotify-timezone = type=http-request,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com)(:443)?\/,requires-body=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/81f6d1e8f55072c19e00232ab4fed51a2b402b02/modules/spotify/spotify-timezone.js,script-update-interval=0
 
 # Artist View / Album Entity View.
 spotify-json = type=http-request,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/(artistview\/v1\/artist|album-entity-view\/v2\/album)\/,requires-body=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/9cb840aaf982a8871fdc231342e9191f30d35a45/modules/spotify/spotify-json.js
 
 # Bootstrap / user customization / Premium account attributes.
-# LOCAL PATCH — clean baseline for seek diagnostics (2026-09-27).
-# OnDemand 15->16 A/B и Amlabort EV3 отключены, чтобы не смешивать причины.
-# Возвращён исходный локальный protobuf patch, закреплённый на проверенном commit.
 spotify-proto = type=http-response,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/(bootstrap\/v1\/bootstrap|user-customization-service\/v1\/customize)$,requires-body=1,binary-body-mode=1,max-size=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/9cb840aaf982a8871fdc231342e9191f30d35a45/modules/spotify/spotify-proto.js,script-update-interval=0
