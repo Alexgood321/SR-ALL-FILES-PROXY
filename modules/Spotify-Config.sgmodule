@@ -22,7 +22,7 @@ http-request ^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:4
 hostname = %APPEND% spclient.wg.spotify.com, *spclient.spotify.com
 
 [Script]
-# LOCAL PATCH — clean seek diagnostic cycle (2026-09-27).
+# LOCAL PATCH — full seek/playback diagnostic cycle (2026-09-27).
 # В Shadowrocket для одного request фактически срабатывает одно matching script rule,
 # поэтому узкие request diagnostics стоят ВЫШЕ общего spotify-timezone и сами
 # повторяют только timezone-подмену Europe/Moscow -> Europe/Helsinki.
@@ -36,10 +36,12 @@ spotify-connect-command-diagnostic = type=http-request,pattern=^https:\/\/(spcli
 # Логирует HTTP status для той же команды. Ответ Spotify не меняет.
 spotify-connect-command-response = type=http-response,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/connect-state\/v1\/player\/command\/,requires-body=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/4cc2edf032bccf7839413677b66874778b68849d/modules/spotify/spotify-connect-command-response-diagnostic.js,script-update-interval=0
 
-# LOCAL PATCH — Connect-State queue diagnostic v3.
-# Read-only: логирует current/prev/next queue, suppressions, play-origin и seek state
-# из PUT /connect-state/v1/devices/*. Protobuf body НЕ меняется.
-spotify-connect-state-diagnostic = type=http-request,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/connect-state\/v1\/devices\/,requires-body=1,binary-body-mode=1,max-size=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/0c9a3c94258f5487757d8112030c6e5adbe17a15/modules/spotify/spotify-connect-state-queue-diagnostic-v3.js,script-update-interval=0
+# LOCAL PATCH — Connect-State full playback diagnostic v4.
+# Read-only: одним проходом логирует current/prev/next queue, ContextIndex,
+# player options, suppressions, signals, play-origin, track/context/page metadata,
+# systemInitiated, sessionCommandId, queue revision, quality и PutState command markers.
+# Protobuf body НЕ меняется.
+spotify-connect-state-diagnostic = type=http-request,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/connect-state\/v1\/devices\/,requires-body=1,binary-body-mode=1,max-size=0,script-path=https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/adb1bf5b76e53224008429b84535b397ddebe862/modules/spotify/spotify-connect-state-full-diagnostic-v4.js,script-update-interval=0
 
 # LOCAL PATCH — playback path request diagnostic.
 # Логирует scrollsita / free-tier recommendations / on-demand selector, а для этих
