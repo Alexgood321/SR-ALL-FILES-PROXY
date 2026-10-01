@@ -4,16 +4,9 @@ on:
   push:
     branches: [main]
     paths:
-      - "config/remote.conf"
-      - "modules/Unified-Routing-System-DNS.sgmodule"
-      - "modules/Ads-Privacy-Block.sgmodule"
-      - "scripts/generate_incy_routing.py"
-      - "scripts/generate_incy_xray_policy.py"
-      - "tests/test_incy_xray_policy.py"
       - "incy/xray-policy.json"
       - "incy/xray-conversion-report.md"
       - ".github/workflows/validate-incy-routing.yml"
-      - ".github/workflows/sync-incy-routing.yml"
 
   pull_request:
     paths:
