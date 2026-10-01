@@ -3317,13 +3317,6 @@
         "outboundTag": "direct"
       },
       {
-        "ip": [
-          "5.61.89.166/32"
-        ],
-        "type": "field",
-        "outboundTag": "direct"
-      },
-      {
         "domain": [
           "full:api.ipify.org"
         ],

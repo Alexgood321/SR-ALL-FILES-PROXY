@@ -5,14 +5,14 @@
 ## Source of truth
 
 - `config/remote.conf` — SHA256 `78b60dd2c6a1c63ba863d07f56ee0035f747f5309a188d941e1ecf72059098d4`
-- `modules/Unified-Routing-System-DNS.sgmodule` — SHA256 `2f77b6988a3fc827a7c48405718a83f785f185172e9e639eefd5926c8ab3c965`
+- `modules/Unified-Routing-System-DNS.sgmodule` — SHA256 `9c8da8e0c952ffbe83e671191e9599743e0f31e967466ffb594a862474b75442`
 - `modules/Ads-Privacy-Block.sgmodule` — SHA256 `2512e9115f9ec81fc52b8507e155c3aa8ddb501c74f511bd7a2676ad0fca8727`
 - YouTube/MITM файлы: **не используются**.
 
 ## Сгенерированная нативная policy
 
 - `https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/main/incy/xray-policy.json`
-- Routing rules: **474**
+- Routing rules: **473**
 - Selective System DNS matchers: **292**
 - Назначение: Sub-Store встраивает эти `dns` + `routing` в каждый INCY Full Xray server config.
 - Артефакт не создаёт `autorouting`, routing header или отдельный routing profile (No `autorouting`).
@@ -44,7 +44,7 @@ DNS ARCHITECTURE: IMPLEMENTED STATICALLY. DNS PARITY: NOT TESTED.
 - `NOT PORTED / COVERAGE CHECK`: 6
 - `NOT PORTED / REQUIRES E2E`: 2
 - `NOT PORTED / UNSUPPORTED ON INCY iOS`: 1
-- `SEMANTIC ADAPTATION`: 345
+- `SEMANTIC ADAPTATION`: 344
 - `SKIPPED AS DUPLICATE`: 3
 
 ## PLATFORM_DEPENDENT
@@ -396,7 +396,6 @@ DNS ARCHITECTURE: IMPLEMENTED STATICALLY. DNS PARITY: NOT TESTED.
 - `IP-CIDR,176.235.29.0/24,DIRECT,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
 - `IP-CIDR,176.235.227.0/24,DIRECT,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
 - `IP-CIDR,188.225.31.197/32,DIRECT,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
-- `IP-CIDR,5.61.89.166/32,DIRECT,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
 - `IP-CIDR,46.174.49.29/32,DIRECT,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
 - `tun-excluded-routes: 100.64.0.0/10` — Shadowrocket исключает сеть из TUN; Xray direct/freedom только отправляет её напрямую внутри Xray и не является 1:1 TUN exclusion. Runtime parity не заявляется.
 - `tun-excluded-routes: 127.0.0.0/8` — Shadowrocket исключает сеть из TUN; Xray direct/freedom только отправляет её напрямую внутри Xray и не является 1:1 TUN exclusion. Runtime parity не заявляется.
