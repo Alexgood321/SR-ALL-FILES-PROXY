@@ -3206,6 +3206,13 @@
       },
       {
         "domain": [
+          "full:incy-sync-test.invalid"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
           "full:new.tv.team"
         ],
         "type": "field",
