@@ -124,11 +124,6 @@
 # =============================================================================
 # ЖУРНАЛ АКТУАЛИЗАЦИИ / ИСТОЧНИКИ
 # =============================================================================
-# 2026-10-02 — TEMP INCY autosync verification.
-# Добавлен DOMAIN,incy-sync-test.invalid,DIRECT только для проверки автоматической
-# синхронизации canonical Shadowrocket routing -> generated INCY Xray policy.
-# Зона .invalid зарезервирована для тестов и не относится к реальному сервису.
-#
 # 2026-09-26 — Netcraze / Keenetic Cloud explicit DIRECT / версия 1.15.
 # Добавлен DOMAIN-SUFFIX,netcraze.cloud,DIRECT. PacketTunnel 2026-09-25 показал,
 # что master.netcraze.cloud и logs.netcraze.cloud уже фактически шли DIRECT через
@@ -714,8 +709,6 @@ IP-CIDR,176.235.227.0/24,DIRECT,no-resolve
 DOMAIN-SUFFIX,netcraze.cloud,DIRECT
 
 # --- Manual DIRECT ---
-# TEMP 2026-10-02: INCY autosync pipeline verification; .invalid is reserved for testing.
-DOMAIN,incy-sync-test.invalid,DIRECT
 DOMAIN,new.tv.team,DIRECT
 DOMAIN,rus.epg.team,DIRECT
 DOMAIN,iptvx.one,DIRECT
