@@ -725,7 +725,6 @@ DOMAIN-SUFFIX,tvtm.one,DIRECT
 DOMAIN-SUFFIX,lamro.workers.dev,DIRECT
 DOMAIN-SUFFIX,vdbmate.org,DIRECT
 IP-CIDR,188.225.31.197/32,DIRECT,no-resolve
-IP-CIDR,5.61.89.166/32,DIRECT,no-resolve
 
 # --- MAX Messenger external-IP consistency ---
 # Reverse engineering confirms MAX uses these public IP-check endpoints.
