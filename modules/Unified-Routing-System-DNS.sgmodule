@@ -1,7 +1,7 @@
-#!name=Unified Routing + System DNS v1.16
+#!name=Unified Routing + System DNS v1.17
 #!desc=Единый модуль DIRECT/PROXY + выборочный System DNS. Использовать вместе с remote.conf.
 #!author=OpenAI + user
-#!version=1.16
+#!version=1.17
 
 # =============================================================================
 # ПАМЯТКА / НАЗНАЧЕНИЕ
@@ -124,6 +124,18 @@
 # =============================================================================
 # ЖУРНАЛ АКТУАЛИЗАЦИИ / ИСТОЧНИКИ
 # =============================================================================
+# 2026-10-12 — DEWU / Poizon videocdn narrow follow-up / версия 1.17.
+# По PacketTunnel runtime 2026-10-12 после v1.16 основные DEWU/Poizon
+# домены шли DIRECT + System DNS, пользователь подтвердил успешную загрузку
+# всех основных разделов, фото и видео при работающем VPN. В логе оставались
+# 2 PROXY обращения к videocdn.poizon.com. Точечно добавлены
+# DOMAIN,videocdn.poizon.com,DIRECT и videocdn.poizon.com = server:system.
+# Зона влияния: только этот отдельный hostname. Остальные поддомены poizon.com,
+# сторонние CDN, общие Alibaba HTTPDNS IP/CIDR, ASN остаются без изменений.
+# Цель: убрать смешанную маршрутизацию Poizon без риска широкого suffix.
+# Основание: PacketTunnel 2026-10-12 и пользовательский runtime-тест v1.16.
+# Post-change runtime v1.17 на устройстве ещё не проверен.
+#
 # 2026-10-12 — DEWU / Poizon narrow DIRECT pilot / версия 1.16.
 # После PacketTunnel 2026-10-12 (Poizon DUApp/6.2.0.510, FIN VPN TPANEL-DEN)
 # пользователь подтвердил: проблемный раздел работает при полном выходе
@@ -730,6 +742,7 @@ DOMAIN-SUFFIX,netcraze.cloud,DIRECT
 DOMAIN-SUFFIX,dewu.com,DIRECT
 DOMAIN-SUFFIX,dewucdn.com,DIRECT
 DOMAIN,cdn.poizon.com,DIRECT
+DOMAIN,videocdn.poizon.com,DIRECT
 
 # --- Manual DIRECT ---
 DOMAIN,new.tv.team,DIRECT
@@ -1118,6 +1131,7 @@ dewu.com = server:system
 dewucdn.com = server:system
 *.dewucdn.com = server:system
 cdn.poizon.com = server:system
+videocdn.poizon.com = server:system
 
 # --- RU service consistency audit ---
 vkuser.net = server:system
