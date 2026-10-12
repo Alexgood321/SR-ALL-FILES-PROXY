@@ -1,7 +1,7 @@
-#!name=Unified Routing + System DNS v1.15
+#!name=Unified Routing + System DNS v1.16
 #!desc=Единый модуль DIRECT/PROXY + выборочный System DNS. Использовать вместе с remote.conf.
 #!author=OpenAI + user
-#!version=1.15
+#!version=1.16
 
 # =============================================================================
 # ПАМЯТКА / НАЗНАЧЕНИЕ
@@ -124,6 +124,23 @@
 # =============================================================================
 # ЖУРНАЛ АКТУАЛИЗАЦИИ / ИСТОЧНИКИ
 # =============================================================================
+# 2026-10-12 — DEWU / Poizon narrow DIRECT pilot / версия 1.16.
+# После PacketTunnel 2026-10-12 (Poizon DUApp/6.2.0.510, FIN VPN TPANEL-DEN)
+# пользователь подтвердил: проблемный раздел работает при полном выходе
+# через российский IP без VPN. В логе app.dewu.com, CDN, im-gateway и
+# Alibaba HTTPDNS ходили через FINAL,PROXY; у HTTPDNS есть разрывы соединений.
+# Добавлены только DOMAIN-SUFFIX,dewu.com,DIRECT,
+# DOMAIN-SUFFIX,dewucdn.com,DIRECT и DOMAIN,cdn.poizon.com,DIRECT;
+# для этих доменов — выборочный server:system, чтобы резолвить через локальный DNS.
+# Не затронуты общие IP/CIDR Alibaba/HTTPDNS, Tencent/CDN, сторонние
+# aliyuncs.com, 95fenapp.com и tianwenca.com: их используют и другие apps.
+# Зона влияния — только названные branded domain hosts и их поддомены.
+# Доказанная работа без VPN НЕ равна runtime PASS с новым split-routing:
+# клиент может напрямую обращаться к shared IP Alibaba HTTPDNS.
+# Основание: PacketTunnel 2026-10-12, тест с RU IP; документ DEWU Tech 2021
+# (cdn.poizon.com/Alibaba CDN), Alibaba Cloud HTTPDNS official docs 2026.
+# Post-change Shadowrocket runtime / release delivery ещё не проверены.
+#
 # 2026-09-26 — Netcraze / Keenetic Cloud explicit DIRECT / версия 1.15.
 # Добавлен DOMAIN-SUFFIX,netcraze.cloud,DIRECT. PacketTunnel 2026-09-25 показал,
 # что master.netcraze.cloud и logs.netcraze.cloud уже фактически шли DIRECT через
@@ -708,6 +725,12 @@ IP-CIDR,176.235.227.0/24,DIRECT,no-resolve
 # и актуальности GeoIP. DNS не форсируем: остаётся глобальный Cloudflare -> ControlD.
 DOMAIN-SUFFIX,netcraze.cloud,DIRECT
 
+# --- DEWU / Poizon narrow DIRECT pilot (2026-10-12) ---
+# Branded domains only. Shared Alibaba HTTPDNS / CDN IPs stay on default policy.
+DOMAIN-SUFFIX,dewu.com,DIRECT
+DOMAIN-SUFFIX,dewucdn.com,DIRECT
+DOMAIN,cdn.poizon.com,DIRECT
+
 # --- Manual DIRECT ---
 DOMAIN,new.tv.team,DIRECT
 DOMAIN,rus.epg.team,DIRECT
@@ -1087,6 +1110,14 @@ crl3.digicert.com = server:system
 crl4.digicert.com = server:system
 ocsp.digicert.com = server:system
 ocsp.digicert.cn = server:system
+
+# --- DEWU / Poizon narrow System DNS (2026-10-12) ---
+# Geo-appropriate DNS for branded hosts only; no shared cloud/CDN domains.
+dewu.com = server:system
+*.dewu.com = server:system
+dewucdn.com = server:system
+*.dewucdn.com = server:system
+cdn.poizon.com = server:system
 
 # --- RU service consistency audit ---
 vkuser.net = server:system
