@@ -276,6 +276,11 @@
           "full:crl4.digicert.com",
           "full:ocsp.digicert.com",
           "full:ocsp.digicert.cn",
+          "full:dewu.com",
+          "domain:dewu.com",
+          "full:dewucdn.com",
+          "domain:dewucdn.com",
+          "full:cdn.poizon.com",
           "full:vkuser.net",
           "domain:vkuser.net",
           "full:userapi.com",
@@ -575,6 +580,11 @@
           "full:crl4.digicert.com",
           "full:ocsp.digicert.com",
           "full:ocsp.digicert.cn",
+          "full:dewu.com",
+          "domain:dewu.com",
+          "full:dewucdn.com",
+          "domain:dewucdn.com",
+          "full:cdn.poizon.com",
           "full:vkuser.net",
           "domain:vkuser.net",
           "full:userapi.com",
@@ -3200,6 +3210,27 @@
       {
         "domain": [
           "domain:netcraze.cloud"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:dewu.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "domain:dewucdn.com"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
+          "full:cdn.poizon.com"
         ],
         "type": "field",
         "outboundTag": "direct"
