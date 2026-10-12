@@ -5,15 +5,15 @@
 ## Source of truth
 
 - `config/remote.conf` — SHA256 `78b60dd2c6a1c63ba863d07f56ee0035f747f5309a188d941e1ecf72059098d4`
-- `modules/Unified-Routing-System-DNS.sgmodule` — SHA256 `7cb6c0924a27c55dfe155ba945e79603cac3db27b74bb7630898745862f71ee3`
+- `modules/Unified-Routing-System-DNS.sgmodule` — SHA256 `caac6587fc06229cf3d95ef0bde731a870ecc54218a4d0da30b8d02aeef0e1e9`
 - `modules/Ads-Privacy-Block.sgmodule` — SHA256 `2512e9115f9ec81fc52b8507e155c3aa8ddb501c74f511bd7a2676ad0fca8727`
 - YouTube/MITM файлы: **не используются**.
 
 ## Сгенерированная нативная policy
 
 - `https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/main/incy/xray-policy.json`
-- Routing rules: **476**
-- Selective System DNS matchers: **297**
+- Routing rules: **477**
+- Selective System DNS matchers: **298**
 - Назначение: Sub-Store встраивает эти `dns` + `routing` в каждый INCY Full Xray server config.
 - Артефакт не создаёт `autorouting`, routing header или отдельный routing profile (No `autorouting`).
 - Legacy `incy/incy-routing.json` остаётся compatibility/diagnostic до Full Xray E2E.
@@ -40,11 +40,11 @@ DNS ARCHITECTURE: IMPLEMENTED STATICALLY. DNS PARITY: NOT TESTED.
 
 ## Количество по статусам
 
-- `CONFIRMED STATIC MAPPING`: 424
+- `CONFIRMED STATIC MAPPING`: 425
 - `NOT PORTED / COVERAGE CHECK`: 6
 - `NOT PORTED / REQUIRES E2E`: 2
 - `NOT PORTED / UNSUPPORTED ON INCY iOS`: 1
-- `SEMANTIC ADAPTATION`: 349
+- `SEMANTIC ADAPTATION`: 350
 - `SKIPPED AS DUPLICATE`: 3
 
 ## PLATFORM_DEPENDENT
@@ -337,6 +337,7 @@ DNS ARCHITECTURE: IMPLEMENTED STATICALLY. DNS PARITY: NOT TESTED.
 - `dewucdn.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
 - `*.dewucdn.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
 - `cdn.poizon.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `videocdn.poizon.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
 - `vkuser.net = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
 - `*.vkuser.net = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
 - `userapi.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
