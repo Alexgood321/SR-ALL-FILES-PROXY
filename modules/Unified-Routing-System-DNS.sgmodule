@@ -1,7 +1,7 @@
-#!name=Unified Routing + System DNS v1.17
+#!name=Unified Routing + System DNS v1.18
 #!desc=Единый модуль DIRECT/PROXY + выборочный System DNS. Использовать вместе с remote.conf.
 #!author=OpenAI + user
-#!version=1.17
+#!version=1.18
 
 # =============================================================================
 # ПАМЯТКА / НАЗНАЧЕНИЕ
@@ -124,6 +124,18 @@
 # =============================================================================
 # ЖУРНАЛ АКТУАЛИЗАЦИИ / ИСТОЧНИКИ
 # =============================================================================
+# 2026-10-14 — Personal WebDAV direct hostname / версия 1.18.
+# Добавлен DOMAIN,daniil.netcraze.link,DIRECT для личного WebDAV:
+# https://daniil.netcraze.link/webdav/ . Правило применяется ко всему HTTPS
+# hostname (а не только к /webdav/), но не охватывает иные hosts netcraze.link.
+# Причина: пользователь хочет доступ к домашнему WebDAV при активном VPN
+# напрямую через локальную сеть/российский IP; без предположений о текущей
+# причине недоступности. Зона влияния ограничена этим единственным hostname.
+# DNS не менялся: остаётся глобальная Cloudflare DoH #proxy / ControlD fallback.
+# IP, CIDR, общий DOMAIN-SUFFIX,netcraze.link и другие сервисы не добавлены.
+# Основание: URL пользователя и аудит Unified v1.17 (2026-10-14).
+# После изменения runtime WebDAV/SSL/порт/доступность нужно проверить отдельно.
+#
 # 2026-10-12 — DEWU / Poizon videocdn narrow follow-up / версия 1.17.
 # По PacketTunnel runtime 2026-10-12 после v1.16 основные DEWU/Poizon
 # домены шли DIRECT + System DNS, пользователь подтвердил успешную загрузку
@@ -736,6 +748,9 @@ IP-CIDR,176.235.227.0/24,DIRECT,no-resolve
 # DIRECT через GEOIP,RU. Фиксируем домен явно, чтобы маршрут не зависел от IP/CDN
 # и актуальности GeoIP. DNS не форсируем: остаётся глобальный Cloudflare -> ControlD.
 DOMAIN-SUFFIX,netcraze.cloud,DIRECT
+
+# --- Personal WebDAV (single hostname, 2026-10-14) ---
+DOMAIN,daniil.netcraze.link,DIRECT
 
 # --- DEWU / Poizon narrow DIRECT pilot (2026-10-12) ---
 # Branded domains only. Shared Alibaba HTTPDNS / CDN IPs stay on default policy.
