@@ -3218,6 +3218,13 @@
       },
       {
         "domain": [
+          "full:daniil.netcraze.link"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
           "domain:dewu.com"
         ],
         "type": "field",
