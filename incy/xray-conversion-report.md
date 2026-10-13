@@ -5,7 +5,7 @@
 ## Source of truth
 
 - `config/remote.conf` — SHA256 `78b60dd2c6a1c63ba863d07f56ee0035f747f5309a188d941e1ecf72059098d4`
-- `modules/Unified-Routing-System-DNS.sgmodule` — SHA256 `003defb7971ffa1e189819023e650f068ad989419b4d7b3ddd5702675dfd36b0`
+- `modules/Unified-Routing-System-DNS.sgmodule` — SHA256 `dc53178d5bd3deb74497040d3943632f5397de9db4afd283b8bd8e3945d77797`
 - `modules/Ads-Privacy-Block.sgmodule` — SHA256 `2512e9115f9ec81fc52b8507e155c3aa8ddb501c74f511bd7a2676ad0fca8727`
 - YouTube/MITM файлы: **не используются**.
 
@@ -13,7 +13,7 @@
 
 - `https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/main/incy/xray-policy.json`
 - Routing rules: **478**
-- Selective System DNS matchers: **298**
+- Selective System DNS matchers: **299**
 - Назначение: Sub-Store встраивает эти `dns` + `routing` в каждый INCY Full Xray server config.
 - Артефакт не создаёт `autorouting`, routing header или отдельный routing profile (No `autorouting`).
 - Legacy `incy/incy-routing.json` остаётся compatibility/diagnostic до Full Xray E2E.
@@ -44,7 +44,7 @@ DNS ARCHITECTURE: IMPLEMENTED STATICALLY. DNS PARITY: NOT TESTED.
 - `NOT PORTED / COVERAGE CHECK`: 6
 - `NOT PORTED / REQUIRES E2E`: 2
 - `NOT PORTED / UNSUPPORTED ON INCY iOS`: 1
-- `SEMANTIC ADAPTATION`: 350
+- `SEMANTIC ADAPTATION`: 351
 - `SKIPPED AS DUPLICATE`: 3
 
 ## PLATFORM_DEPENDENT
@@ -65,6 +65,7 @@ DNS ARCHITECTURE: IMPLEMENTED STATICALLY. DNS PARITY: NOT TESTED.
 
 ## SEMANTIC ADAPTATION
 
+- `daniil.netcraze.link = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
 - `amp-api-search-edge.apps.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
 - `amp-api-edge.apps.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
 - `amp-api.apps.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.

@@ -9,6 +9,7 @@
       {
         "address": "localhost",
         "domains": [
+          "full:daniil.netcraze.link",
           "full:amp-api-search-edge.apps.apple.com",
           "full:amp-api-edge.apps.apple.com",
           "full:amp-api.apps.apple.com",
@@ -314,6 +315,7 @@
       {
         "address": "https://freedns.controld.com/p0",
         "domains": [
+          "full:daniil.netcraze.link",
           "full:amp-api-search-edge.apps.apple.com",
           "full:amp-api-edge.apps.apple.com",
           "full:amp-api.apps.apple.com",
