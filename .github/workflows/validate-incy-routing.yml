@@ -6,6 +6,8 @@ on:
     paths:
       - "incy/xray-policy.json"
       - "incy/xray-conversion-report.md"
+      - "happ/xray-policy.json"
+      - "happ/xray-conversion-report.md"
       - ".github/workflows/validate-incy-routing.yml"
 
   pull_request:
@@ -15,9 +17,13 @@ on:
       - "modules/Ads-Privacy-Block.sgmodule"
       - "scripts/generate_incy_routing.py"
       - "scripts/generate_incy_xray_policy.py"
+      - "scripts/generate_happ_xray_policy.py"
+      - "tests/test_happ_xray_policy.py"
       - "tests/test_incy_xray_policy.py"
       - "incy/xray-policy.json"
       - "incy/xray-conversion-report.md"
+      - "happ/xray-policy.json"
+      - "happ/xray-conversion-report.md"
       - ".github/workflows/validate-incy-routing.yml"
       - ".github/workflows/sync-incy-routing.yml"
 
@@ -133,6 +139,24 @@ jobs:
             /tmp/xray/xray run \
             -test \
             -c /tmp/incy-xray-validation.json
+
+      - name: Validate HAPP canonical adapter independently
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ] || [ ! -f happ/xray-policy.json ]; then
+            python3 -B scripts/generate_happ_xray_policy.py
+          fi
+          python3 -B scripts/generate_happ_xray_policy.py --check --write-validation-config /tmp/happ-xray-validation.json
+          python3 -B -m unittest discover -s tests -p 'test_happ_xray_policy.py' -v
+          XRAY_LOCATION_ASSET=/tmp/xray /tmp/xray/xray run -test -c /tmp/happ-xray-validation.json
+          mapfile -t changed < <({ git diff --name-only; git ls-files --others --exclude-standard; } | sort -u)
+          for path in "${changed[@]}"; do
+            case "$path" in
+              incy/xray-policy.json|incy/xray-conversion-report.md|happ/xray-policy.json|happ/xray-conversion-report.md) ;;
+              *) echo "Generator modified unexpected path: $path" >&2; exit 1 ;;
+            esac
+          done
 
       - name: Upload INCY Xray artifacts
         if: ${{ always() && hashFiles('incy/xray-policy.json') != '' }}
