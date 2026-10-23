@@ -5,7 +5,7 @@
 ## Source of truth
 
 - `config/remote.conf` — SHA256 `78b60dd2c6a1c63ba863d07f56ee0035f747f5309a188d941e1ecf72059098d4`
-- `modules/Unified-Routing-System-DNS.sgmodule` — SHA256 `c85f59ef1a89e8b0ec7a510f39716c5fa10cf3121128c0907f551eb1fe36aa73`
+- `modules/Unified-Routing-System-DNS.sgmodule` — SHA256 `b1152c9e802912684839a23acedceb0c6b1c3b7b789388eeb2ced91e41c23c06`
 - `modules/Ads-Privacy-Block.sgmodule` — SHA256 `2512e9115f9ec81fc52b8507e155c3aa8ddb501c74f511bd7a2676ad0fca8727`
 - YouTube/MITM файлы: **не используются**.
 
