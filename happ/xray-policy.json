@@ -2212,6 +2212,13 @@
       },
       {
         "domain": [
+          "full:vpnall-routing-e2e.test"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "domain": [
           "full:sun1-14.userapi.com"
         ],
         "type": "field",
