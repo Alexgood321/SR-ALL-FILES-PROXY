@@ -124,6 +124,12 @@
 # =============================================================================
 # ЖУРНАЛ АКТУАЛИЗАЦИИ / ИСТОЧНИКИ
 # =============================================================================
+# 2026-10-23 — INCY/HAPP E2E stage 2: replace temporary test DOMAIN.
+# Removed active rule DOMAIN,vpnall-routing-e2e.test,DIRECT;
+# added active rule DOMAIN,vpnall-routing-e2e-2.test,DIRECT.
+# Scope: exact reserved .test hostname only; [Host], DNS and other routes unchanged.
+# Reason: test unattended Alpha update for both clients after one-time INCY approval.
+#
 # 2026-10-23 — Temporary INCY/HAPP automatic delivery E2E canary.
 # DOMAIN,vpnall-routing-e2e.test,DIRECT: reserved .test domain, no production service.
 # Purpose: verify GitHub generation, Alpha timer and actual client JSON delivery.
@@ -594,7 +600,7 @@ DOMAIN-SUFFIX,trae.ai,PROXY
 # ==================================================
 
 # --- TEMPORARY INCY/HAPP AUTO-SYNC E2E CANARY (remove after test) ---
-DOMAIN,vpnall-routing-e2e.test,DIRECT
+DOMAIN,vpnall-routing-e2e-2.test,DIRECT
 
 # --- VK / Mail / OK / MY DIRECT ---
 DOMAIN,sun1-14.userapi.com,DIRECT
