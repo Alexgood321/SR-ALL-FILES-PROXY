@@ -19,7 +19,7 @@ permissions:
   statuses: write
 
 env:
-  XRAY_VERSION: v26.9.8
+  XRAY_VERSION: v26.10.21
 
 concurrency:
   group: incy-routing-sync-main

@@ -31,7 +31,7 @@ permissions:
   contents: read
 
 env:
-  XRAY_VERSION: v26.9.8
+  XRAY_VERSION: v26.10.21
 
 jobs:
   validate:
