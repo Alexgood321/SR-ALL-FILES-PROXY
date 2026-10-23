@@ -124,6 +124,12 @@
 # =============================================================================
 # ЖУРНАЛ АКТУАЛИЗАЦИИ / ИСТОЧНИКИ
 # =============================================================================
+# 2026-10-23 — Temporary INCY/HAPP automatic delivery E2E canary.
+# DOMAIN,vpnall-routing-e2e.test,DIRECT: reserved .test domain, no production service.
+# Purpose: verify GitHub generation, Alpha timer and actual client JSON delivery.
+# Scope: only this exact hostname, no DNS/[Host] or other routing changes.
+# Basis: explicit owner request; remove after ADD/REMOVE E2E verification.
+#
 # 2026-10-14 — Personal WebDAV selective System DNS / версия 1.19.
 # PacketTunnel iPhone 2026-10-14 на LTE + TPANEL-DEN: правило
 # DOMAIN,daniil.netcraze.link,DIRECT применялось, однако Cloudflare DoH через
@@ -586,6 +592,9 @@ DOMAIN-SUFFIX,trae.ai,PROXY
 # ==================================================
 # 03) DIRECT SERVICES
 # ==================================================
+
+# --- TEMPORARY INCY/HAPP AUTO-SYNC E2E CANARY (remove after test) ---
+DOMAIN,vpnall-routing-e2e.test,DIRECT
 
 # --- VK / Mail / OK / MY DIRECT ---
 DOMAIN,sun1-14.userapi.com,DIRECT
