@@ -2222,7 +2222,7 @@
           "full:vpnall-routing-e2e-3.test"
         ],
         "type": "field",
-        "outboundTag": "direct"
+        "outboundTag": "proxy"
       },
       {
         "domain": [
