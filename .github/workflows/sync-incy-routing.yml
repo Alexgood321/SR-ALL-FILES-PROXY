@@ -23,9 +23,9 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    env:
-      ROUTING_CI_RUNTIME: ${{ runner.temp }}/vpnall-routing-${{ github.run_id }}-${{ github.run_attempt }}
     steps:
+      - name: Initialize isolated runtime path
+        run: echo "ROUTING_CI_RUNTIME=$RUNNER_TEMP/vpnall-routing-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" >> "$GITHUB_ENV"
       - name: Checkout reviewed event
         uses: actions/checkout@v4
         with:

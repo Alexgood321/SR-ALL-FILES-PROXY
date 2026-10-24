@@ -30,9 +30,9 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    env:
-      ROUTING_CI_RUNTIME: ${{ runner.temp }}/vpnall-validation-${{ github.run_id }}-${{ github.run_attempt }}
     steps:
+      - name: Initialize isolated runtime path
+        run: echo "ROUTING_CI_RUNTIME=$RUNNER_TEMP/vpnall-validation-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" >> "$GITHUB_ENV"
       - name: Checkout
         uses: actions/checkout@v4
         with:
