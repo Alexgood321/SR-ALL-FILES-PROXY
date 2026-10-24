@@ -601,7 +601,6 @@ DOMAIN-SUFFIX,trae.ai,PROXY
 
 # --- TEMPORARY INCY/HAPP AUTO-SYNC E2E CANARY (remove after test) ---
 DOMAIN,vpnall-routing-e2e-2.test,DIRECT
-DOMAIN,vpnall-routing-e2e-3.test,PROXY
 
 # --- VK / Mail / OK / MY DIRECT ---
 DOMAIN,sun1-14.userapi.com,DIRECT
