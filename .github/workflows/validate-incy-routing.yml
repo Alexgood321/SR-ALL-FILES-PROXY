@@ -4,167 +4,80 @@ on:
   push:
     branches: [main]
     paths:
-      - "incy/xray-policy.json"
-      - "incy/xray-conversion-report.md"
-      - "happ/xray-policy.json"
-      - "happ/xray-conversion-report.md"
-      - ".github/workflows/validate-incy-routing.yml"
-
+      - "config/remote.conf"
+      - "modules/Unified-Routing-System-DNS.sgmodule"
+      - "modules/Ads-Privacy-Block.sgmodule"
+      - "scripts/**"
+      - "tests/**"
+      - "incy/**"
+      - "happ/**"
+      - ".github/workflows/**"
   pull_request:
     paths:
       - "config/remote.conf"
       - "modules/Unified-Routing-System-DNS.sgmodule"
       - "modules/Ads-Privacy-Block.sgmodule"
-      - "scripts/generate_incy_routing.py"
-      - "scripts/generate_incy_xray_policy.py"
-      - "scripts/generate_happ_xray_policy.py"
-      - "tests/test_happ_xray_policy.py"
-      - "tests/test_incy_xray_policy.py"
-      - "incy/xray-policy.json"
-      - "incy/xray-conversion-report.md"
-      - "happ/xray-policy.json"
-      - "happ/xray-conversion-report.md"
-      - ".github/workflows/validate-incy-routing.yml"
-      - ".github/workflows/sync-incy-routing.yml"
+      - "scripts/**"
+      - "tests/**"
+      - "incy/**"
+      - "happ/**"
+      - ".github/workflows/**"
 
 permissions:
   contents: read
-
-env:
-  XRAY_VERSION: v26.10.21
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-
+    env:
+      ROUTING_CI_RUNTIME: ${{ runner.temp }}/vpnall-validation-${{ github.run_id }}-${{ github.run_attempt }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Validate canonical Shadowrocket policy
-        run: python3 scripts/validate_shadowrocket.py
-
-      - name: Detect generated-artifact input changes in pull request
-        id: generated_inputs
-        if: ${{ github.event_name == 'pull_request' }}
-        shell: bash
+          persist-credentials: false
+      - name: Test CI safety with local Git fixtures
+        run: python3 -m unittest discover -s tests -p test_routing_sync_ci.py -v
+      - name: Select source or original-artifact validation independently
+        id: mode
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: |
-          set -Eeuo pipefail
-
-          if git diff --name-only "$BASE_SHA...$HEAD_SHA" -- \
-            config/remote.conf \
-            modules/Unified-Routing-System-DNS.sgmodule \
-            modules/Ads-Privacy-Block.sgmodule \
-            scripts/generate_incy_routing.py \
-            scripts/generate_incy_xray_policy.py | grep -q .; then
-
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Generate or verify INCY Xray artifacts
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
         shell: bash
         run: |
           set -Eeuo pipefail
-
-          if [ "${{ github.event_name }}" = "pull_request" ] && \
-             [ "${{ steps.generated_inputs.outputs.changed }}" = "true" ]; then
-            python3 scripts/generate_incy_xray_policy.py
-          else
-            if [ -f incy/xray-policy.json ] && \
-               [ -f incy/xray-conversion-report.md ]; then
-              python3 scripts/generate_incy_xray_policy.py --check
-            else
-              python3 scripts/generate_incy_xray_policy.py
+          for target in incy happ; do
+            mode=source
+            if [ -z "$BASE" ] || [[ "$BASE" =~ ^0+$ ]]; then
+              mode=artifact
+            elif ! git diff --quiet "$BASE" HEAD -- "$target/xray-policy.json" "$target/xray-conversion-report.md"; then
+              mode=artifact
             fi
-          fi
-
-          python3 scripts/generate_incy_xray_policy.py --check
-
-      - name: Guard generator write scope
-        if: ${{ github.event_name == 'pull_request' }}
-        shell: bash
-        run: |
-          set -Eeuo pipefail
-
-          mapfile -t changed < <(
-            {
-              git diff --name-only
-              git ls-files --others --exclude-standard
-            } | sort -u
-          )
-
-          for path in "${changed[@]}"; do
-            case "$path" in
-              incy/xray-policy.json|incy/xray-conversion-report.md) ;;
-              *)
-                echo "Generator modified unexpected path: $path" >&2
-                exit 1
-                ;;
-            esac
+            echo "$target=$mode" >> "$GITHUB_OUTPUT"
           done
-
-      - name: Run INCY Xray policy tests
-        run: |
-          python3 -m unittest discover \
-            -s tests \
-            -p 'test_incy_xray_policy.py' \
-            -v
-
-      - name: Validate native policy with Xray-core
-        shell: bash
-        run: |
-          set -Eeuo pipefail
-
-          mkdir -p /tmp/xray
-
-          curl -fsSL \
-            -o /tmp/xray.zip \
-            "https://github.com/XTLS/Xray-core/releases/download/${XRAY_VERSION}/Xray-linux-64.zip"
-
-          unzip -q /tmp/xray.zip -d /tmp/xray
-
-          python3 scripts/generate_incy_xray_policy.py \
-            --write-validation-config /tmp/incy-xray-validation.json \
-            --check
-
-          XRAY_LOCATION_ASSET=/tmp/xray \
-            /tmp/xray/xray run \
-            -test \
-            -c /tmp/incy-xray-validation.json
-
-      - name: Validate HAPP canonical adapter independently
-        shell: bash
-        run: |
-          set -Eeuo pipefail
-          if [ "${{ github.event_name }}" = "pull_request" ] || [ ! -f happ/xray-policy.json ]; then
-            python3 -B scripts/generate_happ_xray_policy.py
-          fi
-          python3 -B scripts/generate_happ_xray_policy.py --check --write-validation-config /tmp/happ-xray-validation.json
-          python3 -B -m unittest discover -s tests -p 'test_happ_xray_policy.py' -v
-          XRAY_LOCATION_ASSET=/tmp/xray /tmp/xray/xray run -test -c /tmp/happ-xray-validation.json
-          mapfile -t changed < <({ git diff --name-only; git ls-files --others --exclude-standard; } | sort -u)
-          for path in "${changed[@]}"; do
-            case "$path" in
-              incy/xray-policy.json|incy/xray-conversion-report.md|happ/xray-policy.json|happ/xray-conversion-report.md) ;;
-              *) echo "Generator modified unexpected path: $path" >&2; exit 1 ;;
-            esac
-          done
-
-      - name: Upload INCY Xray artifacts
-        if: ${{ always() && hashFiles('incy/xray-policy.json') != '' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: incy-xray-policy-generated
-          path: |
-            incy/xray-policy.json
-            incy/xray-conversion-report.md
-          if-no-files-found: error
-          retention-days: 1
+      - name: Prepare pinned Xray archive and digest
+        id: setup
+        run: python3 scripts/routing_sync_ci.py --runtime "$ROUTING_CI_RUNTIME" --prepare-xray
+      - name: Validate INCY
+        id: incy
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' && steps.mode.outcome == 'success' }}
+        continue-on-error: true
+        env:
+          MODE: ${{ steps.mode.outputs.incy }}
+        run: python3 scripts/routing_sync_ci.py --runtime "$ROUTING_CI_RUNTIME" --target incy --mode "$MODE"
+      - name: Validate HAPP
+        id: happ
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' && steps.mode.outcome == 'success' }}
+        continue-on-error: true
+        env:
+          MODE: ${{ steps.mode.outputs.happ }}
+        run: python3 scripts/routing_sync_ci.py --runtime "$ROUTING_CI_RUNTIME" --target happ --mode "$MODE"
+      - name: Require both independent results
+        if: ${{ !cancelled() }}
+        env:
+          SETUP: ${{ steps.setup.outcome }}
+          MODE: ${{ steps.mode.outcome }}
+          INCY: ${{ steps.incy.outcome }}
+          HAPP: ${{ steps.happ.outcome }}
+        run: test "$SETUP" = success && test "$MODE" = success && test "$INCY" = success && test "$HAPP" = success

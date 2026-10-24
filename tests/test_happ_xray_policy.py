@@ -16,15 +16,22 @@ class HappPolicyTests(unittest.TestCase):
     def test_same_writer_independent_validation_ready_and_no_docker(self):
         workflow = (ROOT / '.github/workflows/sync-incy-routing.yml').read_text()
         self.assertEqual(workflow.count('  sync:\n'), 1)
-        self.assertIn('context":"happ/xray-policy-ready', workflow)
-        self.assertIn('happ/xray-policy.json|happ/xray-conversion-report.md', workflow)
-        self.assertIn('-c /tmp/happ-xray-validation.json', workflow)
-        self.assertIn("-p 'test_happ_xray_policy.py'", workflow)
+        self.assertIn('--target happ --publish', workflow)
+        self.assertIn('--target incy --publish', workflow)
+        self.assertIn("steps.happ.outcome", workflow)
+        self.assertIn("steps.incy.outcome", workflow)
+        harness = (ROOT / 'scripts/routing_sync_ci.py').read_text()
+        self.assertIn("'context': f'{target}/xray-policy-ready'", harness)
+        self.assertIn("f'{target}/xray-policy.json'", harness)
+        self.assertIn("f'test_{target}_xray_policy.py'", harness)
+        self.assertIn("'run', '-test', '-c'", harness)
         self.assertNotIn('docker ', workflow)
         self.assertNotIn('publish_policy_v2.py --publish', workflow)
         validate = (ROOT / '.github/workflows/validate-incy-routing.yml').read_text()
-        self.assertIn('scripts/generate_happ_xray_policy.py', validate)
-        self.assertIn('-c /tmp/happ-xray-validation.json', validate)
+        self.assertIn('--target happ --mode', validate)
+        self.assertIn('--target incy --mode', validate)
+        self.assertIn('contents: read', validate)
+        self.assertNotIn('statuses: write', validate)
 
     def test_canonical_parity_and_independent_copy(self):
         import generate_incy_xray_policy as incy
