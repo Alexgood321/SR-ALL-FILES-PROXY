@@ -780,13 +780,6 @@
       },
       {
         "domain": [
-          "domain:adfstat.yandex.ru"
-        ],
-        "type": "field",
-        "outboundTag": "block"
-      },
-      {
-        "domain": [
           "domain:appmetrica.yandex.ru"
         ],
         "type": "field",
