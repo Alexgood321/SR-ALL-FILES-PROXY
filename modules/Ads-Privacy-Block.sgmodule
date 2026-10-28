@@ -1,7 +1,7 @@
-#!name=Ads + Privacy Block v1.4
-#!desc=Опциональная блокировка рекламы/трекеров. Использовать отдельным модулем ВЫШЕ Unified Routing + System DNS. Обновлено 2026-09-06.
+#!name=Ads + Privacy Block v1.5
+#!desc=Опциональная блокировка рекламы/трекеров. Использовать отдельным модулем ВЫШЕ Unified Routing + System DNS. Обновлено 2026-10-28.
 #!author=OpenAI + user
-#!version=1.4
+#!version=1.5
 
 # =============================================================================
 # НАЗНАЧЕНИЕ
@@ -46,6 +46,15 @@
 # =============================================================================
 # ЖУРНАЛ АКТУАЛИЗАЦИИ
 # =============================================================================
+# 2026-10-28 — версия 1.5 / тест капчи Яндекс Маркета на Mac.
+# - временно отключён только REJECT для adfstat.yandex.ru; правило сохранено
+#   комментарием для быстрого восстановления.
+# - основание: PacketTunnel 2026-10-28 фиксирует REJECT adfstat.yandex.ru
+#   рядом с запросами captcha-backgrounds.s3.yandex.net при посещении Маркета
+#   на Mac. Причинно-следственная связь с CAPTCHA пока НЕ подтверждена.
+# - остальные блокировки Яндекса и иных сервисов оставлены без изменений.
+# - rollback: раскомментировать DOMAIN-SUFFIX,adfstat.yandex.ru,REJECT.
+#
 # 2026-09-06 — версия 1.4 / Yandex Metrica, Webvisor и Yads.
 # - добавлены DOMAIN-SUFFIX,webvisor.com,REJECT,
 #   DOMAIN-SUFFIX,yandexmetrica.com,REJECT и DOMAIN-SUFFIX,yads.tech,REJECT;
@@ -152,7 +161,9 @@ DOMAIN-SUFFIX,yads.tech,REJECT
 DOMAIN,ads.adfox.ru,REJECT
 DOMAIN-SUFFIX,adfox.yandex.ru,REJECT
 DOMAIN-SUFFIX,mobile.yandexadexchange.net,REJECT
-DOMAIN-SUFFIX,adfstat.yandex.ru,REJECT
+# TEST 2026-10-28 (Mac / Yandex Market CAPTCHA): временно разрешаем adfstat.yandex.ru.
+# В логах REJECT совпадал по времени с запросами CAPTCHA; причина не доказана.
+# DOMAIN-SUFFIX,adfstat.yandex.ru,REJECT
 DOMAIN-SUFFIX,appmetrica.yandex.ru,REJECT
 DOMAIN-SUFFIX,report.appmetrica.yandex.net,REJECT
 DOMAIN-SUFFIX,report.appmetrica.yango.com,REJECT
