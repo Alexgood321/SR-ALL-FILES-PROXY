@@ -2113,6 +2113,13 @@
         "outboundTag": "proxy"
       },
       {
+        "domain": [
+          "domain:metaaiusercontent.com"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
         "ip": [
           "31.13.24.0/21"
         ],
