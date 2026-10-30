@@ -1,7 +1,7 @@
-#!name=Unified Routing + System DNS v1.19
+#!name=Unified Routing + System DNS v1.20
 #!desc=Единый модуль DIRECT/PROXY + выборочный System DNS. Использовать вместе с remote.conf.
 #!author=OpenAI + user
-#!version=1.19
+#!version=1.20
 
 # =============================================================================
 # ПАМЯТКА / НАЗНАЧЕНИЕ
@@ -124,6 +124,17 @@
 # =============================================================================
 # ЖУРНАЛ АКТУАЛИЗАЦИИ / ИСТОЧНИКИ
 # =============================================================================
+# 2026-10-30 — Meta AI user content narrow PROXY / версия 1.20.
+# Добавлено DOMAIN-SUFFIX,metaaiusercontent.com,PROXY в Meta FULL PROXY.
+# Причина: домен включён в maintained v2fly/domain-list-community/data/meta;
+# отдельного Meta-правила в Unified не было, FINAL,PROXY не гарантирует перехват
+# перед GEOIP,RU,DIRECT при будущих RU GeoIP-ответах.
+# Зона влияния: metaaiusercontent.com и его поддомены; всегда PROXY.
+# [Host] и глобальный DNS remote.conf без изменений. Никаких CIDR не добавлено.
+# Это SOURCE UPDATE/coverage hardening, а не подтверждённая новая инфраструктура.
+# Runtime/PacketTunnel не проверялся. Источник:
+# https://github.com/v2fly/domain-list-community/blob/master/data/meta
+#
 # 2026-10-23 — INCY/HAPP E2E stage 2: replace temporary test DOMAIN.
 # Removed active rule DOMAIN,vpnall-routing-e2e.test,DIRECT;
 # added active rule DOMAIN,vpnall-routing-e2e-2.test,DIRECT.
@@ -577,6 +588,7 @@ DOMAIN-SUFFIX,instagr.am,PROXY
 DOMAIN-SUFFIX,instagram.com,PROXY
 DOMAIN-SUFFIX,cdninstagram.com,PROXY
 DOMAIN-SUFFIX,meta.com,PROXY
+DOMAIN-SUFFIX,metaaiusercontent.com,PROXY
 IP-CIDR,31.13.24.0/21,PROXY,no-resolve
 IP-CIDR,66.220.144.0/20,PROXY,no-resolve
 IP-CIDR,69.63.176.0/20,PROXY,no-resolve
