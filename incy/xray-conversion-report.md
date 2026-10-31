@@ -5,14 +5,14 @@
 ## Source of truth
 
 - `config/remote.conf` — SHA256 `78b60dd2c6a1c63ba863d07f56ee0035f747f5309a188d941e1ecf72059098d4`
-- `modules/Unified-Routing-System-DNS.sgmodule` — SHA256 `fa82e9136eaca173a02e0725562630c1d604a6e2b6b77f987abf153f06204b07`
+- `modules/Unified-Routing-System-DNS.sgmodule` — SHA256 `60371987cc19999eae5820eed73e9f658302f149207bdfc93e7da63030255f74`
 - `modules/Ads-Privacy-Block.sgmodule` — SHA256 `4cc4c2605f59978ad83ea9bf2d2605f78b6b3173eebee0d9250312a33363bd38`
 - YouTube/MITM файлы: **не используются**.
 
 ## Сгенерированная нативная policy
 
 - `https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/main/incy/xray-policy.json`
-- Routing rules: **479**
+- Routing rules: **478**
 - Selective System DNS matchers: **299**
 - Назначение: Sub-Store встраивает эти `dns` + `routing` в каждый INCY Full Xray server config.
 - Артефакт не создаёт `autorouting`, routing header или отдельный routing profile (No `autorouting`).
@@ -44,7 +44,7 @@ DNS ARCHITECTURE: IMPLEMENTED STATICALLY. DNS PARITY: NOT TESTED.
 - `NOT PORTED / COVERAGE CHECK`: 6
 - `NOT PORTED / REQUIRES E2E`: 2
 - `NOT PORTED / UNSUPPORTED ON INCY iOS`: 1
-- `SEMANTIC ADAPTATION`: 351
+- `SEMANTIC ADAPTATION`: 350
 - `SKIPPED AS DUPLICATE`: 3
 
 ## PLATFORM_DEPENDENT
@@ -365,7 +365,6 @@ DNS ARCHITECTURE: IMPLEMENTED STATICALLY. DNS PARITY: NOT TESTED.
 - `postmypost.io = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
 - `*.postmypost.io = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
 - `dns.tag=dns-internal` — Внутренний DNS-трафик Cloudflare/ControlD принудительно идёт через proxy, при этом localhost System DNS не заводится в routing loop.
-- `IP-CIDR,62.60.230.167/32,PROXY,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
 - `IP-CIDR,31.77.158.107/32,PROXY,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
 - `IP-CIDR,91.108.4.0/22,PROXY,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
 - `IP-CIDR,91.108.8.0/22,PROXY,no-resolve` — Целевой CIDR сохранён; у Shadowrocket no-resolve нет 1:1 модификатора Xray при IPIfNonMatch.
