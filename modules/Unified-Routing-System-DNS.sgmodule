@@ -1,7 +1,7 @@
-#!name=Unified Routing + System DNS v1.20
+#!name=Unified Routing + System DNS v1.21
 #!desc=Единый модуль DIRECT/PROXY + выборочный System DNS. Использовать вместе с remote.conf.
 #!author=OpenAI + user
-#!version=1.20
+#!version=1.21
 
 # =============================================================================
 # ПАМЯТКА / НАЗНАЧЕНИЕ
@@ -124,6 +124,14 @@
 # =============================================================================
 # ЖУРНАЛ АКТУАЛИЗАЦИИ / ИСТОЧНИКИ
 # =============================================================================
+# 2026-10-31 — Retire obsolete Manual Proxy IP / версия 1.21.
+# Удалено IP-CIDR,62.60.230.167/32,PROXY,no-resolve из Manual Proxy.
+# Основание: владелец проекта подтвердил, что адрес больше не актуален.
+# Влияние: трафик к 62.60.230.167 больше не принуждается к PROXY этим правилом;
+# итоговый маршрут определяется оставшимися правилами и GEOIP,RU/FINAL в remote.conf.
+# Другие IP/CIDR, правила сервисов и [Host]/DNS не изменены.
+# Runtime/PacketTunnel не проверялся.
+#
 # 2026-10-30 — Meta AI user content narrow PROXY / версия 1.20.
 # Добавлено DOMAIN-SUFFIX,metaaiusercontent.com,PROXY в Meta FULL PROXY.
 # Причина: домен включён в maintained v2fly/domain-list-community/data/meta;
@@ -425,7 +433,6 @@ DOMAIN,i.ytimg.com,PROXY
 DOMAIN-SUFFIX,ytimg.com,PROXY
 DOMAIN-SUFFIX,ggpht.com,PROXY
 DOMAIN-SUFFIX,pixabay.com,PROXY
-IP-CIDR,62.60.230.167/32,PROXY,no-resolve
 IP-CIDR,31.77.158.107/32,PROXY,no-resolve
 
 # ==================================================
