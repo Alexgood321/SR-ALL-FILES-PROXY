@@ -5,7 +5,7 @@
 ## Source of truth
 
 - `config/remote.conf` — SHA256 `78b60dd2c6a1c63ba863d07f56ee0035f747f5309a188d941e1ecf72059098d4`
-- `modules/Unified-Routing-System-DNS.sgmodule` — SHA256 `60371987cc19999eae5820eed73e9f658302f149207bdfc93e7da63030255f74`
+- `modules/Unified-Routing-System-DNS.sgmodule` — SHA256 `445c856d188b71281798ef158ef8013ad846be6f86a2d556e8ef6b031ec06ab5`
 - `modules/Ads-Privacy-Block.sgmodule` — SHA256 `4cc4c2605f59978ad83ea9bf2d2605f78b6b3173eebee0d9250312a33363bd38`
 - YouTube/MITM файлы: **не используются**.
 
@@ -13,7 +13,7 @@
 
 - `https://raw.githubusercontent.com/Alexgood321/SR-ALL-FILES-PROXY/main/incy/xray-policy.json`
 - Routing rules: **478**
-- Selective System DNS matchers: **299**
+- Selective System DNS matchers: **300**
 - Назначение: Sub-Store встраивает эти `dns` + `routing` в каждый INCY Full Xray server config.
 - Артефакт не создаёт `autorouting`, routing header или отдельный routing profile (No `autorouting`).
 - Legacy `incy/incy-routing.json` остаётся compatibility/diagnostic до Full Xray E2E.
@@ -44,7 +44,7 @@ DNS ARCHITECTURE: IMPLEMENTED STATICALLY. DNS PARITY: NOT TESTED.
 - `NOT PORTED / COVERAGE CHECK`: 6
 - `NOT PORTED / REQUIRES E2E`: 2
 - `NOT PORTED / UNSUPPORTED ON INCY iOS`: 1
-- `SEMANTIC ADAPTATION`: 350
+- `SEMANTIC ADAPTATION`: 351
 - `SKIPPED AS DUPLICATE`: 3
 
 ## PLATFORM_DEPENDENT
@@ -65,7 +65,8 @@ DNS ARCHITECTURE: IMPLEMENTED STATICALLY. DNS PARITY: NOT TESTED.
 
 ## SEMANTIC ADAPTATION
 
-- `daniil.netcraze.link = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `netcraze.link = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
+- `*.netcraze.link = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
 - `amp-api-search-edge.apps.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
 - `amp-api-edge.apps.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
 - `amp-api.apps.apple.com = server:system` — Преобразовано в priority domains нативного Xray DNS с localhost System DNS.
