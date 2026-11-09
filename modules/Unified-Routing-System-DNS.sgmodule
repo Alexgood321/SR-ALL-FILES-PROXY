@@ -1,7 +1,7 @@
-#!name=Unified Routing + System DNS v1.21
+#!name=Unified Routing + System DNS v1.22
 #!desc=Единый модуль DIRECT/PROXY + выборочный System DNS. Использовать вместе с remote.conf.
 #!author=OpenAI + user
-#!version=1.21
+#!version=1.22
 
 # =============================================================================
 # ПАМЯТКА / НАЗНАЧЕНИЕ
@@ -124,6 +124,21 @@
 # =============================================================================
 # ЖУРНАЛ АКТУАЛИЗАЦИИ / ИСТОЧНИКИ
 # =============================================================================
+# 2026-11-09 — KeenDNS public zone DIRECT + System DNS / версия 1.22.
+# По запросу владельца точечный DIRECT hostname заменён на
+# DOMAIN-SUFFIX,netcraze.link,DIRECT для всей зоны и всех поддоменов.
+# Вместо точечного [Host] добавлены netcraze.link и *.netcraze.link
+# = server:system, чтобы сохранить прежний DNS-путь личного KeenDNS сервиса.
+# Основание: PacketTunnel 2026-11-09: субдомен шёл по GEOIP,RU,DIRECT;
+# пользователь подтвердил KeenDNS и запросил общий suffix.
+# Влияние/риск: все имена публичной зоны netcraze.link, включая чужие
+# KeenDNS-имена, получают DIRECT и System DNS. DNS-ответы и доступность
+# сторонних имён могут отличаться от прежней политики.
+# Частное имя удалено из активных правил и текущих комментариев.
+# Старые Git-коммиты/release-версии эта правка не очищает.
+# IP/CIDR, глобальный DNS remote.conf и прочие маршруты не изменены.
+# Static/CI, delivery и device runtime требуют отдельных проверок.
+#
 # 2026-10-31 — Retire obsolete Manual Proxy IP / версия 1.21.
 # Удалено IP-CIDR,62.60.230.167/32,PROXY,no-resolve из Manual Proxy.
 # Основание: владелец проекта подтвердил, что адрес больше не актуален.
@@ -157,12 +172,12 @@
 #
 # 2026-10-14 — Personal WebDAV selective System DNS / версия 1.19.
 # PacketTunnel iPhone 2026-10-14 на LTE + TPANEL-DEN: правило
-# DOMAIN,daniil.netcraze.link,DIRECT применялось, однако Cloudflare DoH через
+# DOMAIN,[private-host].netcraze.link,DIRECT применялось, однако Cloudflare DoH через
 # PROXY резолвил данное имя в 185.162.93.96, а TCP к 185.162.93.96:443
 # завершался timeout ~5 секунд (все пять попыток в наблюдаемом capture).
 # Пользователь подтвердил: при полном отключении VPN WebDAV работает на LTE.
 # Для диагностического A/B добавлен лишь один Host mapping:
-# daniil.netcraze.link = server:system.
+# [private-host].netcraze.link = server:system.
 # Ожидаемая зона влияния: только DNS этого точного hostname; текущий DIRECT
 # маршрут, другие домены Netcraze и глобальный DNS (remote.conf) не меняются.
 # Системный DNS при сбоях может перейти к ControlD fallback через PROXY,
@@ -172,8 +187,8 @@
 # После выпуска проверить IP ответа, DNS path, TCP did connect, WebDAV runtime.
 #
 # 2026-10-14 — Personal WebDAV direct hostname / версия 1.18.
-# Добавлен DOMAIN,daniil.netcraze.link,DIRECT для личного WebDAV:
-# https://daniil.netcraze.link/webdav/ . Правило применяется ко всему HTTPS
+# Добавлен DOMAIN,[private-host].netcraze.link,DIRECT для личного WebDAV:
+# https://[private-host].netcraze.link/webdav/ . Правило применяется ко всему HTTPS
 # hostname (а не только к /webdav/), но не охватывает иные hosts netcraze.link.
 # Причина: пользователь хочет доступ к домашнему WebDAV при активном VPN
 # напрямую через локальную сеть/российский IP; без предположений о текущей
@@ -799,8 +814,8 @@ IP-CIDR,176.235.227.0/24,DIRECT,no-resolve
 # и актуальности GeoIP. DNS не форсируем: остаётся глобальный Cloudflare -> ControlD.
 DOMAIN-SUFFIX,netcraze.cloud,DIRECT
 
-# --- Personal WebDAV (single hostname, 2026-10-14) ---
-DOMAIN,daniil.netcraze.link,DIRECT
+# --- KeenDNS zone DIRECT (2026-11-09) ---
+DOMAIN-SUFFIX,netcraze.link,DIRECT
 
 # --- DEWU / Poizon narrow DIRECT pilot (2026-10-12) ---
 # Branded domains only. Shared Alibaba HTTPDNS / CDN IPs stay on default policy.
@@ -914,8 +929,9 @@ DOMAIN-SUFFIX,xn--p1ai,DIRECT
 # Only domains listed in this section bypass the global DNS path and use system DNS.
 # All other DNS remains governed by remote.conf.
 
-# --- Personal WebDAV selective System DNS (2026-10-14) ---
-daniil.netcraze.link = server:system
+# --- KeenDNS zone System DNS (2026-11-09) ---
+netcraze.link = server:system
+*.netcraze.link = server:system
 
 # --- Apple DIRECT + System DNS MAX ---
 amp-api-search-edge.apps.apple.com = server:system
