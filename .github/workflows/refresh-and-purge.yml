@@ -128,9 +128,13 @@ jobs:
               tag_sha="$(curl -fsS "${api_headers[@]}" \
                 "https://api.github.com/repos/${REPOSITORY}/git/ref/tags/${version}" \
                 | jq -r '.object.sha // empty')"
-              if [ -z "$release_id" ] || [ "$tag_sha" != "$target_sha" ]; then
-                echo "Existing release/tag mismatch for $version: tag_sha=$tag_sha target=$target_sha" >&2
+              if [ -z "$release_id" ]; then
+                echo "Existing release $version is missing its release ID" >&2
                 return 1
+              fi
+              if [ "$tag_sha" != "$target_sha" ]; then
+                echo "Existing release/tag belongs to another commit: $version tag_sha=$tag_sha target=$target_sha" >&2
+                return 2
               fi
               echo "RELEASE EXISTS version=$version id=$release_id sha=$target_sha" >&2
               printf '%s\n' "$release_id"
@@ -230,7 +234,7 @@ jobs:
             local url="$1" expected_file="$2"
             local body_file status expected_sha actual_sha
             body_file="$(mktemp)"
-            status="$(curl -sS -L -o "$body_file" -w '%{http_code}' "$url" || true)"
+            status="$(curl -sS -L --retry 3 --retry-delay 2 -o "$body_file" -w '%{http_code}' "$url" || true)"
             expected_sha="$(sha256sum "$expected_file" | awk '{print $1}')"
 
             if [ "$status" = "200" ] && [ -s "$body_file" ] && cmp -s "$body_file" "$expected_file"; then
@@ -379,7 +383,19 @@ jobs:
 
             if [ "$publisher" = true ]; then
               echo "ROLE=PUBLISHER event=$EVENT_SHA target=$TARGET_SHA version=$VERSION"
+              set +e
               release_id="$(get_or_create_release "$VERSION" "$TARGET_SHA")"
+              release_rc=$?
+              set -e
+              if [ "$release_rc" -eq 2 ]; then
+                echo "Release version $VERSION is already bound to a different commit; trying the next iteration"
+                rm -rf "$expected_dir"
+                continue
+              elif [ "$release_rc" -ne 0 ]; then
+                echo "Could not get or create release $VERSION (exit=$release_rc)" >&2
+                rm -rf "$expected_dir"
+                exit "$release_rc"
+              fi
               echo "RELEASE_ID=$release_id"
 
               for path in "${delivery_files[@]}"; do
