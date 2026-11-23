@@ -5,7 +5,7 @@
 ## Source of truth
 
 - `config/remote.conf` — SHA256 `78b60dd2c6a1c63ba863d07f56ee0035f747f5309a188d941e1ecf72059098d4`
-- `modules/Unified-Routing-System-DNS.sgmodule` — SHA256 `445c856d188b71281798ef158ef8013ad846be6f86a2d556e8ef6b031ec06ab5`
+- `modules/Unified-Routing-System-DNS.sgmodule` — SHA256 `2a360dc69ff38cb47ee3d6b5da0fcf69d8d100171207b3ea4444a4d703c2664b`
 - `modules/Ads-Privacy-Block.sgmodule` — SHA256 `4cc4c2605f59978ad83ea9bf2d2605f78b6b3173eebee0d9250312a33363bd38`
 - YouTube/MITM файлы: **не используются**.
 
@@ -41,6 +41,7 @@ DNS ARCHITECTURE: IMPLEMENTED STATICALLY. DNS PARITY: NOT TESTED.
 ## Количество по статусам
 
 - `CONFIRMED STATIC MAPPING`: 427
+- `NOT PORTED`: 1
 - `NOT PORTED / COVERAGE CHECK`: 6
 - `NOT PORTED / REQUIRES E2E`: 2
 - `NOT PORTED / UNSUPPORTED ON INCY iOS`: 1
@@ -56,6 +57,7 @@ DNS ARCHITECTURE: IMPLEMENTED STATICALLY. DNS PARITY: NOT TESTED.
 - `USER-AGENT,TikTok*,PROXY` — **NOT PORTED / REQUIRES E2E** — Xray attrs нельзя считать безопасным 1:1 эквивалентом USER-AGENT для общего HTTPS/app traffic.
 - `PROCESS-NAME,WhatsApp,PROXY` — **NOT PORTED / UNSUPPORTED ON INCY iOS** — INCY iOS Xray не поддерживает process lookup; PROCESS-NAME намеренно не доставляется.
 - `USER-AGENT,WhatsApp*,PROXY` — **NOT PORTED / REQUIRES E2E** — Xray attrs нельзя считать безопасным 1:1 эквивалентом USER-AGENT для общего HTTPS/app traffic.
+- `AND,((IP-CIDR,176.124.207.107/32,no-resolve),(DST-PORT,8090)),DIRECT` — **NOT PORTED** — AND должен содержать ровно один selector и одно условие PROTOCOL.
 - `skip-proxy: localhost` — **NOT PORTED / COVERAGE CHECK** — Токен не является CIDR; область hostname/wildcard здесь не расширяется, каноническая доменная политика берётся из Unified.
 - `skip-proxy: *.local` — **NOT PORTED / COVERAGE CHECK** — Токен не является CIDR; область hostname/wildcard здесь не расширяется, каноническая доменная политика берётся из Unified.
 - `skip-proxy: captive.apple.com` — **NOT PORTED / COVERAGE CHECK** — Токен не является CIDR; область hostname/wildcard здесь не расширяется, каноническая доменная политика берётся из Unified.
