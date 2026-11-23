@@ -1,7 +1,7 @@
-#!name=Unified Routing + System DNS v1.22
+#!name=Unified Routing + System DNS v1.23
 #!desc=Единый модуль DIRECT/PROXY + выборочный System DNS. Использовать вместе с remote.conf.
 #!author=OpenAI + user
-#!version=1.22
+#!version=1.23
 
 # =============================================================================
 # ПАМЯТКА / НАЗНАЧЕНИЕ
@@ -124,6 +124,19 @@
 # =============================================================================
 # ЖУРНАЛ АКТУАЛИЗАЦИИ / ИСТОЧНИКИ
 # =============================================================================
+# 2026-11-23 — AEZA TorrServer port-specific DIRECT / версия 1.23.
+# Добавлено составное правило IP-CIDR + DST-PORT для 176.124.207.107:8090:
+# только клиентские соединения с TorrServer идут DIRECT; остальные порты IP
+# (включая VPN endpoints) сохраняют существующую маршрутизацию.
+# Основание: PacketTunnel-20261123140839.log (Mac, 14:45–14:47):
+# HTTP UI/API, /stream preload/stat и libmpv /stream play шли через
+# FINAL,PROXY # TPANEL-DEN -> VLESS 5.61.88.118:443.
+# Риск: прямой маршрут может быть недоступен в отдельных сетях/у провайдеров.
+# [Host], System DNS, remote.conf и серверный исходящий torrent-трафик не менялись.
+# INCY/HAPP composite-rule conversion и Shadowrocket runtime требуют отдельных
+# проверок; static validation не является подтверждением устройства.
+# Rollback: удалить правило ниже и восстановить версию предыдущего модуля.
+#
 # 2026-11-09 — KeenDNS public zone DIRECT + System DNS / версия 1.22.
 # По запросу владельца точечный DIRECT hostname заменён на
 # DOMAIN-SUFFIX,netcraze.link,DIRECT для всей зоны и всех поддоменов.
@@ -825,6 +838,8 @@ DOMAIN,cdn.poizon.com,DIRECT
 DOMAIN,videocdn.poizon.com,DIRECT
 
 # --- Manual DIRECT ---
+# AEZA TorrServer only (IP:8090), preserve all other ports including VPN.
+AND,((IP-CIDR,176.124.207.107/32,no-resolve),(DST-PORT,8090)),DIRECT
 DOMAIN,new.tv.team,DIRECT
 DOMAIN,rus.epg.team,DIRECT
 DOMAIN,iptvx.one,DIRECT
